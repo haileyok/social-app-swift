@@ -136,7 +136,7 @@ jobs:
               "$BIN" lint --strict > /tmp/swiftlint-out.txt 2>&1
               RC=$?
               set -e
-              tail -20 /tmp/swiftlint-out.txt
+              grep -v '^Linting' /tmp/swiftlint-out.txt | tail -100
               exit $RC
             fi
           fi

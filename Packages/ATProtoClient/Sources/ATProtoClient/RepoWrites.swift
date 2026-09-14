@@ -26,16 +26,18 @@ extension XrpcClient {
   }
 
   public struct BlobUploadResponse: Decodable, Sendable {
-    public struct BlobRef: Decodable, Sendable {
-      public let type: String?
-      public let ref: Ref?
-      public let mimeType: String?
-      public let size: Int?
-    }
-    public struct Ref: Decodable, Sendable {
-      public let link: String?
-    }
     public let blob: BlobRef
+  }
+
+  public struct BlobRef: Decodable, Sendable {
+    public let type: String?
+    public let ref: BlobRefLink?
+    public let mimeType: String?
+    public let size: Int?
+  }
+
+  public struct BlobRefLink: Decodable, Sendable {
+    public let link: String?
   }
 
   public struct CreateRecordBody<Input: Encodable & Sendable>: Encodable, Sendable {

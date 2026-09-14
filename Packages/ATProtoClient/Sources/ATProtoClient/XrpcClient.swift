@@ -161,9 +161,7 @@ public struct XrpcClient: Sendable {
       method: "POST", url: url(method: method), headers: h, body: body)
   }
 
-  static func decode<Output: Decodable>(_ response: HTTPResponse) throws
-    -> Output
-  {
+  static func decode<Output: Decodable>(_ response: HTTPResponse) throws -> Output {
     guard 200..<300 ~= response.status else {
       throw XrpcError.from(
         status: response.status, headers: response.headers,
@@ -177,8 +175,7 @@ public struct XrpcClient: Sendable {
       // Empty-but-required decoding: only Optional properties can succeed,
       // so an all-optional struct decodes from "{}".
       if let fromObject = try? JSONDecoder().decode(
-        Output.self, from: Data("{}".utf8))
-      {
+        Output.self, from: Data("{}".utf8)) {
         return fromObject
       }
     }
@@ -206,7 +203,7 @@ extension XrpcClient {
   ) async throws -> (items: [Item], cursor: String?) {
     var all: [Item] = []
     var seen = Set<Item.ID>()
-    var cursor: String? = nil
+    var cursor: String?
     var page = 0
     var currentParams = params
     if let limit {

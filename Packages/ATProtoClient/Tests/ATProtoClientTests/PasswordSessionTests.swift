@@ -2,7 +2,6 @@ import Testing
 import Foundation
 @testable import ATProtoClient
 
-
 /// Sendable collection box for hook assertions.
 final class Box<T>: @unchecked Sendable {
   var items: [T] = []
@@ -34,7 +33,8 @@ final class Box<T>: @unchecked Sendable {
     #expect(transport.received.count == 1)
     let req = transport.received[0]
     #expect(req.url.hasSuffix("/xrpc/com.atproto.server.createSession"))
-    let body = try JSONSerialization.jsonObject(with: req.body ?? Data()) as! [String: Any]
+    let body = try #require(
+      try JSONSerialization.jsonObject(with: req.body ?? Data()) as? [String: Any])
     #expect(body["identifier"] as? String == "alice.example")
   }
 

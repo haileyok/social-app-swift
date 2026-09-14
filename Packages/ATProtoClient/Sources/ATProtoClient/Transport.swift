@@ -69,12 +69,12 @@ public struct XrpcError: Error, Sendable {
   ) -> XrpcError {
     var rawCode: String?
     var message: String?
-    if let data,
-      let body = try? JSONDecoder().decode(XrpcErrorBody.self, from: data),
-      body.error != nil || body.message != nil
-    {
-      rawCode = body.error
-      message = body.message
+    if let data {
+      let body = try? JSONDecoder().decode(XrpcErrorBody.self, from: data)
+      if body?.error != nil || body?.message != nil {
+        rawCode = body?.error
+        message = body?.message
+      }
     }
     let retryHeaderValue = headers.first(where: {
       $0.key.caseInsensitiveCompare("Retry-After") == .orderedSame

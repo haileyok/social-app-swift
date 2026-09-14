@@ -55,16 +55,16 @@ import Foundation
     // Authenticated call through the appview proxy header
     struct Timeline: Decodable {
       let feed: [FeedItem]?
-      struct FeedItem: Decodable {
-        let post: Post
-        struct Post: Decodable {
-          let uri: String
-          let author: Author
-          struct Author: Decodable {
-            let handle: String
-          }
-        }
-      }
+    }
+    struct FeedItem: Decodable {
+      let post: Post
+    }
+    struct Post: Decodable {
+      let uri: String
+      let author: Author
+    }
+    struct Author: Decodable {
+      let handle: String
     }
     let base = try await session.client()
     let appview = base.withProxy(proxy)

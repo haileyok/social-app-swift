@@ -58,8 +58,7 @@ public struct DidDocument: Codable, Sendable, Equatable {
     if let arr = try? container.decode([ServiceEntry].self, forKey: .service) {
       self.service = arr
     } else if let single = try? container.decode(
-      ServiceEntry.self, forKey: .service)
-    {
+      ServiceEntry.self, forKey: .service) {
       self.service = [single]
     } else {
       self.service = nil
@@ -221,9 +220,7 @@ public actor PasswordSession {
     return try await refresh(allowConcurrent: current)
   }
 
-  private func refresh(allowConcurrent current: SessionData) async throws
-    -> SessionData
-  {
+  private func refresh(allowConcurrent current: SessionData) async throws -> SessionData {
     if let task = refreshTask {
       // Someone is already refreshing; share their result.
       return try await task.value
@@ -249,9 +246,7 @@ public actor PasswordSession {
     var didDoc: DidDocument?
   }
 
-  private func performRefresh(current: SessionData) async throws
-    -> SessionData
-  {
+  private func performRefresh(current: SessionData) async throws -> SessionData {
     let service = XrpcClient(
       baseURL: current.service, transport: transport)
     // refreshSession targets the login service (not the PDS pin).

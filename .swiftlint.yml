@@ -17,6 +17,7 @@ opt_in_rules:
 
 excluded:
   - .build
+  - "Packages/*/.build"
   - Packages/Lexicons/Sources          # generated — never lint
   - tools/lexicon-codegen              # vendored (MIT) — not our style surface
   - dev-env-mock
