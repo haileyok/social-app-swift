@@ -17,6 +17,15 @@ public enum ShellAccessibility {
   /** The presented token gallery. */
   public static let tokenGallery = "app.tokenGallery"
 
+  /** The debug toolbar button that presents the login screen. */
+  public static let loginButton = "app.debug.login"
+
+  /** The presented login screen, wrapped in its navigation stack. */
+  public static let loginSheet = "app.login"
+
+  /** The login sheet's dismiss control. */
+  public static let loginCloseButton = "app.login.close"
+
   /** Per-screen content container, e.g. `screen.Home`. */
   public static func screen(_ routeName: String) -> String {
     "screen.\(routeName)"
