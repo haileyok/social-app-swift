@@ -7,12 +7,16 @@ import Foundation
 #endif
 
 /// AC.3 integration suite: runs against the vendored dev-env-mock server
-/// (PDS on http://localhost:3000, mock users alice/bob/carla, password
-/// "hunter2"). Skips when the mock is not reachable so `swift test` works
-/// without the backend running.
-@Suite struct MockServerIntegrationTests {
+/// (mock users alice/bob/carla, password "hunter2"). Enabled only when
+/// MOCK_PDS_URL is set - run locally as:
+///   MOCK_PDS_URL=http://localhost:3000 swift test
+/// CI has no mock backend, so it skips this suite cleanly there. When the
+/// variable IS set but the server is unreachable, tests fail loudly (that
+/// means you asked for mock coverage and the mock is down).
+@Suite(.enabled(if: ProcessInfo.processInfo.environment["MOCK_PDS_URL"] != nil))
+struct MockServerIntegrationTests {
 
-  static let pds = "http://localhost:3000"
+  static let pds = ProcessInfo.processInfo.environment["MOCK_PDS_URL"] ?? "http://localhost:3000"
 
   static func mockReachable() async -> Bool {
     guard let url = URL(string: "\(pds)/xrpc/com.atproto.server.describeServer")

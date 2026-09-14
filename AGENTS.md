@@ -41,6 +41,7 @@ CI runs the exact same Swift major.minor in a pinned `swift:6.3` Docker containe
 - `pnpm install && pnpm start:external`, then `curl -X POST 'http://localhost:1986?users&follows&posts'` to spawn the network (PDS on `:3000`, mock appview DID `did:plc:bw7ad3erl7btq6qwf66yqiov`).
 - macOS runner recipe: see the `mock-server-spike` job in `.github/workflows/ios.yml` (brew `postgresql@16` + `redis`, configure port/user, drive + assert). **This is the proven ios.yml mock step for AC.6/AC.10.**
 - Local (this workstation): apt `postgresql` (pg 18) + `redis-server`; see `dev-env-mock/README.md`.
+- Mock integration tests are opt-in via env: `MOCK_PDS_URL=http://localhost:3000 swift test` (in `Packages/ATProtoClient`). CI leaves the variable unset so the mock suite skips there; every other test remains the gate.
 - **Chat is NOT served** (`@atproto/dev-env` TestNetwork has no chat service) — Messages tests use the `TestSupport` fake XRPC chat server (documented plan fallback, confirmed).
 
 ## Workflow conventions

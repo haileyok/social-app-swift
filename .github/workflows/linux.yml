@@ -25,7 +25,7 @@ jobs:
 
       - name: Build
         run: |
-          set -e
+          set -eo pipefail
           for pkg in Packages/*/; do
             name=$(basename "$pkg")
             case "$name" in DesignSystem|UIComponents) continue ;; esac
@@ -36,7 +36,7 @@ jobs:
 
       - name: Test
         run: |
-          set -e
+          set -eo pipefail
           for pkg in Packages/*/; do
             name=$(basename "$pkg")
             case "$name" in DesignSystem|UIComponents) continue ;; esac
