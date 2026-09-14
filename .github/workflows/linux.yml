@@ -34,9 +34,11 @@ jobs:
           set -eo pipefail
           for pkg in Packages/*/; do
             name=$(basename "$pkg")
-            # DesignSystem/UIComponents and any *Views feature package import
-            # SwiftUI and cannot build on Linux; they are Mac-verified only.
-            case "$name" in DesignSystem|UIComponents|*Views) continue ;; esac
+            # UIComponents and any *Views feature package import SwiftUI and
+            # cannot build on Linux; they are Mac-verified only. DesignSystem
+            # is fully #if canImport(SwiftUI)-guarded, so it DOES build+test
+            # on Linux (its DesignSystemCore target is Linux-verified).
+            case "$name" in UIComponents|*Views) continue ;; esac
             echo "::group::Build $name"
             (cd "$pkg" && swift build 2>&1 | tail -2) || { echo "::error::$name build failed"; exit 1; }
             echo "::endgroup::"
@@ -47,7 +49,7 @@ jobs:
           set -eo pipefail
           for pkg in Packages/*/; do
             name=$(basename "$pkg")
-            case "$name" in DesignSystem|UIComponents|*Views) continue ;; esac
+            case "$name" in UIComponents|*Views) continue ;; esac
             echo "::group::Test $name"
             (cd "$pkg" && swift test 2>&1 | tail -3) || { echo "::error::$name tests failed"; exit 1; }
             echo "::endgroup::"
