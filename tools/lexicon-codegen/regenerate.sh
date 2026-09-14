@@ -10,12 +10,15 @@ OUT_DIR="$REPO_ROOT/Packages/Lexicons/Sources/Lexicons"
 # Resolve the local dependency to an absolute file:// URL (required for local
 # deps) and apply the client-relevant namespace allowlist.
 #
-# Allowlist curated from the RN app's actual lexicon usage (grep of src/):
-# app.bsky.*, chat.bsky.*, com.atproto.*, plus tools.ozone.report.* (used by
-# the report dialog). Server-side namespaces (the rest of tools.ozone.*,
-# internal.*, site.*, com.germnetwork.*) are excluded - the full set also trips
-# a generator bug on tools.ozone.moderation.getAccountPreferences' cross-schema
-# array reference, so the allowlist is required, not optional.
+# Allowlist curated from the RN app's actual lexicon usage. Two sources agree:
+# (1) the app's own generated manifest (bluesky/social-app `lexicons.json`,
+#     266 entries), which is the authoritative client-relevant set, and
+# (2) a grep of src/ for `client.call(app.bsky.*)`-style method references.
+# Roots below cover every manifest entry except com.germnetwork.declaration,
+# which is listed explicitly. Server-side namespaces (the rest of tools.ozone.*,
+# internal.*, site.*) are excluded - the full set also trips a generator bug on
+# tools.ozone.moderation.getAccountPreferences' cross-schema array reference, so
+# the allowlist is required, not optional.
 #
 # Also excluded: app.bsky.video.uploadPart - its "application/octet-stream"
 # input mimetype the vendored generator's lexicon decoder rejects; blob upload
@@ -29,7 +32,17 @@ import json, pathlib, re, sys
 
 dep_dir = sys.argv[1]
 root = pathlib.Path(dep_dir, 'lexicons')
-allowed_roots = ("app.bsky", "chat.bsky", "com.atproto", "tools.ozone.report")
+# Roots mirror the RN app's own lexicon manifest (bluesky/social-app
+# lexicons.json, 266 entries): every namespace the client ships. The only
+# out-of-root entry there is com.germnetwork.declaration (read/written as a
+# record by the Germ profile button), so that namespace is listed explicitly.
+allowed_roots = (
+    "app.bsky",
+    "chat.bsky",
+    "com.atproto",
+    "com.germnetwork",
+    "tools.ozone.report",
+)
 exclude = {"app.bsky.video.uploadPart"}
 
 cfg = json.load(open('.atproto.json'))

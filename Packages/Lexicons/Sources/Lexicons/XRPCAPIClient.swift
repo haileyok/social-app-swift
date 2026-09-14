@@ -21,6 +21,8 @@ public enum Chat {
 public enum Com {
   public enum Atproto {
   }
+  public enum Germnetwork {
+  }
 }
 
 public enum Tools {
@@ -48581,6 +48583,201 @@ extension Com.Atproto {
       var container = encoder.container(keyedBy: CodingKeys.self)
       try container.encode(self.account, forKey: .account)
       try _unknownValues.encode(to: encoder)
+    }
+  }
+}
+
+extension Com.Germnetwork {
+  public struct Declaration: ATProtoRecord {
+    public static let nsId = "com.germnetwork.declaration"
+    public var type: Swift.String {
+      Self.nsId
+    }
+    /// Array of opaque values to allow for key rolling
+    public let continuityProofs: [Foundation.Data]?
+    public let currentKey: Foundation.Data
+    public let keyPackage: Foundation.Data?
+    /// Controls who can message this account
+    public let messageMe: Declaration_MessageMe?
+    /// Semver version number, without pre-release or build information, for the format of opaque content
+    public let version: Swift.String
+    public let _unknownValues: [Swift.String: AnyCodable]
+
+    public init(continuityProofs: [Foundation.Data]? = nil, currentKey: Foundation.Data, keyPackage: Foundation.Data? = nil, messageMe: Declaration_MessageMe? = nil, version: Swift.String) {
+      self.continuityProofs = continuityProofs
+      self.currentKey = currentKey
+      self.keyPackage = keyPackage
+      self.messageMe = messageMe
+      self.version = version
+      self._unknownValues = [:]
+    }
+
+    public static func make(continuityProofs: [Foundation.Data]? = nil, currentKey: Foundation.Data, keyPackage: Foundation.Data? = nil, messageMe: Declaration_MessageMe? = nil, version: Swift.String) throws -> Self {
+      if let continuityProofs {
+        guard continuityProofs.count <= 1000 else {
+          throw LexiconConstraintError.arrayTooLong("continuityProofs", limit: 1000)
+        }
+      }
+      guard version.utf8.count <= 14 else {
+        throw LexiconConstraintError.stringTooLong("version", limit: 14)
+      }
+      guard version.utf8.count >= 5 else {
+        throw LexiconConstraintError.stringTooShort("version", minimum: 5)
+      }
+      return Self.init(continuityProofs: continuityProofs, currentKey: currentKey, keyPackage: keyPackage, messageMe: messageMe, version: version)
+    }
+
+    enum CodingKeys: Swift.String, CodingKey {
+      case type = "$type"
+      case continuityProofs
+      case currentKey
+      case keyPackage
+      case messageMe
+      case version
+    }
+
+    public init(from decoder: any Decoder) throws {
+      let keyedContainer = try decoder.container(keyedBy: CodingKeys.self)
+      let continuityProofs = try keyedContainer.decodeIfPresent([Foundation.Data].self, forKey: .continuityProofs)
+      let currentKey = try keyedContainer.decode(Foundation.Data.self, forKey: .currentKey)
+      let keyPackage = try keyedContainer.decodeIfPresent(Foundation.Data.self, forKey: .keyPackage)
+      let messageMe = try keyedContainer.decodeIfPresent(Declaration_MessageMe.self, forKey: .messageMe)
+      let version = try keyedContainer.decode(Swift.String.self, forKey: .version)
+      let unknownContainer = try decoder.container(keyedBy: AnyCodingKeys.self)
+      var _unknownValues = [Swift.String: AnyCodable]()
+      for key in unknownContainer.allKeys {
+        guard CodingKeys(rawValue: key.stringValue) == nil else {
+          continue
+        }
+        _unknownValues[key.stringValue] = try unknownContainer.decode(AnyCodable.self, forKey: key)
+      }
+      if !LexiconDecodingMode.shouldValidateConstraints(in: decoder) {
+        self = Self.init(continuityProofs: continuityProofs, currentKey: currentKey, keyPackage: keyPackage, messageMe: messageMe, version: version)
+        return
+      }
+      do {
+        self = try Self.make(continuityProofs: continuityProofs, currentKey: currentKey, keyPackage: keyPackage, messageMe: messageMe, version: version)
+      } catch let error as LexiconConstraintError {
+        throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "\(error)", underlyingError: error))
+      }
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      try container.encodeIfPresent(self.continuityProofs, forKey: .continuityProofs)
+      try container.encode(self.currentKey, forKey: .currentKey)
+      try container.encodeIfPresent(self.keyPackage, forKey: .keyPackage)
+      try container.encodeIfPresent(self.messageMe, forKey: .messageMe)
+      try container.encode(self.version, forKey: .version)
+      try _unknownValues.encode(to: encoder)
+    }
+  }
+
+  public struct Declaration_MessageMe: Codable, Hashable, Sendable {
+    /// A URL to present to an account that does not have its own com.germnetwork.declaration record, must have an empty fragment component, where the app should fill in the fragment component with the DIDs of the two accounts who wish to message each other
+    public var messageMeUrl: FormatString<URI>
+    /// The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.
+    public var showButtonTo: Declaration_MessageMe_ShowButtonTo
+    public let _unknownValues: [Swift.String: AnyCodable]
+
+    public init(messageMeUrl: FormatString<URI>, showButtonTo: Declaration_MessageMe_ShowButtonTo) {
+      self.messageMeUrl = messageMeUrl
+      self.showButtonTo = showButtonTo
+      self._unknownValues = [:]
+    }
+
+    public static func make(messageMeUrl: FormatString<URI>, showButtonTo: Declaration_MessageMe_ShowButtonTo) throws -> Self {
+      guard messageMeUrl.rawValue.utf8.count <= 2047 else {
+        throw LexiconConstraintError.stringTooLong("messageMeUrl", limit: 2047)
+      }
+      guard messageMeUrl.rawValue.utf8.count >= 1 else {
+        throw LexiconConstraintError.stringTooShort("messageMeUrl", minimum: 1)
+      }
+      guard showButtonTo.rawValue.utf8.count <= 100 else {
+        throw LexiconConstraintError.stringTooLong("showButtonTo", limit: 100)
+      }
+      guard showButtonTo.rawValue.utf8.count >= 1 else {
+        throw LexiconConstraintError.stringTooShort("showButtonTo", minimum: 1)
+      }
+      return Self.init(messageMeUrl: messageMeUrl, showButtonTo: showButtonTo)
+    }
+
+    enum CodingKeys: Swift.String, CodingKey {
+      case messageMeUrl
+      case showButtonTo
+    }
+
+    public init(from decoder: any Decoder) throws {
+      let keyedContainer = try decoder.container(keyedBy: CodingKeys.self)
+      let messageMeUrl = try keyedContainer.decode(FormatString<URI>.self, forKey: .messageMeUrl)
+      let showButtonTo = try keyedContainer.decode(Com.Germnetwork.Declaration_MessageMe_ShowButtonTo.self, forKey: .showButtonTo)
+      let unknownContainer = try decoder.container(keyedBy: AnyCodingKeys.self)
+      var _unknownValues = [Swift.String: AnyCodable]()
+      for key in unknownContainer.allKeys {
+        guard CodingKeys(rawValue: key.stringValue) == nil else {
+          continue
+        }
+        _unknownValues[key.stringValue] = try unknownContainer.decode(AnyCodable.self, forKey: key)
+      }
+      if !LexiconDecodingMode.shouldValidateConstraints(in: decoder) {
+        self = Self.init(messageMeUrl: messageMeUrl, showButtonTo: showButtonTo)
+        return
+      }
+      do {
+        self = try Self.make(messageMeUrl: messageMeUrl, showButtonTo: showButtonTo)
+      } catch let error as LexiconConstraintError {
+        throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "\(error)", underlyingError: error))
+      }
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      try container.encode(self.messageMeUrl, forKey: .messageMeUrl)
+      try container.encode(self.showButtonTo, forKey: .showButtonTo)
+      try _unknownValues.encode(to: encoder)
+    }
+  }
+
+  /// The policy of who can message the account, this value is included in the keyPackage, but is duplicated here to allow applications to decide if they should show a 'Message on Germ' button to the viewer.
+  public indirect enum Declaration_MessageMe_ShowButtonTo: RawRepresentable, Codable, Hashable, Sendable {
+    case none
+    case usersifollow
+    case everyone
+    case _other(Swift.String)
+
+    public init(rawValue: Swift.String) {
+      switch rawValue {
+      case "none":
+        self = .none
+      case "usersIFollow":
+        self = .usersifollow
+      case "everyone":
+        self = .everyone
+      default:
+        self = ._other(rawValue)
+      }
+    }
+
+    public var rawValue: Swift.String {
+      switch self {
+      case .none:
+        "none"
+      case .usersifollow:
+        "usersIFollow"
+      case .everyone:
+        "everyone"
+      case ._other(let value):
+        value
+      }
+    }
+
+    public init(from decoder: any Decoder) throws {
+      let rawValue = try Swift.String(from: decoder)
+      self = Self(rawValue: rawValue)
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+      try rawValue.encode(to: encoder)
     }
   }
 }
