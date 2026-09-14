@@ -73,11 +73,14 @@ jobs:
       - name: Validate string catalogs
         run: |
           set -e
+          apt-get update -qq && apt-get install -y -qq jq >/dev/null
           FOUND=0
+          find . -name '*.xcstrings' -type f -not -path './.build/*' > /tmp/xcstrings-list.txt || true
           while IFS= read -r f; do
+            [ -n "$f" ] || continue
             jq empty "$f" || { echo "::error::invalid xcstrings: $f"; exit 1; }
             FOUND=1
-          done < <(find . -name '*.xcstrings' -type f -not -path './.build/*')
+          done < /tmp/xcstrings-list.txt
           if [ "$FOUND" -eq 0 ]; then echo "(no xcstrings yet)"; fi
 
   lexicon-codegen-idempotency:
@@ -93,6 +96,7 @@ jobs:
       - name: Regenerate and verify diff-clean
         run: |
           set -e
+          apt-get update -qq && apt-get install -y -qq python3-minimal git >/dev/null
           tools/lexicon-codegen/regenerate.sh
           if ! git diff --exit-code -- Packages/Lexicons; then
             echo "::error::Packages/Lexicons is not in sync with codegen output. Regenerate locally and commit. Never hand-edit generated code."
