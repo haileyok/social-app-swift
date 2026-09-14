@@ -3,6 +3,9 @@ disabled_rules:
   - line_length                # generated lexicon files have long lines; source-wide enforcement later
   - identifier_name            # atproto conventions use short names (uri, cid, did)
   - trailing_comma             # SPM manifests and multi-line literals conventionally use them
+  - force_try                  # static Regex(...) inits are compile-time constants; failure surfaces at first build
+  - large_tuple                # Regex capture tuples are fixed by pattern shape
+  - blanket_disable_command    # disables are deliberate and documented in-place
 opt_in_rules:
   - empty_count
   - closure_spacing

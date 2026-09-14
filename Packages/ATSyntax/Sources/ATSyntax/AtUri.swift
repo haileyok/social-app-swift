@@ -1,8 +1,4 @@
 import FoundationEssentials
-// swiftlint:disable force_try large_tuple
-// (this file builds two compile-time-constant Regex values; force-try
-// surfaces pattern errors at first build, and the capture tuple shape is
-// fixed by the pattern)
 
 /// at:// URI (e.g. `at://did:plc:abc/app.bsky.feed.post/3jz7e4l`).
 ///
