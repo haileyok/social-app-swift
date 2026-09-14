@@ -140,8 +140,7 @@ extension ProfileView {
 
   /// Projects the generated viewer state onto the engine's input.
   static func moderationViewer(_ viewer: App.Bsky.ActorDefs_ViewerState)
-    -> Moderation.ActorViewerState
-  {
+    -> Moderation.ActorViewerState {
     Moderation.ActorViewerState(
       muted: viewer.muted,
       mutedByList: nil,

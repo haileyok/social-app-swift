@@ -30,8 +30,7 @@ public struct ProfileClient: Sendable {
 
   /// `app.bsky.actor.getProfile` - port of `useProfileQuery`.
   public func getProfile(actor: String, authorization: String? = nil) async throws
-    -> App.Bsky.ActorDefs_ProfileViewDetailed
-  {
+    -> App.Bsky.ActorDefs_ProfileViewDetailed {
     try await client.get(
       App.Bsky.ActorGetProfile.id,
       params: [("actor", actor)],
@@ -40,8 +39,7 @@ public struct ProfileClient: Sendable {
 
   /// `app.bsky.actor.getProfiles` - port of `useProfilesQuery`.
   public func getProfiles(actors: [String], authorization: String? = nil) async throws
-    -> App.Bsky.ActorGetProfiles_Output
-  {
+    -> App.Bsky.ActorGetProfiles_Output {
     try await client.get(
       App.Bsky.ActorGetProfiles.id,
       params: [("actors", actors.joined(separator: ","))],
@@ -174,8 +172,7 @@ public struct ProfileClient: Sendable {
 
   /// `app.bsky.labeler.getServices` with `detailed: true`.
   public func getLabelerService(did: String, authorization: String? = nil) async throws
-    -> App.Bsky.LabelerDefs_LabelerViewDetailed?
-  {
+    -> App.Bsky.LabelerDefs_LabelerViewDetailed? {
     let output: App.Bsky.LabelerGetServices_Output = try await client.get(
       App.Bsky.LabelerGetServices.id,
       params: [("detailed", "true"), ("dids", did)],
@@ -188,8 +185,7 @@ public struct ProfileClient: Sendable {
 
   /// `app.bsky.labeler.getServices` without `detailed`.
   public func getLabelerServices(dids: [String], authorization: String? = nil) async throws
-    -> [App.Bsky.LabelerDefs_LabelerView]
-  {
+    -> [App.Bsky.LabelerDefs_LabelerView] {
     let output: App.Bsky.LabelerGetServices_Output = try await client.get(
       App.Bsky.LabelerGetServices.id,
       params: [("dids", dids.joined(separator: ","))],
@@ -202,8 +198,7 @@ public struct ProfileClient: Sendable {
 
   /// `app.bsky.labeler.getServices` with `detailed: true`, for many DIDs.
   public func getLabelerServicesDetailed(dids: [String], authorization: String? = nil)
-    async throws -> [App.Bsky.LabelerDefs_LabelerViewDetailed]
-  {
+    async throws -> [App.Bsky.LabelerDefs_LabelerViewDetailed] {
     let output: App.Bsky.LabelerGetServices_Output = try await client.get(
       App.Bsky.LabelerGetServices.id,
       params: [("detailed", "true"), ("dids", dids.joined(separator: ","))],
@@ -225,7 +220,8 @@ public struct ProfileClient: Sendable {
   public func follow(
     subject did: String, repo: String, createdAt: Date, authorization: String? = nil
   ) async throws -> (uri: String, cid: String?) {
-    let record = FollowRecord(
+    let record = SubjectRecordBody(
+      nsId: App.Bsky.GraphFollow.nsId,
       createdAt: FormatString<Date>(rawValue: Self.iso8601(createdAt)),
       subject: FormatString<DID>(rawValue: did))
     let result = try await writeClient.createRecord(
@@ -256,7 +252,8 @@ public struct ProfileClient: Sendable {
   public func block(
     subject did: String, repo: String, createdAt: Date, authorization: String? = nil
   ) async throws -> (uri: String, cid: String?) {
-    let record = BlockRecord(
+    let record = SubjectRecordBody(
+      nsId: App.Bsky.GraphBlock.nsId,
       createdAt: FormatString<Date>(rawValue: Self.iso8601(createdAt)),
       subject: FormatString<DID>(rawValue: did))
     let result = try await writeClient.createRecord(
@@ -270,61 +267,13 @@ public struct ProfileClient: Sendable {
   /// Port of `useProfileUnblockMutation`, which splits the block URI and deletes
   /// from the viewer's repo.
   public func unblock(repo: String, blockUri: String, authorization: String? = nil)
-    async throws
-  {
+    async throws {
     guard let rkey = Self.recordKey(from: blockUri) else {
       throw ProfileWriteError.malformedRecordURI(blockUri)
     }
     _ = try await writeClient.deleteRecord(
       repo: repo, collection: App.Bsky.GraphBlock.nsId, rkey: rkey,
       authorization: authorization)
-  }
-
-  /// The `app.bsky.graph.follow` record body.
-  ///
-  /// Hand-written for the same reason as ``BlockRecord``: the generated
-  /// ``App/Bsky/GraphFollow`` encoder omits `$type`, which the PDS requires on a
-  /// record body. The fields and their order match the lexicon.
-  struct FollowRecord: Encodable, Sendable {
-    var type: String
-    var createdAt: FormatString<Date>
-    var subject: FormatString<DID>
-
-    init(createdAt: FormatString<Date>, subject: FormatString<DID>) {
-      self.type = App.Bsky.GraphFollow.nsId
-      self.createdAt = createdAt
-      self.subject = subject
-    }
-
-    enum CodingKeys: String, CodingKey {
-      case type = "$type"
-      case createdAt
-      case subject
-    }
-  }
-
-  /// The `app.bsky.graph.block` record body.
-  ///
-  /// Hand-written rather than taken from ``App/Bsky/GraphBlock`` because the
-  /// generated type's initialiser orders `createdAt` before `subject` while the
-  /// lexicon JSON orders them the other way, and because the block path is the
-  /// one place RN also constructs the record itself.
-  struct BlockRecord: Encodable, Sendable {
-    var type: String
-    var createdAt: FormatString<Date>
-    var subject: FormatString<DID>
-
-    init(createdAt: FormatString<Date>, subject: FormatString<DID>) {
-      self.type = App.Bsky.GraphBlock.nsId
-      self.createdAt = createdAt
-      self.subject = subject
-    }
-
-    enum CodingKeys: String, CodingKey {
-      case type = "$type"
-      case createdAt
-      case subject
-    }
   }
 
   // MARK: - Mutes
@@ -368,14 +317,6 @@ public struct ProfileClient: Sendable {
       body: MuteActorBody(actor: actor, onlyReposts: nil),
       authorization: authorization)
       as ATProtoClient.XrpcClient.EmptyResponse
-  }
-
-  /// The `app.bsky.actor.mute` request body.
-  struct MuteActorBody: Encodable, Sendable {
-    var actor: String
-    /// Undeclared in the vendored lexicon at the time of writing; forwarded when
-    /// set, exactly as the RN app does with its conditional spread.
-    var onlyReposts: Bool?
   }
 
   /// The record key portion of an `at://` URI: `.../<collection>/<rkey>`.
@@ -499,4 +440,37 @@ public enum ProfileFetchers {
         return QueryPage(items: page.items, cursor: page.cursor)
       })
   }
+}
+
+/// A `subject` + `createdAt` record body, in JSON wire form.
+///
+/// Shared by the follow and block paths, which write the same two fields to
+/// different collections. Hand-written rather than taken from the generated
+/// ``App/Bsky/GraphFollow`` / ``App/Bsky/GraphBlock`` records because their
+/// encoders omit `$type`, which the PDS requires on a record body. The field set
+/// and order match both lexicons.
+struct SubjectRecordBody: Encodable, Sendable {
+  var type: String
+  var createdAt: FormatString<Date>
+  var subject: FormatString<DID>
+
+  init(nsId: String, createdAt: FormatString<Date>, subject: FormatString<DID>) {
+    self.type = nsId
+    self.createdAt = createdAt
+    self.subject = subject
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case type = "$type"
+    case createdAt
+    case subject
+  }
+}
+
+/// The `app.bsky.actor.mute` request body.
+struct MuteActorBody: Encodable, Sendable {
+  var actor: String
+  /// Undeclared in the vendored lexicon at the time of writing; forwarded when
+  /// set, exactly as the RN app does with its conditional spread.
+  var onlyReposts: Bool?
 }

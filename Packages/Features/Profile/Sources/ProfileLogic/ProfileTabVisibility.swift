@@ -38,8 +38,7 @@ public struct ProfileTabVisibility: Sendable, Equatable {
   public let rawListCount: Int
 
   /// Derives the visibility inputs from a loaded profile.
-  public init(profile: App.Bsky.ActorDefs_ProfileViewDetailed, viewerDid: String?, hasSession: Bool)
-  {
+  public init(profile: App.Bsky.ActorDefs_ProfileViewDetailed, viewerDid: String?, hasSession: Bool) {
     self.isMe = viewerDid != nil && profile.did.rawValue == viewerDid
     self.hasSession = hasSession
     self.hasLabeler = profile.associated?.labeler == true

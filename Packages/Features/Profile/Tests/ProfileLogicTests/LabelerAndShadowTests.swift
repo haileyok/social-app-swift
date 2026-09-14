@@ -1,7 +1,6 @@
 import Foundation
 import Lexicons
 import Moderation
-import Preferences
 import QueryStore
 import SwiftAtproto
 import Testing
@@ -38,29 +37,20 @@ import Testing
         like: FormatString<ATURI>(rawValue: $0)) })
   }
 
-  private func prefs(labelers: [String]) -> ModerationPreferences {
-    ModerationPreferences(
-      adultContentEnabled: true,
-      labels: [:],
-      labelers: labelers.map { Preferences.LabelerPreference(did: $0) },
-      mutedWords: [],
-      hiddenPosts: [])
-  }
-
   /// A missing service view yields no data, so the screen falls back to the
   /// standard header - which is what `enabled: !!profile.associated?.labeler`
   /// plus a loading state achieves in RN.
   @Test func noLabelerServiceYieldsNoData() {
     let data = LabelerProfileViewData(
-      labeler: nil, preferences: nil, viewerDid: Self.viewerDid, hasSession: true)
+      labeler: nil, subscribedLabelerDIDs: [], viewerDid: Self.viewerDid, hasSession: true)
     #expect(data == nil)
   }
 
   /// The like and count come from the service view.
   @Test func likeStateComesFromTheServiceView() throws {
     let data = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(like: "at://did:plc:me/app.bsky.feed.like/1", likeCount: 12),
-      preferences: nil, viewerDid: Self.viewerDid, hasSession: true))
+      labeler: makeLabeler(likeCount: 12, like: "at://did:plc:me/app.bsky.feed.like/1"),
+      subscribedLabelerDIDs: [], viewerDid: Self.viewerDid, hasSession: true))
     #expect(data.likeURI == "at://did:plc:me/app.bsky.feed.like/1")
     #expect(data.likeCount == 12)
   }
@@ -68,7 +58,7 @@ import Testing
   /// A null like count reads as zero, matching RN's `labeler.likeCount || 0`.
   @Test func nullLikeCountReadsAsZero() throws {
     let data = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(likeCount: nil), preferences: nil,
+      labeler: makeLabeler(likeCount: nil), subscribedLabelerDIDs: [],
       viewerDid: Self.viewerDid, hasSession: true))
     #expect(data.likeCount == 0)
     #expect(data.likeURI == nil)
@@ -77,32 +67,32 @@ import Testing
   /// The subscribed state comes from the preferences' labeler list.
   @Test func subscribedStateComesFromPreferences() throws {
     let subscribed = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(), preferences: prefs(labelers: [Self.labelerDid]),
+      labeler: makeLabeler(), subscribedLabelerDIDs: [Self.labelerDid],
       viewerDid: Self.viewerDid, hasSession: true))
     #expect(subscribed.isSubscribed)
 
     let notSubscribed = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(), preferences: prefs(labelers: []),
+      labeler: makeLabeler(), subscribedLabelerDIDs: [],
       viewerDid: Self.viewerDid, hasSession: true))
     #expect(!notSubscribed.isSubscribed)
 
-    let noPreferences = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(), preferences: nil, viewerDid: Self.viewerDid, hasSession: true))
-    #expect(!noPreferences.isSubscribed)
+    let noneGiven = try #require(LabelerProfileViewData(
+      labeler: makeLabeler(), subscribedLabelerDIDs: [], viewerDid: Self.viewerDid, hasSession: true))
+    #expect(!noneGiven.isSubscribed)
   }
 
   /// The app labeler is recognised by DID, and the subscribe button hides.
   @Test func appLabelerHidesTheSubscribeButton() throws {
     let app = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(did: BlueskyModerationLabeler.did),
-      preferences: prefs(labelers: [BlueskyModerationLabeler.did]),
+      labeler: makeLabeler(did: LabelerSubscription.appModerationLabelerDID),
+      subscribedLabelerDIDs: [LabelerSubscription.appModerationLabelerDID],
       viewerDid: Self.viewerDid, hasSession: true))
     #expect(app.isAppLabeler)
     #expect(!app.showsSubscribeButton)
     #expect(!app.showsLikeButton, "RN hides the like block for app labelers")
 
     let thirdParty = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(), preferences: nil, viewerDid: Self.viewerDid, hasSession: true))
+      labeler: makeLabeler(), subscribedLabelerDIDs: [], viewerDid: Self.viewerDid, hasSession: true))
     #expect(!thirdParty.isAppLabeler)
     #expect(thirdParty.showsSubscribeButton)
     #expect(thirdParty.showsLikeButton)
@@ -111,7 +101,7 @@ import Testing
   /// The viewer's own profile shows edit, not subscribe.
   @Test func ownProfileShowsEditNotSubscribe() throws {
     let data = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(did: Self.viewerDid), preferences: nil,
+      labeler: makeLabeler(did: Self.viewerDid), subscribedLabelerDIDs: [],
       viewerDid: Self.viewerDid, hasSession: true))
     #expect(data.isMe)
     #expect(data.showsEditProfileButton)
@@ -122,16 +112,16 @@ import Testing
   /// The message button needs a session, a non-self profile, and no block.
   @Test func messageButtonRules() throws {
     let normal = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(), preferences: nil, viewerDid: Self.viewerDid, hasSession: true))
+      labeler: makeLabeler(), subscribedLabelerDIDs: [], viewerDid: Self.viewerDid, hasSession: true))
     #expect(normal.showsMessageButton)
 
     let signedOut = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(), preferences: nil, viewerDid: nil, hasSession: false))
+      labeler: makeLabeler(), subscribedLabelerDIDs: [], viewerDid: nil, hasSession: false))
     #expect(!signedOut.showsMessageButton)
 
     let blocked = try #require(LabelerProfileViewData(
       labeler: makeLabeler(creatorBlocking: "at://did:plc:me/app.bsky.graph.block/1"),
-      preferences: nil, viewerDid: Self.viewerDid, hasSession: true))
+      subscribedLabelerDIDs: [], viewerDid: Self.viewerDid, hasSession: true))
     #expect(blocked.isBlocked)
     #expect(!blocked.showsMessageButton)
     #expect(blocked.showsSubscribeButton, "RN only hides the message button on a block")
@@ -140,7 +130,7 @@ import Testing
   /// The like button needs a session.
   @Test func likeButtonNeedsASession() throws {
     let data = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(), preferences: nil, viewerDid: nil, hasSession: false))
+      labeler: makeLabeler(), subscribedLabelerDIDs: [], viewerDid: nil, hasSession: false))
     #expect(data.showsLikeButton)
     #expect(!data.canLike)
   }
@@ -149,11 +139,11 @@ import Testing
   @Test func creatorIdentifierPrefersTheHandle() throws {
     let handled = try #require(LabelerProfileViewData(
       labeler: makeLabeler(creatorHandle: "labeler.example.com"),
-      preferences: nil, viewerDid: Self.viewerDid, hasSession: true))
+      subscribedLabelerDIDs: [], viewerDid: Self.viewerDid, hasSession: true))
     #expect(handled.creatorIdentifier == "labeler.example.com")
 
     let handleless = try #require(LabelerProfileViewData(
-      labeler: makeLabeler(creatorHandle: ""), preferences: nil,
+      labeler: makeLabeler(creatorHandle: ""), subscribedLabelerDIDs: [],
       viewerDid: Self.viewerDid, hasSession: true))
     #expect(handleless.creatorIdentifier == Self.labelerDid)
   }
@@ -204,7 +194,7 @@ import Testing
   /// polls the user's configured labelers, and the app labeler is implicit.
   @Test func theAppLabelerIsNeverInvalid() {
     let invalid = LabelerSubscriptionPlanner.invalidLabelers(
-      subscribed: [BlueskyModerationLabeler.did], profiles: [])
+      subscribed: [LabelerSubscription.appModerationLabelerDID], profiles: [])
     #expect(invalid.isEmpty)
   }
 
@@ -303,11 +293,13 @@ import Testing
   /// A subscriber for another DID is not called.
   @Test func subscribersAreScopedToTheirDid() async throws {
     let store = ProfileShadowStore()
-    final class Box: @unchecked Sendable { var count = 0 }
+    final class Box: @unchecked Sendable { var calls: [Bool] = [] }
     let box = Box()
-    let subscription = await store.subscribe(did: "did:plc:other") { _ in box.count += 1 }
+    let subscription = await store.subscribe(did: "did:plc:other") { shadow in
+      box.calls.append(shadow.muted?.value ?? false)
+    }
     await store.update(did: Self.did, with: ProfileShadow(muted: .set(true)))
-    #expect(box.count == 0)
+    #expect(box.calls.isEmpty, "a subscriber for another DID is not called")
     await subscription.cancel()
   }
 
@@ -431,45 +423,75 @@ import Testing
   }
 
   /// A queued toggle that is superseded throws an abort to its caller.
+  ///
+  /// The replacement is queued while the first mutation is deliberately slow, so
+  /// the ordering is observed rather than raced: `toggle` records the pending
+  /// task synchronously, and the slow first mutation keeps the drain open long
+  /// enough for the third call to replace the second.
   @Test func aSupersededToggleThrows() async throws {
+    let started = AsyncStream<Void>.makeStream()
     let queue = ToggleMutationQueue<Bool>(
       currentState: { false },
       runMutation: { _, next in
-        try await Task.sleep(for: .milliseconds(30))
+        started.continuation.yield()
+        try await Task.sleep(for: .milliseconds(80))
         return next
       },
       onSuccess: { _ in })
 
     let first = Task { try await queue.toggle(true) }
-    _ = try await waitFor { await queue.isBusy }
+    // Wait until the first mutation is genuinely running before queueing more.
+    var iterator = started.stream.makeAsyncIterator()
+    _ = await iterator.next()
+
     let superseded = Task { try await queue.toggle(false) }
-    _ = try await waitFor { await queue.isBusy }
     let winner = Task { try await queue.toggle(true) }
 
     _ = try await first.value
-    #expect(try await winner.value == true)
+    let winnerState = try await winner.value
+    #expect(winnerState == true, "the later toggle is the one that runs")
 
     var threw = false
     do { _ = try await superseded.value } catch is ToggleAbortError { threw = true }
     #expect(threw, "the replaced toggle is aborted")
   }
 
-  /// The finaliser runs once per drain, with the last confirmed state.
+  /// The finaliser runs once per drain, with that drain's confirmed state.
+  ///
+  /// A drain is created per toggle that arrives while the queue is idle, so two
+  /// awaits produce two drains and two finalises - which is what RN's
+  /// `finally { onSuccess(confirmedState) }` does, since the early-return guard
+  /// only suppresses a *concurrent* second drain.
   @Test func onSuccessRunsOncePerDrain() async throws {
     final class Box: @unchecked Sendable { var calls: [Bool] = [] }
     let box = Box()
     let queue = ToggleMutationQueue<Bool>(
       currentState: { false },
-      runMutation: { _, next in next },
+      runMutation: { _, next in
+        // A real mutation takes time; without it the queue would go idle between
+        // the two toggles and they would drain separately, which is correct but
+        // not what this test is pinning.
+        try await Task.sleep(for: .milliseconds(20))
+        return next
+      },
       onSuccess: { state in box.calls.append(state) })
 
-    _ = try await queue.toggle(true)
-    _ = try await queue.toggle(false)
-    #expect(box.calls == [true], "one drain, one finalise, with the first state")
+    // Two toggles overlap, so they join one drain and it finalises once.
+    let first = Task { try await queue.toggle(true) }
+    _ = try await waitFor { await queue.isBusy }
+    let second = Task { try await queue.toggle(false) }
+    _ = try await first.value
+    _ = try await second.value
+    // The finalise runs from the drain's `defer`, which is reached after the
+    // awaiting task resumes, so poll rather than assert immediately.
+    _ = try await waitFor { box.calls == [false] }
+    #expect(box.calls == [false], "one drain, one finalise, with its last state")
 
-    // A second drain finalises again with its own state.
+    // A later, non-overlapping toggle drains again and finalises with its own
+    // state (the queue is idle by now, so this is a fresh drain).
     _ = try await queue.toggle(true)
-    #expect(box.calls == [true, false])
+    _ = try await waitFor { box.calls.count == 2 }
+    #expect(box.calls == [false, true], "two drains, two finalises")
   }
 
   /// A failing mutation does not stop the queue.

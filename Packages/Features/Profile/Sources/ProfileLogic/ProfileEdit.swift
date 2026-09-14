@@ -267,8 +267,7 @@ public struct ProfileManager: Sendable {
   /// - Note: this is a workaround for a bug in `ATProtoClient`; once its blob
   ///   link decoding is fixed, this can call the typed helper again.
   func uploadBlob(_ upload: ProfileImageUpload, authorization: String?)
-    async throws -> (blob: LexBlob, link: String)
-  {
+    async throws -> (blob: LexBlob, link: String) {
     let boundary = "Boundary-\(UUID().uuidString)"
     var body = Data()
     body.append(contentsOf: Array("--\(boundary)\r\n".utf8))
@@ -335,8 +334,7 @@ public struct ProfileManager: Sendable {
   /// Reads the current `app.bsky.actor.profile` record, or an empty record when
   /// the account has none yet.
   func currentRecord(repo: String, authorization: String?) async throws
-    -> App.Bsky.ActorProfile
-  {
+    -> App.Bsky.ActorProfile {
     do {
       let output: Com.Atproto.RepoGetRecord_Output = try await client.get(
         "com.atproto.repo.getRecord",
@@ -347,8 +345,7 @@ public struct ProfileManager: Sendable {
         ],
         authorization: authorization)
       if case .record(let record) = output.value,
-        let profile = record as? App.Bsky.ActorProfile
-      {
+        let profile = record as? App.Bsky.ActorProfile {
         return profile
       }
       return App.Bsky.ActorProfile()
@@ -436,8 +433,8 @@ public struct ProfileManager: Sendable {
 /// omitted when absent so the record stays minimal.
 struct ProfileRecordBody: Encodable, Sendable {
   var type: String
-  var avatar: BlobBody?
-  var banner: BlobBody?
+  var avatar: ProfileBlobBody?
+  var banner: ProfileBlobBody?
   var createdAt: String?
   var description: String?
   var displayName: String?
@@ -446,30 +443,6 @@ struct ProfileRecordBody: Encodable, Sendable {
   var pinnedPost: Com.Atproto.RepoStrongRef?
   var pronouns: String?
   var website: String?
-
-  /// A blob reference in the JSON wire form.
-  struct BlobBody: Encodable, Sendable {
-    var type = "blob"
-    var ref: LinkBody
-    var mimeType: String
-    var size: Int
-
-    enum CodingKeys: String, CodingKey {
-      case type = "$type"
-      case ref
-      case mimeType
-      case size
-    }
-  }
-
-  /// A CID link in the JSON wire form.
-  struct LinkBody: Encodable, Sendable {
-    var link: String
-
-    enum CodingKeys: String, CodingKey {
-      case link = "$link"
-    }
-  }
 
   enum CodingKeys: String, CodingKey {
     case type = "$type"
@@ -493,11 +466,11 @@ struct ProfileRecordBody: Encodable, Sendable {
   init(record: App.Bsky.ActorProfile, avatarLink: String?, bannerLink: String?) {
     self.type = App.Bsky.ActorProfile.nsId
     self.avatar = avatarLink.map {
-      BlobBody(ref: LinkBody(link: $0), mimeType: record.avatar?.mimeType ?? "image/jpeg",
+      ProfileBlobBody(ref: ProfileLinkBody(link: $0), mimeType: record.avatar?.mimeType ?? "image/jpeg",
         size: Int(record.avatar?.size ?? 0))
     }
     self.banner = bannerLink.map {
-      BlobBody(ref: LinkBody(link: $0), mimeType: record.banner?.mimeType ?? "image/jpeg",
+      ProfileBlobBody(ref: ProfileLinkBody(link: $0), mimeType: record.banner?.mimeType ?? "image/jpeg",
         size: Int(record.banner?.size ?? 0))
     }
     self.createdAt = record.createdAt?.rawValue
@@ -520,5 +493,34 @@ extension ProfileManager {
     await store.invalidate(ProfileQueryKeys.profile(did: did, scope: scope))
     await store.invalidate(
       ProfileQueryKeys.profiles(handles: [did], scope: scope))
+  }
+}
+
+/// A blob reference in the JSON wire form.
+///
+/// File-scope rather than nested, and hand-built for the reason given on
+/// ``ProfileRecordBody``: the generated ``LexBlob`` encodes its link as a CBOR
+/// byte string, which is not the `{"$link": "..."}` shape a JSON record body
+/// needs.
+struct ProfileBlobBody: Encodable, Sendable {
+  var type = "blob"
+  var ref: ProfileLinkBody
+  var mimeType: String
+  var size: Int
+
+  enum CodingKeys: String, CodingKey {
+    case type = "$type"
+    case ref
+    case mimeType
+    case size
+  }
+}
+
+/// A CID link in the JSON wire form.
+struct ProfileLinkBody: Encodable, Sendable {
+  var link: String
+
+  enum CodingKeys: String, CodingKey {
+    case link = "$link"
   }
 }

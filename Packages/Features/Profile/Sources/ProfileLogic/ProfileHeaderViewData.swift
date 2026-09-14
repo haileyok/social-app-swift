@@ -280,8 +280,7 @@ extension ProfileHeaderViewData {
   /// carries; a basic view therefore yields the signed-out shape, which is what
   /// RN gets too when it renders a list row rather than a profile screen.
   private static func placeholderDetailed(_ profile: ProfileView)
-    -> App.Bsky.ActorDefs_ProfileViewDetailed
-  {
+    -> App.Bsky.ActorDefs_ProfileViewDetailed {
     App.Bsky.ActorDefs_ProfileViewDetailed(
       did: FormatString<DID>(rawValue: profile.did),
       handle: FormatString<Handle>(rawValue: profile.handle),
@@ -310,8 +309,7 @@ public enum KnownFollowersLogic {
   /// `ProfileHeaderStandard.tsx`; that gate is exposed separately as
   /// ``shouldShow(knownFollowers:isMe:isBlocked:)``.
   public static func shouldShow(_ knownFollowers: App.Bsky.ActorDefs_KnownFollowers?)
-    -> Bool
-  {
+    -> Bool {
     guard let knownFollowers else { return false }
     return !knownFollowers.followers.isEmpty
   }
@@ -328,8 +326,7 @@ public enum KnownFollowersLogic {
 
   /// The follower previews to render, in order. The lexicon caps these at five.
   public static func previews(_ knownFollowers: App.Bsky.ActorDefs_KnownFollowers?)
-    -> [App.Bsky.ActorDefs_ProfileViewBasic]
-  {
+    -> [App.Bsky.ActorDefs_ProfileViewBasic] {
     knownFollowers?.followers ?? []
   }
 

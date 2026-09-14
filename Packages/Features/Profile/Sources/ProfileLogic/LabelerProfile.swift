@@ -69,20 +69,22 @@ extension LabelerProfileViewData {
   /// - Parameters:
   ///   - labeler: the service view, or `nil` while it is loading - in which case
   ///     the caller should render the standard header instead.
-  ///   - preferences: the viewer's preferences, for the subscribed state.
+  ///   - subscribedLabelerDIDs: the DIDs the viewer is subscribed to, i.e.
+  ///     `preferences.moderationPrefs.labelers.map(\.did)`. Passed as a plain
+  ///     list rather than the preferences value so this feature does not depend
+  ///     on how preferences are stored.
   ///   - viewerDid: the signed-in account's DID, or `nil` when signed out.
   ///   - hasSession: whether a session exists.
   public init?(
     labeler: App.Bsky.LabelerDefs_LabelerViewDetailed?,
-    preferences: ModerationPreferences?,
+    subscribedLabelerDIDs: [String] = [],
     viewerDid: String?,
     hasSession: Bool
   ) {
     guard let labeler else { return nil }
     let labelerDid = labeler.creator.did.rawValue
     self.labeler = labeler
-    self.isSubscribed = LabelerSubscription.isSubscribed(
-      did: labelerDid, preferences: preferences)
+    self.isSubscribed = subscribedLabelerDIDs.contains(labelerDid)
     self.likeURI = labeler.viewer?.like?.rawValue
     self.likeCount = labeler.likeCount ?? 0
     self.isAppLabeler = LabelerSubscription.isAppLabeler(did: labelerDid)
@@ -97,6 +99,13 @@ extension LabelerProfileViewData {
 /// Port of `isAppLabeler` / `isSubscribed` in `src/lib/moderation.ts` and the
 /// validation inside `useLabelerSubscriptionMutation`.
 public enum LabelerSubscription {
+  /// The app's own moderation labeler DID.
+  ///
+  /// Kept in step with `Preferences.BlueskyModerationLabeler.did`; written out
+  /// here because the `Preferences` module and the `Preferences` type share a
+  /// name, so a qualified reference from this file would be ambiguous.
+  public static let appModerationLabelerDID = "did:plc:ar7c4by46qjdydhdevvrndac"
+
   /// The DIDs of the app's own labelers.
   ///
   /// The RN app reads `Client.appLabelers`, a static on the lexicon client. The
@@ -108,18 +117,9 @@ public enum LabelerSubscription {
   /// True when `did` is one of the app's labelers.
   public static func isAppLabeler(did: String) -> Bool { appLabelerDIDs.contains(did) }
 
-  /// True when the viewer's preferences list this labeler.
-  public static func isSubscribed(did: String, preferences: ModerationPreferences?) -> Bool {
-    guard let preferences else { return false }
-    return preferences.labelers.contains { $0.did == did }
-  }
-
-  /// The labeler DIDs the viewer is subscribed to, app labeler included.
-  ///
-  /// The preferences engine always registers the app labeler first, so this is
-  /// the same list RN reads from `preferences.moderationPrefs.labelers`.
-  public static func subscribedDIDs(preferences: ModerationPreferences?) -> [String] {
-    preferences?.labelers.map(\.did) ?? []
+  /// True when `dids` lists this labeler.
+  public static func isSubscribed(did: String, subscribedLabelerDIDs: [String]) -> Bool {
+    subscribedLabelerDIDs.contains(did)
   }
 }
 

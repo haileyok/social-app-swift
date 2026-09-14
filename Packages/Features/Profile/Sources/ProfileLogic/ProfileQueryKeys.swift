@@ -117,15 +117,13 @@ public enum ProfileQueryKeys {
 
   /// Key of the follows list for `actor`.
   public static func follows(actor: String, sort: ActorListSort? = nil, scope: String? = nil)
-    -> QueryKey
-  {
+    -> QueryKey {
     QueryKey(follows, FollowListArgs(actor: actor, sort: sort), options: QueryOptions(scope: scope))
   }
 
   /// Key of the followers list for `actor`.
   public static func followers(actor: String, sort: ActorListSort? = nil, scope: String? = nil)
-    -> QueryKey
-  {
+    -> QueryKey {
     QueryKey(followers, FollowListArgs(actor: actor, sort: sort), options: QueryOptions(scope: scope))
   }
 

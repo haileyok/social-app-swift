@@ -33,7 +33,16 @@ import Testing
     let expectFollowersLabel: String
   }
 
+  /// The table, assembled from its slices so each builder stays short.
   static func table() -> [Row] {
+    [
+      tablePart1(), tablePart2(), tablePart3(), tablePart4(),
+      tablePart5(), tablePart6(), tablePart7(), tablePart8(),
+    ].flatMap { $0 }
+  }
+
+  /// Slice tablePart1 of the header-derivation table.
+  static func tablePart1() -> [Row] {
     [
       Row(
         name: "own profile, no shadow",
@@ -51,7 +60,6 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
-
       Row(
         name: "following",
         profile: makeProfile(viewer: makeViewerState(following: "at://did:plc:me/app.bsky.graph.follow/1")),
@@ -68,7 +76,12 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
+    ]
+  }
 
+  /// Slice tablePart2 of the header-derivation table.
+  static func tablePart2() -> [Row] {
+    [
       Row(
         name: "mutual follow",
         profile: makeProfile(viewer: makeViewerState(
@@ -87,7 +100,6 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
-
       Row(
         name: "muted",
         profile: makeProfile(viewer: makeViewerState(muted: true)),
@@ -104,7 +116,12 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
+    ]
+  }
 
+  /// Slice tablePart3 of the header-derivation table.
+  static func tablePart3() -> [Row] {
+    [
       Row(
         name: "muted reposts only",
         profile: makeProfile(viewer: makeViewerState(mutedOnlyReposts: true)),
@@ -121,7 +138,6 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
-
       Row(
         name: "muted by list",
         profile: makeProfile(viewer: makeViewerState(mutedByList: true)),
@@ -138,7 +154,12 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
+    ]
+  }
 
+  /// Slice tablePart4 of the header-derivation table.
+  static func tablePart4() -> [Row] {
+    [
       Row(
         name: "blocking",
         profile: makeProfile(viewer: makeViewerState(blocking: "at://did:plc:me/app.bsky.graph.block/1")),
@@ -155,7 +176,6 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
-
       Row(
         name: "blocked by",
         profile: makeProfile(viewer: makeViewerState(blockedBy: true)),
@@ -172,7 +192,12 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
+    ]
+  }
 
+  /// Slice tablePart5 of the header-derivation table.
+  static func tablePart5() -> [Row] {
+    [
       Row(
         name: "labeler profile",
         profile: makeProfile(labeler: true),
@@ -189,7 +214,6 @@ import Testing
         expectVariant: .labeler,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
-
       Row(
         name: "signed out",
         profile: makeProfile(viewer: nil),
@@ -206,7 +230,12 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
+    ]
+  }
 
+  /// Slice tablePart6 of the header-derivation table.
+  static func tablePart6() -> [Row] {
+    [
       Row(
         name: "empty description",
         profile: makeProfile(description: ""),
@@ -223,7 +252,6 @@ import Testing
         expectVariant: .standard,
         expectDescription: nil,
         expectFollowersLabel: "100"),
-
       Row(
         name: "large follower count is formatted",
         profile: makeProfile(followersCount: 12345),
@@ -240,7 +268,12 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "12.3K"),
+    ]
+  }
 
+  /// Slice tablePart7 of the header-derivation table.
+  static func tablePart7() -> [Row] {
+    [
       Row(
         name: "shadow overrides an unfollowed server state",
         profile: makeProfile(viewer: nil),
@@ -257,7 +290,6 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
-
       Row(
         name: "shadow clears a following server state",
         profile: makeProfile(viewer: makeViewerState(following: "at://did:plc:me/app.bsky.graph.follow/1")),
@@ -274,7 +306,12 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
+    ]
+  }
 
+  /// Slice tablePart8 of the header-derivation table.
+  static func tablePart8() -> [Row] {
+    [
       Row(
         name: "pending follow reads as pending",
         profile: makeProfile(viewer: nil),
@@ -291,7 +328,6 @@ import Testing
         expectVariant: .standard,
         expectDescription: "Hello",
         expectFollowersLabel: "100"),
-
       Row(
         name: "shadow mute over a clear server state",
         profile: makeProfile(viewer: nil),

@@ -244,8 +244,7 @@ func profileJSON(
 
 /// A label definition fixture, so a labeled profile produces a real decision.
 func makeLabel(_ value: String, uri: String = "at://did:plc:alice")
-  -> Com.Atproto.LabelDefs_Label
-{
+  -> Com.Atproto.LabelDefs_Label {
   Com.Atproto.LabelDefs_Label(
     cts: FormatString<Date>(rawValue: "2026-01-01T00:00:00.000Z"),
     src: FormatString<DID>(rawValue: "did:plc:labeler"),
@@ -255,8 +254,7 @@ func makeLabel(_ value: String, uri: String = "at://did:plc:alice")
 
 /// Moderation options with an empty preference set.
 func makeModerationOpts(userDid: String = "did:plc:me", labelDefs: [String: [LabelValueDefinition]] = [:])
-  -> ModerationOpts
-{
+  -> ModerationOpts {
   ModerationOpts(
     userDid: userDid,
     prefs: ModerationPrefs(),

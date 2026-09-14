@@ -52,9 +52,12 @@ import Testing
     #expect(record["$type"] as? String == "app.bsky.graph.follow")
     #expect(record["createdAt"] != nil)
 
-    // The shadow is finalised with the confirmed URI.
-    let shadow = try #require(await shadows.shadow(for: Self.alice))
-    #expect(shadow.followingUri?.value == "at://did:plc:me/app.bsky.graph.follow/1")
+    // The shadow is finalised with the confirmed URI, in the queue's onSuccess
+    // task, so poll for it.
+    let finalised = try await waitForShadow(shadows, did: Self.alice) { shadow in
+      shadow.followingUri?.value == "at://did:plc:me/app.bsky.graph.follow/1"
+    }
+    #expect(finalised)
   }
 
   /// The optimistic write happens before the request completes, showing the
@@ -139,9 +142,10 @@ import Testing
     #expect(json["collection"] as? String == "app.bsky.graph.follow")
     #expect(json["rkey"] as? String == "1", "the rkey is split out of the follow URI")
 
-    let shadow = try #require(await shadows.shadow(for: Self.alice))
-    #expect(shadow.followingUri?.value == nil)
-    #expect(shadow.followingUri?.isSet == true, "the shadow must clear, not unset, the field")
+    let finalised = try await waitForShadow(shadows, did: Self.alice) { shadow in
+      shadow.followingUri == .cleared
+    }
+    #expect(finalised, "the shadow clears the field")
   }
 
   /// Unfollowing when no follow was ever confirmed sends no request.
@@ -163,6 +167,9 @@ import Testing
       ScriptedTransport.json(["uri": followUri]),
       ScriptedTransport.json([:]),
     ])
+    // A slow first response keeps the drain open long enough for the unfollow to
+    // join it rather than start a fresh drain.
+    transport.responseDelay = .milliseconds(40)
     let shadows = ProfileShadowStore()
     let (queue, _, _) = makeQueue(transport: transport, shadows: shadows)
 
@@ -411,9 +418,7 @@ import Testing
 }
 
 /// A record body for fixtures that need one but whose contents do not matter.
-struct EmptyRecord: Codable, Hashable, Sendable {
-  init() {}
-}
+struct EmptyRecord: Codable, Hashable, Sendable {}
 
 /// Polls `condition` until it holds, or a short budget expires.
 ///

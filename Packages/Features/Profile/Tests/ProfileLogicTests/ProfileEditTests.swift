@@ -205,7 +205,7 @@ import Testing
     #expect(record["description"] as? String == "Bio")
     let avatar = try #require(record["avatar"] as? [String: Any])
     #expect(avatar["mimeType"] as? String == "image/jpeg")
-    #expect((avatar["ref"] as? [String: Any])?["$link"] as? String != nil)
+    #expect((avatar["ref"] as? [String: Any])?["$link"] is String)
   }
 
   /// The upload is sent as multipart with the image bytes and its MIME type.
@@ -237,7 +237,8 @@ import Testing
     #expect(upload.headers["Content-Type"]?.hasPrefix("multipart/form-data") == true)
     let body = try #require(upload.body)
     #expect(body.range(of: bytes) != nil, "the raw bytes are in the body")
-    #expect(String(decoding: body, as: UTF8.self).contains("image/jpeg"))
+    let bodyText = String(bytes: body, encoding: .utf8) ?? ""
+    #expect(bodyText.contains("image/jpeg"))
   }
 
   /// When the appview never reflects the change, the last profile seen is
