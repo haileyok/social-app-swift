@@ -3,12 +3,18 @@ import PackageDescription
 
 let package = Package(
   name: "ATSyntax",
-  defaultLocalization: "en",
   products: [
     .library(name: "ATSyntax", targets: ["ATSyntax"])
   ],
   targets: [
-    .target(name: "ATSyntax", dependencies: []),
-    .testTarget(name: "ATSyntaxTests", dependencies: ["ATSyntax"]),
+    .target(name: "ATSyntax"),
+    .testTarget(
+      name: "ATSyntaxTests",
+      dependencies: ["ATSyntax"],
+      resources: [
+        // atproto repo interop fixtures (interop-test-files/syntax/*.txt)
+        .copy("Fixtures")
+      ]
+    ),
   ]
 )
