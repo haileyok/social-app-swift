@@ -33,6 +33,7 @@ public enum UnknownATPValue: UnknownATPValueProtocol {
     "app.bsky.notification.declaration": App.Bsky.NotificationDeclaration.self,
     "chat.bsky.actor.declaration": Chat.Bsky.ActorDeclaration.self,
     "com.atproto.lexicon.schema": Com.Atproto.LexiconSchema.self,
+    "com.germnetwork.declaration": Com.Germnetwork.Declaration.self,
   ]
 
   public var type: Swift.String? {
