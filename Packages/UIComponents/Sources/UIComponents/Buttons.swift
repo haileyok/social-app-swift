@@ -42,52 +42,63 @@ public struct AlfButtonStyle: ButtonStyle {
   /// The container and label styling, kept in a modifier so it can read the
   /// environment (`isEnabled`, theme) that a `ButtonStyle` may also read but
   /// which is clearer in one place.
+  ///
+  /// The body is deliberately broken into small, explicitly-typed pieces: an
+  /// all-in-one expression makes the type-checker time out on this view.
   fileprivate struct AlfButtonLabel: ViewModifier {
     let modifier: AlfButtonStyle
     let isPressed: Bool
 
     @Environment(\.alfTheme) private var theme
     @Environment(\.isEnabled) private var isEnabled
-
-    func body(content: Content) -> some View {
-      let resolved = modifier.resolved
-      let metrics = resolved.metrics
-      let background = resolved.background(disabled: !isEnabled, interacting: isPressed)
-      let foreground = resolved.foreground(disabled: !isEnabled)
-      content
-        .font(
-          metrics.textScale.typeScale.font(fontScale: fontScale, family: family, weight: metrics.fontWeight.rawValue)
-        )
-        .foregroundStyle(foreground.resolve(theme))
-        .multilineTextAlignment(.center)
-        .padding(.vertical, metrics.paddingVertical)
-        .padding(.horizontal, metrics.paddingHorizontal)
-        .frame(
-          minWidth: metrics.side.map(CGFloat.init),
-          minHeight: metrics.side.map(CGFloat.init)
-        )
-        .background(backgroundColor(background))
-        .contentShape(shapeContent)
-        .clipShape(shapeClip)
-        .opacity(isEnabled ? 1 : 0.999)
-    }
-
     @Environment(\.alfFontScale) private var fontScale
     @Environment(\.alfFontFamily) private var family
 
-    private func backgroundColor(_ token: ColorToken?) -> Color {
-      token?.resolve(theme) ?? .clear
+    func body(content: Content) -> some View {
+      content
+        .font(labelFont)
+        .foregroundStyle(labelColor)
+        .multilineTextAlignment(.center)
+        .padding(.vertical, metrics.paddingVertical)
+        .padding(.horizontal, metrics.paddingHorizontal)
+        .frame(minWidth: fixedSide, minHeight: fixedSide)
+        .background(containerColor)
+        .contentShape(.rect)
+        .clipShape(containerShape)
+        .opacity(isEnabled ? 1 : 0.999)
     }
 
-    private var shapeClip: AnyShape {
-      let radius = modifier.resolved.metrics.cornerRadius
-      if let radius {
-        return AnyShape(.rect(cornerRadius: radius, style: .continuous))
+    private var resolved: ResolvedButton { modifier.resolved }
+    private var metrics: ButtonMetrics { resolved.metrics }
+
+    /// The fixed side for the round/square shapes, or nil for the flexible ones.
+    private var fixedSide: CGFloat? {
+      guard let side = metrics.side else { return nil }
+      return CGFloat(side)
+    }
+
+    private var labelFont: Font {
+      let scale: TypeScale = metrics.textScale.typeScale
+      return scale.font(
+        fontScale: fontScale, family: family, weight: metrics.fontWeight.rawValue)
+    }
+
+    private var labelColor: Color {
+      let token: ColorToken = resolved.foreground(disabled: !isEnabled)
+      return token.resolve(theme)
+    }
+
+    private var containerColor: Color {
+      let token: ColorToken? = resolved.background(disabled: !isEnabled, interacting: isPressed)
+      return token?.resolve(theme) ?? .clear
+    }
+
+    private var containerShape: AnyShape {
+      if let radius = metrics.cornerRadius {
+        return AnyShape(.rect(cornerRadius: CGFloat(radius), style: .continuous))
       }
       return AnyShape(.capsule)
     }
-
-    private var shapeContent: AnyShape { shapeClip }
   }
 }
 
