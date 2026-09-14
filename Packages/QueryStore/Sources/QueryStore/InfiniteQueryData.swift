@@ -63,11 +63,13 @@ public struct InfiniteQueryData<Item: Sendable>: Sendable {
     if pages.count > count { pages = Array(pages.prefix(count)) }
   }
 
-  /// True when `cursor` already produced an earlier page, which means a request
-  /// for it would loop.
+  /// True when `cursor` already produced a page, which means a request
+  /// for it would loop. Includes the LAST page: a server returning the same
+  /// cursor it just consumed is the classic terminal-loop case and must be
+  /// refused too.
   public func repeatsCursor(_ cursor: String?) -> Bool {
     guard let cursor else { return false }
-    return pages.dropLast().contains { $0.requestCursor == cursor }
+    return pages.contains { $0.requestCursor == cursor }
   }
 }
 
