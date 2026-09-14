@@ -112,7 +112,7 @@ public struct ToastBanner: View {
     .padding(.md)
     .background(theme.atomColors.bgContrast900)
     .clipShape(.rect(cornerRadius: Radius.lg, style: .continuous))
-    .alfShadow(.medium)
+    .alfShadow(.lg)
     .contentShape(.rect)
     .onTapGesture(perform: onDismiss)
     .accessibilityElement(children: .combine)
