@@ -36,6 +36,9 @@ public struct ComponentGallery: View {
     }
     .background(galleryBackground)
     .toastPresenter(toastPresenter)
+    // `.system` re-resolves against `\.colorScheme`, so the gallery follows the
+    // OS appearance unless the caller pinned a theme name.
+    .theme(previewTheme)
   }
 
   @Environment(\.alfTheme) private var theme
