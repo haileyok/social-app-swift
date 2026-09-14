@@ -42,12 +42,27 @@ jobs:
 
       - name: Build AppShell for iOS Simulator
         run: |
-          set -o pipefail
           cd App
-          xcodebuild -scheme AppShell \
+          if xcodebuild -scheme AppShell \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath ~/dd-appshell \
-            CODE_SIGNING_ALLOWED=NO build 2>&1 | tail -4
+            CODE_SIGNING_ALLOWED=NO build > /tmp/ios-build.log 2>&1; then
+            tail -3 /tmp/ios-build.log
+          else
+            echo "::error::iOS build failed - compile errors:"
+            grep -E 'error:|fatal error:' /tmp/ios-build.log | sort -u | head -60
+            echo "--- last 40 lines of build log:"
+            tail -40 /tmp/ios-build.log
+            exit 1
+          fi
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: /tmp/ios-build.log
+          if-no-files-found: ignore
 
       - name: Simulator inventory
         run: |
