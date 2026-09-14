@@ -10,7 +10,7 @@
 		1A2B3C4D5E6F708090A0B012 /* SocialAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708090A0B011 /* SocialAppApp.swift */; };
 		1A2B3C4D5E6F708090A0B018 /* AppShellSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708090A0B017 /* AppShellSmokeTests.swift */; };
 		1A2B3C4D5E6F708090A0B01A /* TabSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708090A0B019 /* TabSmokeUITests.swift */; };
-		1A2B3C4D5E6F708090A0B01C /* LoginSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708090A0B01B /* LoginSmokeUITests.swift */; };
+		1A2B3C4D5E6F708090A0B034 /* LoginSmokeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708090A0B035 /* LoginSmokeUITests.swift */; };
 		1A2B3C4D5E6F708090A0B014 /* AppShell in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708090A0B02C /* AppShell */; };
 		1A2B3C4D5E6F708090A0B015 /* AppShell in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708090A0B02D /* AppShell */; };
 		1A2B3C4D5E6F708090A0B016 /* AppShell in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708090A0B02E /* AppShell */; };
@@ -24,7 +24,7 @@
 		1A2B3C4D5E6F708090A0B013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708090A0B017 /* AppShellSmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShellSmokeTests.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708090A0B019 /* TabSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabSmokeUITests.swift; sourceTree = "<group>"; };
-		1A2B3C4D5E6F708090A0B01B /* LoginSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginSmokeUITests.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708090A0B035 /* LoginSmokeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginSmokeUITests.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708090A0B01F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -97,7 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				1A2B3C4D5E6F708090A0B019 /* TabSmokeUITests.swift */,
-				1A2B3C4D5E6F708090A0B01B /* LoginSmokeUITests.swift */,
+				1A2B3C4D5E6F708090A0B035 /* LoginSmokeUITests.swift */,
 				1A2B3C4D5E6F708090A0B01F /* Info.plist */,
 			);
 			path = UITests;
@@ -244,7 +244,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A2B3C4D5E6F708090A0B01A /* TabSmokeUITests.swift in Sources */,
-				1A2B3C4D5E6F708090A0B01C /* LoginSmokeUITests.swift in Sources */,
+				1A2B3C4D5E6F708090A0B034 /* LoginSmokeUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

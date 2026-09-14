@@ -29,7 +29,6 @@ public struct LoginScreen: View {
   @FocusState private var focusedField: Field?
 
   @Environment(\.alfTheme) private var theme
-  @Environment(\.dismiss) private var dismiss
 
   /// The screen's own focus domain.
   enum Field: Hashable {
