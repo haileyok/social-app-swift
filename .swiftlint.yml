@@ -2,6 +2,7 @@ disabled_rules:
   - trailing_whitespace        # generated code + editor handling
   - line_length                # generated lexicon files have long lines; source-wide enforcement later
   - identifier_name            # atproto conventions use short names (uri, cid, did)
+  - trailing_comma             # SPM manifests and multi-line literals conventionally use them
 opt_in_rules:
   - empty_count
   - closure_spacing
