@@ -12,7 +12,7 @@ let package = Package(
   dependencies: [
     // UI packages (macOS-CI-built). Added as they land:
     .package(path: "../Packages/DesignSystem"),
-    // .package(path: "../Packages/UIComponents"),
+    .package(path: "../Packages/UIComponents"),
   ],
   targets: [
     .target(
@@ -20,6 +20,7 @@ let package = Package(
       dependencies: [
         .product(name: "DesignSystem", package: "DesignSystem"),
         .product(name: "DesignSystemCore", package: "DesignSystem"),
+        .product(name: "UIComponents", package: "UIComponents"),
       ],
       path: "Sources/AppShell"
     )
