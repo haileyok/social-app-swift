@@ -9,6 +9,12 @@ concurrency:
   group: linux-${{ github.ref }}
   cancel-in-progress: true
 
+# Container jobs default to `sh` (dash) on the swift image; dash lacks
+# `set -o pipefail`, which the build/test steps rely on.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build-test:
     name: Build & test Linux-verifiable packages
