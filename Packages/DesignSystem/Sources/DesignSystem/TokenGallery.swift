@@ -62,7 +62,7 @@ public struct TokenGallery: View {
   }
 
   private var paletteSection: some View {
-    Section("Palette") {
+    GallerySection("Palette") {
       ForEach(PaletteSwatch.groups(palette: theme.colors)) { group in
         VStack(alignment: .leading, spacing: Spacing.xxs.value) {
           AlfText(group.name, scale: .xs, color: theme.atomColors.textContrastMedium)
@@ -81,7 +81,7 @@ public struct TokenGallery: View {
   }
 
   private var atomSection: some View {
-    Section("Semantic atoms") {
+    GallerySection("Semantic atoms") {
       let atoms = theme.atomColors
       let pairs: [(String, Color)] = [
         ("text", atoms.text), ("textLink", atoms.textLink),
@@ -92,13 +92,13 @@ public struct TokenGallery: View {
         ("borderContrastMedium", atoms.borderContrastMedium),
       ]
       LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))], spacing: Spacing.sm.value) {
-        ForEach(pairs, id: \.0) { name, color in
+        ForEach(pairs, id: \.0) { entry in
           HStack(spacing: Spacing.xs.value) {
             RoundedRectangle(cornerRadius: Radius.xs.value)
-              .fill(color)
+              .fill(entry.1)
               .frame(width: 20, height: 20)
               .overlay(RoundedRectangle(cornerRadius: Radius.xs.value).strokeBorder(theme.atomColors.borderContrastLow))
-            AlfText(name, scale: .xs, color: theme.atomColors.textContrastMedium)
+            AlfText(entry.0, scale: .xs, color: theme.atomColors.textContrastMedium)
           }
         }
       }
@@ -106,7 +106,7 @@ public struct TokenGallery: View {
   }
 
   private var typeSection: some View {
-    Section("Type scale") {
+    GallerySection("Type scale") {
       ForEach(TypeScale.allCases, id: \.self) { scale in
         HStack(alignment: .firstTextBaseline, spacing: Spacing.sm.value) {
           AlfText(label(for: scale), scale: .xs, color: theme.atomColors.textContrastLow)
@@ -120,15 +120,15 @@ public struct TokenGallery: View {
           [(Scales.FontWeight.normal, "normal"), (Scales.FontWeight.medium, "medium"),
            (Scales.FontWeight.semiBold, "semiBold"), (Scales.FontWeight.bold, "bold")],
           id: \.0
-        ) { token, name in
-          AlfText("\(name) (\(token))", scale: .md, weight: token)
+        ) { entry in
+          AlfText("\(entry.1) (\(entry.0))", scale: .md, weight: entry.0)
         }
       }
     }
   }
 
   private var spacingSection: some View {
-    Section("Spacing ladder") {
+    GallerySection("Spacing ladder") {
       ForEach(Spacing.Step.allCases, id: \.self) { step in
         HStack(spacing: Spacing.sm.value) {
           AlfText("\(name(for: step)) · \(formatted(step.value))", scale: .xs, color: theme.atomColors.textContrastMedium)
@@ -142,7 +142,7 @@ public struct TokenGallery: View {
   }
 
   private var radiusSection: some View {
-    Section("Radius") {
+    GallerySection("Radius") {
       HStack(spacing: Spacing.md.value) {
         ForEach(Radius.Step.allCases, id: \.self) { step in
           VStack(spacing: Spacing.xxs.value) {
@@ -157,7 +157,7 @@ public struct TokenGallery: View {
   }
 
   private var gradientSection: some View {
-    Section("Gradients") {
+    GallerySection("Gradients") {
       LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: Spacing.sm.value) {
         ForEach(GradientName.allCases, id: \.self) { name in
           VStack(alignment: .leading, spacing: Spacing.xxs.value) {
@@ -172,7 +172,7 @@ public struct TokenGallery: View {
   }
 
   private var shadowSection: some View {
-    Section("Shadows") {
+    GallerySection("Shadows") {
       LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: Spacing.lg.value) {
         ForEach(DesignSystemCore.ShadowGeometry.Size.allCases, id: \.self) { size in
           VStack(spacing: Spacing.xxs.value) {
@@ -192,7 +192,7 @@ public struct TokenGallery: View {
   }
 
   private var breakpointSection: some View {
-    Section("Breakpoints") {
+    GallerySection("Breakpoints") {
       let widths: [Double] = [390, 500, 800, 1100, 1300, 1600]
       ForEach(widths, id: \.self) { width in
         let bp = ScreenBreakpoints(width: width, isRegularWidth: width >= 500)
@@ -249,7 +249,7 @@ public struct TokenGallery: View {
 }
 
 /** A titled block in the gallery. */
-struct Section<Content: View>: View {
+struct GallerySection<Content: View>: View {
   private let title: String
   private let content: Content
 

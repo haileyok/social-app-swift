@@ -25,7 +25,7 @@ public enum GradientName: String, Equatable, Sendable, CaseIterable {
   case bonfire
 
   /** The preset from `GradientPreset.designTokens`. */
-  public var preset: Gradient {
+  public var preset: DesignTokens.Gradient {
     switch self {
     case .primary: GradientPreset.designTokens.primary
     case .sky: GradientPreset.designTokens.sky
@@ -42,10 +42,15 @@ public enum GradientName: String, Equatable, Sendable, CaseIterable {
    The gradient as a SwiftUI `LinearGradient` on `GradientFill`'s diagonal axis.
    The stop positions become `Gradient.Stop.location` values, so a preset with
    four uneven stops renders exactly where ALF draws them.
+
+   `SwiftUI.Gradient.Stop` is qualified because `DesignTokens.Gradient` (the
+   token type) shadows SwiftUI's `Gradient` in this file.
    */
   public var linearGradient: LinearGradient {
     LinearGradient(
-      stops: preset.stops.map { Gradient.Stop(color: Color(hex: $0.color), location: $0.position) },
+      stops: preset.stops.map {
+        SwiftUI.Gradient.Stop(color: Color(hex: $0.color), location: $0.position)
+      },
       startPoint: UnitPoint(x: GradientPreset.diagonalStart.x, y: GradientPreset.diagonalStart.y),
       endPoint: UnitPoint(x: GradientPreset.diagonalEnd.x, y: GradientPreset.diagonalEnd.y))
   }
