@@ -273,9 +273,10 @@ struct ToleranceTests {
         "rev": "\(index + 1)",
         "convoId": "convo-g",
       ]
-      if name.contains("JoinRequest") || name.contains("Approve") || name.contains("Reject")
-        || name.contains("Withdraw")
-      {
+      let isMemberEvent =
+        name.contains("JoinRequest") || name.contains("Approve")
+        || name.contains("Reject") || name.contains("Withdraw")
+      if isMemberEvent {
         event["member"] = ["did": Fixtures.otherDid, "handle": "other.test"]
       } else {
         event["relatedProfiles"] = []

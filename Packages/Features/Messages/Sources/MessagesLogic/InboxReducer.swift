@@ -96,45 +96,22 @@ public struct InboxReducer: Sendable {
       }
 
     case .readConvo(let rev, let convoId, _), .readMessage(let rev, let convoId, _):
-      await updateConvoInAllLists(convoId: convoId) { convo in
-        guard rev > convo.rev else { return convo }
-        var copy = convo
-        copy.rev = rev
-        copy.unreadCount = 0
-        return copy
-      }
+      await advance(convoId: convoId, rev: rev) { $0.unreadCount = 0 }
 
     case .acceptConvo(let e):
       await applyAcceptConvo(e)
 
     case .muteConvo(let e):
-      await updateConvoInAllLists(convoId: e.convoId) { convo in
-        guard e.rev > convo.rev else { return convo }
-        var copy = convo
-        copy.muted = true
-        copy.rev = e.rev
-        return copy
-      }
+      await advance(convoId: e.convoId, rev: e.rev) { $0.muted = true }
 
     case .unmuteConvo(let e):
-      await updateConvoInAllLists(convoId: e.convoId) { convo in
-        guard e.rev > convo.rev else { return convo }
-        var copy = convo
-        copy.muted = false
-        copy.rev = e.rev
-        return copy
-      }
+      await advance(convoId: e.convoId, rev: e.rev) { $0.muted = false }
 
     case .addReaction(let rev, let convoId, _, _),
       .removeReaction(let rev, let convoId, _, _):
       // A reaction updates the message list, not the inbox row's ordering. The
       // row's rev still advances so a later stale event cannot rewind it.
-      await updateConvoInAllLists(convoId: convoId) { convo in
-        guard rev > convo.rev else { return convo }
-        var copy = convo
-        copy.rev = rev
-        return copy
-      }
+      await advance(convoId: convoId, rev: rev) { _ in }
 
     case .leaveConvo(let e):
       await removeConvoFromAllLists(convoId: e.convoId)
@@ -222,6 +199,23 @@ public struct InboxReducer: Sendable {
     }
   }
 
+  /// Bumps a held convo's rev and applies `change`, guarded on the rev.
+  ///
+  /// The rev guard is spelled once here: an event at or below the cached rev is
+  /// ignored, which is what makes a re-delivered batch idempotent.
+  private func advance(
+    convoId: String, rev: String,
+    _ change: @Sendable (inout Chat.Bsky.ConvoDefs_ConvoView) -> Void
+  ) async {
+    await updateConvoInAllLists(convoId: convoId) { convo in
+      guard rev > convo.rev else { return convo }
+      var copy = convo
+      copy.rev = rev
+      change(&copy)
+      return copy
+    }
+  }
+
   // MARK: - Store helpers
 
   /// The status encoded in a convo-list key.
@@ -271,9 +265,7 @@ public struct InboxReducer: Sendable {
   /// Projects a message into the `lastMessage` union position.
   static func asLastMessage(
     _ message: ConvoMessage
-  )
-    -> Chat.Bsky.ConvoDefs_ConvoView_LastMessage?
-  {
+  ) -> Chat.Bsky.ConvoDefs_ConvoView_LastMessage? {
     switch message {
     case .message(let view): .convoDefsMessageView(view)
     case .deleted(let view): .convoDefsDeletedMessageView(view)
@@ -284,9 +276,9 @@ public struct InboxReducer: Sendable {
 
   /// The first convo with `convoId` held in any list, or the single-convo entry.
   private func findConvo(_ convoId: String) async -> Chat.Bsky.ConvoDefs_ConvoView? {
-    if let single = try? await store.payload(
+    let single = try? await store.payload(
       MessagesKeys.convo(convoId), as: Chat.Bsky.ConvoDefs_ConvoView.self)
-    {
+    if let single {
       return single
     }
     for key in await store.keys(root: MessagesKeys.convoListRoot) {

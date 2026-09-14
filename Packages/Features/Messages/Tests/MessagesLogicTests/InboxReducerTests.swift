@@ -22,9 +22,7 @@ struct InboxReducerTests {
 
   private func convos(
     _ store: QueryStore, _ key: QueryKey
-  ) async
-    -> [Chat.Bsky.ConvoDefs_ConvoView]
-  {
+  ) async -> [Chat.Bsky.ConvoDefs_ConvoView] {
     (try? await store.payload(key, as: InfiniteQueryData<Chat.Bsky.ConvoDefs_ConvoView>.self))?
       .items ?? []
   }

@@ -35,12 +35,12 @@ subject of the `ToleranceTests` suite.
 | `chat.bsky.convo.sendMessageBatch` | `LiveChatXrpc.sendMessageBatch` | `ChatClientWiringTests.sendMessageBatchPostsItemsArray`, `ConversationTests.batchRetrySendsTheWholeQueue` |
 | `chat.bsky.convo.addReaction` | `LiveChatXrpc.addReaction` | `ChatClientWiringTests.addReactionPostsConvoMessageValue`, `ConversationTests.addReactionIsOptimisticThenReconciled` |
 | `chat.bsky.convo.removeReaction` | `LiveChatXrpc.removeReaction` | `ChatClientWiringTests.removeReactionPostsSameShape`, `ConversationTests.removeReactionIsOptimisticThenReconciled` |
-| `chat.bsky.convo.updateRead` | `LiveChatXrpc.updateRead` | `ChatClientWiringTests.updateReadPostsConvoAndOptionalMessage`, `ConversationTests.updateReadZeroesUnreadAndReturnsTheConvo` |
+| `chat.bsky.convo.updateRead` | `LiveChatXrpc.updateRead` | `ChatClientWiringTests.updateReadPostsConvoAndOptionalMessage`, `updateReadZeroesUnreadAndReturnsTheConvo` |
 | `chat.bsky.convo.updateAllRead` | `LiveChatXrpc.updateAllRead` | `ChatClientWiringTests.updateAllReadPostsStatus` |
 | `chat.bsky.convo.getUnreadCounts` | `LiveChatXrpc.getUnreadCounts`, `UnreadCountsQuery` | `ChatClientWiringTests.getUnreadCountsEncodesIncludeGroupChats`, `InboxTests.unreadCountsQueryHas15sStaleTime` |
-| `chat.bsky.convo.muteConvo` / `unmuteConvo` | `LiveChatXrpc.muteConvo`, `setMuted` | `ChatClientWiringTests.muteAndUnmuteRouteToTheirProcedures`, `ConversationTests.muteIsOptimisticAndRollsBackOnFailure` |
-| `chat.bsky.convo.leaveConvo` | `LiveChatXrpc.leaveConvo` | `ChatClientWiringTests.leaveConvoReturnsIdAndRev`, `ConversationTests.leaveClearsTheConvoAndRestoresOnFailure` |
-| `chat.bsky.convo.deleteMessageForSelf` | `LiveChatXrpc.deleteMessageForSelf` | `ChatClientWiringTests.deleteMessageForSelfDecodesDeletedView`, `ConversationTests.deleteIsOptimisticAndHidesTheMessage` |
+| `chat.bsky.convo.muteConvo` / `unmuteConvo` | `LiveChatXrpc.muteConvo`, `setMuted` | `ChatClientWiringTests.muteAndUnmuteRouteToTheirProcedures`, `muteIsOptimisticAndRollsBackOnFailure` |
+| `chat.bsky.convo.leaveConvo` | `LiveChatXrpc.leaveConvo` | `ChatClientWiringTests.leaveConvoReturnsIdAndRev`, `leaveClearsTheConvoAndRestoresOnFailure` |
+| `chat.bsky.convo.deleteMessageForSelf` | `LiveChatXrpc.deleteMessageForSelf` | `ChatClientWiringTests.deleteMessageForSelfDecodesDeletedView`, `deleteIsOptimisticAndHidesTheMessage` |
 
 ## Ported behaviour
 
@@ -54,8 +54,8 @@ subject of the `ToleranceTests` suite.
 | `state/queries/messages/get-unread-counts.ts` (`UNREAD_ACCEPTED_CAP`) | the counts are sentinel-capped at 100 and must not be clamped locally | `ChatClientWiringTests.getUnreadCountsEncodesIncludeGroupChats` |
 | `state/queries/messages/conversation.ts` (`useConvoQuery`) | `staleTime: STALE.INFINITY`; the value is refreshed by invalidation | `InboxTests.convoQueryIsNeverTimeStale` |
 | `state/queries/messages/conversation.ts` (`precacheConvoQuery`) | a convo can be written into the cache without a request | `InboxTests.convoQueryPrecachesWithoutARequest` |
-| `state/queries/messages/conversation.ts` (`useMarkAsReadMutation.onSuccess`) | the convo row's `unreadCount` is reset to 0 | `ConversationTests.updateReadZeroesUnreadAndReturnsTheConvo` |
-| `state/queries/messages/utils/convo-cache.ts` (`updateConvoOptimistic`) | a mutation writes optimistically and rolls back on error | `ConversationTests.muteIsOptimisticAndRollsBackOnFailure`, `InboxReducerTests.writeTouchesTheSingleConvoCache` |
+| `state/queries/messages/conversation.ts` (`useMarkAsReadMutation.onSuccess`) | the convo row's `unreadCount` is reset to 0 | `updateReadZeroesUnreadAndReturnsTheConvo` |
+| `state/queries/messages/utils/convo-cache.ts` (`updateConvoOptimistic`) | a mutation writes optimistically and rolls back on error | `muteIsOptimisticAndRollsBackOnFailure`, `InboxReducerTests.writeTouchesTheSingleConvoCache` |
 | `state/messages/convo/agent.ts` (`fetchMessageHistory`) | `limit: 30`, cursor-walked; the cursor is trusted over page length | `ConversationTests.fetchesInitialHistoryChronologically`, `ConversationTests.fetchesAdditionalHistoryViaCursor`, `ConversationTests.trustsTheCursorOverAShortPage` |
 | `state/messages/convo/agent.ts` (`fetchMessageHistory` error) | a failed history fetch renders a retry row | `ConversationTests.historyFailureSetsTheRetryState` |
 | `state/messages/convo/agent.ts` (`sendMessage`) | an empty message with no embed is ignored | `ConversationTests.emptyMessagesAreIgnored` |
@@ -68,11 +68,11 @@ subject of the `ToleranceTests` suite.
 | `state/messages/convo/agent.ts` (`addReaction`) | optimistic, reconciled by the response, rolled back on error | `ConversationTests.addReactionIsOptimisticThenReconciled`, `ConversationTests.reactionIsRolledBackOnFailure` |
 | `state/messages/convo/agent.ts` (`addReaction`) | the emoji must be one grapheme; a duplicate is a no-op; max 5 per sender | `ConversationTests.multiScalarEmojiIsOneGrapheme`, `ConversationTests.addReactionRejectsNonSingleGrapheme`, `ConversationTests.duplicateReactionIsANoOp`, `ConversationTests.atMostFiveReactionsPerSender` |
 | `state/messages/convo/agent.ts` (`removeReaction`) | optimistic removal, rolled back on error | `ConversationTests.removeReactionIsOptimisticThenReconciled` |
-| `state/messages/convo/agent.ts` (`deleteMessage`) | the id goes into `deletedMessages` before the request, and stays gone | `ConversationTests.deleteIsOptimisticAndHidesTheMessage` |
-| `state/messages/convo/agent.ts` (`getItems`) | the list is past, then new, then pending, filtered through the deleted set | `ConversationTests.itemsArePastThenNewThenPending` |
+| `state/messages/convo/agent.ts` (`deleteMessage`) | the id goes into `deletedMessages` before the request, and stays gone | `deleteIsOptimisticAndHidesTheMessage` |
+| `state/messages/convo/agent.ts` (`getItems`) | the list is past, then new, then pending, filtered through the deleted set | `itemsArePastThenNewThenPending` |
 | `state/messages/convo/agent.ts` (`ingestFirehose`) | a `logCreateMessage` replaces a message already admitted by our own send | `ConversationTests.successfulSendReordersWhenTheLogArrives` |
-| `state/messages/convo/agent.ts` (`ingestFirehose`) | a `logDeleteMessage` removes the message and tombstones it | `ConversationTests.deleteViaLogRemovesAndTombstones` |
-| `state/messages/convo/agent.ts` (`ingestFirehose`) | the convo rev advances to the newest event | `ConversationTests.revAdvancesToTheNewestEvent` |
+| `state/messages/convo/agent.ts` (`ingestFirehose`) | a `logDeleteMessage` removes the message and tombstones it | `deleteViaLogRemovesAndTombstones` |
+| `state/messages/convo/agent.ts` (`ingestFirehose`) | the convo rev advances to the newest event | `revAdvancesToTheNewestEvent` |
 | `state/messages/events/agent.ts` (`MessagesEventBus.init`) | `getLog` with no cursor seeds the rev without replaying events | `LogSyncTests.initializeSeedsTheCursorWithoutEvents` |
 | `state/messages/events/agent.ts` (`MessagesEventBus.init`) | the seed takes the max of the held rev and the server cursor, never rewinding | `LogSyncTests.reinitializeNeverRewindsTheCursor` |
 | `state/messages/events/agent.ts` (`MessagesEventBus.poll`) | only events with a rev strictly greater than the cursor are emitted | `LogSyncTests.pollReturnsOnlyEventsPastTheCursor`, `LogSyncTests.repeatedPollsDoNotRedeliver` |
@@ -81,7 +81,7 @@ subject of the `ToleranceTests` suite.
 | `state/messages/events/agent.ts` (`MessagesEventBus.init` error) | `InitFailed` when there is no cursor to resume from | `LogSyncTests.initFailureReportsInitPhaseAndLeavesCursorUnset` |
 | `state/messages/events/agent.ts` (`MessagesEventBus.poll` error) | `PollFailed` keeps the cursor | `LogSyncTests.pollFailureReportsPollPhaseAndKeepsTheCursor` |
 | `state/messages/events/agent.ts` (`MessagesEventBus.recoverFromError`) | a seeded bus resumes from its cursor and does not skip events | `LogSyncTests.recoverResumesFromTheHeldCursorWithoutSkipping`, `LogSyncTests.recoverFromAnUnseededBusReseeds` |
-| `state/messages/events/agent.ts` (`MessagesEventBus.on`) | a subscriber can be scoped to one `convoId` | `ConversationTests.logEventsOnlyAffectThisConvo` |
+| `state/messages/events/agent.ts` (`MessagesEventBus.on`) | a subscriber can be scoped to one `convoId` | `logEventsOnlyAffectThisConvo` |
 | `state/queries/messages/list-conversations.tsx` (`logCreateMessage` arm) | the convo bumps to page one with the new last message | `InboxReducerTests.createMessageBumpsToTopAndCountsUnread` |
 | `state/queries/messages/list-conversations.tsx` (`logCreateMessage` arm) | `unreadCount` increments unless the convo is open, and never for our own message | `InboxReducerTests.ownMessageDoesNotIncrementUnread`, `InboxReducerTests.createMessageForTheOpenConvoStaysRead` |
 | `state/queries/messages/list-conversations.tsx` (`logCreateMessage` arm) | `relatedProfiles` are merged into members, deduped | `InboxReducerTests.createMessageMergesRelatedProfiles` |
@@ -170,23 +170,23 @@ it, case for case:
 | `history fetching` / `fetches initial chat history` | `ConversationTests.fetchesInitialHistoryChronologically` |
 | `history fetching` / `fetches additional chat history` | `ConversationTests.fetchesAdditionalHistoryViaCursor` |
 | `history fetching` / `handles history fetch failure` | `ConversationTests.historyFailureSetsTheRetryState` |
-| `history fetching` / `does not insert deleted messages` | `ConversationTests.deleteViaLogRemovesAndTombstones` |
+| `history fetching` / `does not insert deleted messages` | `deleteViaLogRemovesAndTombstones` |
 | `sending messages` / `optimistically adds sending messages` | `ConversationTests.optimisticallyAddsSendingMessages` |
 | `sending messages` / `sends messages in order` | `ConversationTests.sendsAreProcessedInOrder` |
 | `sending messages` / `failed message send fails all sending messages` | `ConversationTests.failedSendFailsAllSendingMessages` |
 | `sending messages` / `can retry all failed messages via retry ConvoItem` | `ConversationTests.batchRetrySendsTheWholeQueue` |
 | `sending messages` / `successfully sent messages are re-ordered, if needed, by events received from server` | `ConversationTests.successfulSendReordersWhenTheLogArrives` |
 | `sending messages` / `pending messages are cleaned up from state after firehose event` | `ConversationTests.sendReconcilesViaTheResponse` |
-| `deleting messages` / `messages are optimistically deleted from the chat` | `ConversationTests.deleteIsOptimisticAndHidesTheMessage` |
-| `deleting messages` / `messages are confirmed deleted via events from the server` | `ConversationTests.deleteViaLogRemovesAndTombstones` |
-| `deleting messages` / `deleted messages are cleaned up from state after firehose event` | `ConversationTests.deleteViaLogRemovesAndTombstones` |
-| `log handling` / `updates rev to latest message received` | `ConversationTests.revAdvancesToTheNewestEvent` |
-| `log handling` / `only handles log events for this convoId` | `ConversationTests.logEventsOnlyAffectThisConvo` |
-| `log handling` / `does not insert deleted messages` | `ConversationTests.deleteIsOptimisticAndHidesTheMessage` |
-| `item ordering` / `pending items are first, and in order` | `ConversationTests.itemsArePastThenNewThenPending` |
-| `item ordering` / `new message items are next, and in order` | `ConversationTests.itemsArePastThenNewThenPending` |
-| `item ordering` / `past message items are next, and in order` | `ConversationTests.itemsArePastThenNewThenPending` |
-| `read states` / `should mark messages as read as they come in` | `ConversationTests.updateReadZeroesUnreadAndReturnsTheConvo` |
+| `deleting messages` / `messages are optimistically deleted from the chat` | `deleteIsOptimisticAndHidesTheMessage` |
+| `deleting messages` / `messages are confirmed deleted via events from the server` | `deleteViaLogRemovesAndTombstones` |
+| `deleting messages` / `deleted messages are cleaned up from state after firehose event` | `deleteViaLogRemovesAndTombstones` |
+| `log handling` / `updates rev to latest message received` | `revAdvancesToTheNewestEvent` |
+| `log handling` / `only handles log events for this convoId` | `logEventsOnlyAffectThisConvo` |
+| `log handling` / `does not insert deleted messages` | `deleteIsOptimisticAndHidesTheMessage` |
+| `item ordering` / `pending items are first, and in order` | `itemsArePastThenNewThenPending` |
+| `item ordering` / `new message items are next, and in order` | `itemsArePastThenNewThenPending` |
+| `item ordering` / `past message items are next, and in order` | `itemsArePastThenNewThenPending` |
+| `read states` / `should mark messages as read as they come in` | `updateReadZeroesUnreadAndReturnsTheConvo` |
 | `inactivity` / both cases | **not covered** - inactivity policy not ported (see gaps). |
 
 ## Test infrastructure

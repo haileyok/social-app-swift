@@ -1,5 +1,6 @@
 import Foundation
 import Lexicons
+import SwiftAtproto
 
 /// A `rev` + `convoId` pair, the shape shared by every conversation-scoped log
 /// event (`logBeginConvo`, `logAcceptConvo`, `logLeaveConvo`, `logMuteConvo`,
@@ -23,7 +24,7 @@ public struct ChatRevEvent: Sendable, Hashable {
 /// 1:1 scope cares about: the event types the inbox and the conversation act on,
 /// plus a ``groupEvent`` case for group/link/request events and an ``other``
 /// case for anything unrecognized. Neither of those last two throws or renders;
-/// ``LogSync`` advances the cursor past them and moves on.
+/// ``LogSync`` advances the cursor past them and the data layer skips them.
 ///
 /// Port of the `bsky.isType(...)` ladder in
 /// `src/state/queries/messages/list-conversations.tsx` and
@@ -144,54 +145,93 @@ public enum ChatLogEvent: Sendable, Hashable {
       self = .removeReaction(
         rev: e.rev, convoId: e.convoId, message: ConvoMessage(e.message),
         reaction: e.reaction)
+    default:
+      // Every remaining arm is a group / join-link / join-request event, mapped
+      // by the helpers below. They all carry the same `rev` + `convoId` shape
+      // and none is applied by the 1:1 scope.
+      self = Self.tolerant(element)
+    }
+  }
+
+  /// Dispatches a group / join-link / join-request arm, or an unknown `$type`.
+  ///
+  /// Split across two switch helpers because the union has 19 such arms: one
+  /// function would exceed the repo's cyclomatic-complexity and body-length
+  /// budgets for no readability gain.
+  private static func tolerant(
+    _ element: Chat.Bsky.ConvoGetLog_Output_Logs_Elem
+  ) -> ChatLogEvent {
+    if let event = membershipEvent(element) { return event }
+    if let event = linkAndRequestEvent(element) { return event }
+    if case ._other(let record) = element {
+      return .other(type: record.type, rev: nil, convoId: nil)
+    }
+    return .other(type: nil, rev: nil, convoId: nil)
+  }
+
+  /// The membership- and lock-shaped group arms.
+  private static func membershipEvent(
+    _ element: Chat.Bsky.ConvoGetLog_Output_Logs_Elem
+  ) -> ChatLogEvent? {
+    switch element {
     case .convoDefsLogAddMember(let e):
-      self = .groupEvent(type: Self.groupType(.addMember), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.addMember), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogRemoveMember(let e):
-      self = .groupEvent(type: Self.groupType(.removeMember), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.removeMember), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogMemberJoin(let e):
-      self = .groupEvent(type: Self.groupType(.memberJoin), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.memberJoin), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogMemberLeave(let e):
-      self = .groupEvent(type: Self.groupType(.memberLeave), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.memberLeave), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogLockConvo(let e):
-      self = .groupEvent(type: Self.groupType(.lockConvo), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.lockConvo), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogUnlockConvo(let e):
-      self = .groupEvent(type: Self.groupType(.unlockConvo), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.unlockConvo), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogLockConvoPermanently(let e):
-      self = .groupEvent(
-        type: Self.groupType(.lockConvoPermanently), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(
+        type: groupType(.lockConvoPermanently), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogEditGroup(let e):
-      self = .groupEvent(type: Self.groupType(.editGroup), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.editGroup), rev: e.rev, convoId: e.convoId)
+    default:
+      return nil
+    }
+  }
+
+  /// The join-link and join-request group arms.
+  private static func linkAndRequestEvent(
+    _ element: Chat.Bsky.ConvoGetLog_Output_Logs_Elem
+  ) -> ChatLogEvent? {
+    switch element {
     case .convoDefsLogCreateJoinLink(let e):
-      self = .groupEvent(type: Self.groupType(.createJoinLink), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.createJoinLink), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogEditJoinLink(let e):
-      self = .groupEvent(type: Self.groupType(.editJoinLink), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.editJoinLink), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogEnableJoinLink(let e):
-      self = .groupEvent(type: Self.groupType(.enableJoinLink), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.enableJoinLink), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogDisableJoinLink(let e):
-      self = .groupEvent(type: Self.groupType(.disableJoinLink), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(type: groupType(.disableJoinLink), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogIncomingJoinRequest(let e):
-      self = .groupEvent(
-        type: Self.groupType(.incomingJoinRequest), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(
+        type: groupType(.incomingJoinRequest), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogApproveJoinRequest(let e):
-      self = .groupEvent(
-        type: Self.groupType(.approveJoinRequest), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(
+        type: groupType(.approveJoinRequest), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogRejectJoinRequest(let e):
-      self = .groupEvent(
-        type: Self.groupType(.rejectJoinRequest), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(
+        type: groupType(.rejectJoinRequest), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogOutgoingJoinRequest(let e):
-      self = .groupEvent(
-        type: Self.groupType(.outgoingJoinRequest), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(
+        type: groupType(.outgoingJoinRequest), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogWithdrawIncomingJoinRequest(let e):
-      self = .groupEvent(
-        type: Self.groupType(.withdrawIncomingJoinRequest), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(
+        type: groupType(.withdrawIncomingJoinRequest), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogWithdrawOutgoingJoinRequest(let e):
-      self = .groupEvent(
-        type: Self.groupType(.withdrawOutgoingJoinRequest), rev: e.rev, convoId: e.convoId)
+      return .groupEvent(
+        type: groupType(.withdrawOutgoingJoinRequest), rev: e.rev, convoId: e.convoId)
     case .convoDefsLogReadJoinRequests(let e):
-      self = .groupEvent(
-        type: Self.groupType(.readJoinRequests), rev: e.rev, convoId: e.convoId)
-    case ._other(let record):
-      self = .other(type: record.type, rev: nil, convoId: nil)
+      return .groupEvent(
+        type: groupType(.readJoinRequests), rev: e.rev, convoId: e.convoId)
+    default:
+      return nil
     }
   }
 

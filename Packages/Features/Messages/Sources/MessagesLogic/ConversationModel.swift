@@ -9,127 +9,6 @@ import SwiftAtproto
 /// order the list is built in is RN's: past history (oldest first), then
 /// messages received or sent after history was loaded, then the pending local
 /// echo, then error rows.
-public enum ConvoItem: Sendable, Hashable {
-  /// A user-originated message.
-  case message(Chat.Bsky.ConvoDefs_MessageView)
-  /// A deleted-message tombstone.
-  case deletedMessage(Chat.Bsky.ConvoDefs_DeletedMessageView)
-  /// A system message.
-  case systemMessage(Chat.Bsky.ConvoDefs_SystemMessageView)
-  /// A locally echoed message awaiting a server id.
-  case pendingMessage(PendingMessage)
-  /// A retryable error row.
-  case error(code: ConvoItemErrorCode)
-
-  /// The list key. RN's `key`.
-  public var key: String {
-    switch self {
-    case .message(let m): m.id
-    case .deletedMessage(let m): m.id
-    case .systemMessage(let m): m.id
-    case .pendingMessage(let m): m.id
-    case .error(let code): code.rawValue
-    }
-  }
-
-  /// The message identity, for the deleted-set filter. Non-message rows are nil.
-  public var messageId: String? {
-    switch self {
-    case .message(let m): m.id
-    case .deletedMessage(let m): m.id
-    case .systemMessage(let m): m.id
-    case .pendingMessage(let m): m.id
-    case .error: nil
-    }
-  }
-}
-
-/// Error rows a conversation can render.
-public enum ConvoItemErrorCode: String, Sendable, Hashable {
-  /// History fetching failed. RN: `ConvoItemError.HistoryFailed`.
-  case historyFailed = "error-history-failed"
-  /// The log firehose failed. RN: `ConvoItemError.FirehoseFailed`.
-  case firehoseFailed = "error-firehose-failed"
-}
-
-/// A locally echoed message awaiting reconciliation.
-///
-/// RN keeps `{id: tempId, message: MessageInput}` in `pendingMessages` and
-/// synthesizes a `messageView` at render time (`getItems`). This port keeps the
-/// same split: the pending entry carries the input and the synthesized
-/// placeholder carries the shape the list renders.
-public struct PendingMessage: Sendable, Hashable {
-  /// The temporary id, unique within the conversation.
-  public var id: String
-  /// The input the caller asked to send.
-  public var message: Chat.Bsky.ConvoDefs_MessageInput
-  /// Whether the whole pending queue is in a failed state.
-  public var failed: Bool
-
-  public init(id: String, message: Chat.Bsky.ConvoDefs_MessageInput, failed: Bool = false) {
-    self.id = id
-    self.message = message
-    self.failed = failed
-  }
-
-  /// The placeholder message view the list renders for this pending entry.
-  ///
-  /// Port of the synthesized view in RN's `getItems`: a real-looking view whose
-  /// rev is the sentinel `__fake__` so a log event carrying the real one
-  /// replaces it cleanly.
-  public func placeholderView(senderDid: String, sentAt: Date) -> Chat.Bsky.ConvoDefs_MessageView {
-    ConvoMessage.optimisticMessageView(
-      id: id, rev: ConvoMessage.fakeRev, senderDid: senderDid, sentAt: sentAt,
-      text: message.text, facets: message.facets)
-  }
-}
-
-extension ConvoMessage {
-  /// The sentinel rev the RN agent stamps on a locally echoed message.
-  public static let fakeRev = "__fake__"
-}
-
-/// How a send failure should be treated.
-///
-/// Port of `pendingMessageFailure` in `src/state/messages/convo/agent.ts`:
-/// a 5xx-class failure is `recoverable` (the whole queue is retryable via
-/// `sendMessageBatch`), anything else is `unrecoverable` and just renders as
-/// failed.
-public enum SendFailure: String, Sendable, Hashable {
-  /// The server was unavailable; the queue can be retried as a batch.
-  case recoverable
-  /// The server rejected the message; retrying will not help.
-  case unrecoverable
-}
-
-/// The state one conversation's model holds.
-public struct ConversationState: Sendable, Equatable {
-  /// The convo view, once loaded.
-  public var convo: Chat.Bsky.ConvoDefs_ConvoView?
-  /// The rendered items, in display order.
-  public var items: [ConvoItem]
-  /// True while an older history page is in flight.
-  public var isFetchingHistory: Bool
-  /// True when every older page has been read (RN's `oldestRev === null`).
-  public var hasAllHistory: Bool
-  /// The current send failure, if any.
-  public var pendingMessageFailure: SendFailure?
-  /// True when history fetching failed and a retry row is showing.
-  public var historyFailed: Bool
-
-  public init(
-    convo: Chat.Bsky.ConvoDefs_ConvoView? = nil, items: [ConvoItem] = [],
-    isFetchingHistory: Bool = false, hasAllHistory: Bool = false,
-    pendingMessageFailure: SendFailure? = nil, historyFailed: Bool = false
-  ) {
-    self.convo = convo
-    self.items = items
-    self.isFetchingHistory = isFetchingHistory
-    self.hasAllHistory = hasAllHistory
-    self.pendingMessageFailure = pendingMessageFailure
-    self.historyFailed = historyFailed
-  }
-}
 
 /// The local conversation model: history, the pending outbox, reactions and
 /// read state for one conversation.
@@ -157,20 +36,20 @@ public actor ConversationModel {
   public let convoId: String
   /// The signed-in account's DID, used for the optimistic echo's sender.
   public let senderDid: String
-  private let client: any ChatXrpc
-  private let clock: @Sendable () -> Date
+  let client: any ChatXrpc
+  let now: @Sendable () -> Date
 
   /// History, oldest first.
-  private var pastMessages: [String: ConvoMessage] = [:]
+  var pastMessages: [String: ConvoMessage] = [:]
   /// History order, so `params`-less rendering is stable.
-  private var pastOrder: [String] = []
+  var pastOrder: [String] = []
   /// Messages seen after history, in arrival order.
-  private var newMessages: [String: ConvoMessage] = [:]
-  private var newOrder: [String] = []
+  var newMessages: [String: ConvoMessage] = [:]
+  var newOrder: [String] = []
   /// The optimistic outbox, in send order.
-  private var pendingMessages: [PendingMessage] = []
+  var pendingMessages: [PendingMessage] = []
   /// Ids that must not render, even from a stale view.
-  private var deletedMessages: Set<String> = []
+  var deletedMessages: Set<String> = []
   /// The pagination position for history, mirroring RN's `oldestRev` tri-state.
   ///
   /// RN uses `undefined` (not yet fetched), a string (more pages), and `null`
@@ -186,18 +65,18 @@ public actor ConversationModel {
   }
 
   /// The history pagination position. RN's `oldestRev`, made explicit.
-  private var history: HistoryCursor = .unstarted
+  var history: HistoryCursor = .unstarted
 
   /// The outbox id counter. RN uses `nanoid`; a monotonic counter is
   /// deterministic, which is what tests want.
-  private var pendingCounter = 0
+  var pendingCounter = 0
 
-  private var isFetchingHistory = false
-  private var historyFailed = false
-  private var pendingFailure: SendFailure?
-  private var isProcessingPending = false
+  var isFetchingHistory = false
+  var historyFailed = false
+  var pendingFailure: SendFailure?
+  var isProcessingPending = false
 
-  private var convo: Chat.Bsky.ConvoDefs_ConvoView?
+  var convo: Chat.Bsky.ConvoDefs_ConvoView?
 
   /// Creates a conversation model.
   ///
@@ -217,7 +96,7 @@ public actor ConversationModel {
     self.client = client
     self.senderDid = senderDid
     self.convo = convo
-    self.clock = clock
+    self.now = clock
   }
 
   // MARK: - Reading
@@ -325,9 +204,8 @@ public actor ConversationModel {
   /// - Returns: the pending entry's id, or `nil` when the message was ignored.
   @discardableResult
   public func sendMessage(_ message: Chat.Bsky.ConvoDefs_MessageInput) -> String? {
-    if message.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-      message.embed == nil
-    {
+    let trimmed = message.text.trimmingCharacters(in: .whitespacesAndNewlines)
+    if trimmed.isEmpty, message.embed == nil {
       return nil
     }
 
@@ -414,108 +292,6 @@ public actor ConversationModel {
     }
   }
 
-  // MARK: - Reactions
-
-  /// Adds an emoji reaction, optimistically.
-  ///
-  /// Port of `addReaction`. The reaction must be exactly one grapheme, the
-  /// sender may hold at most five distinct reactions on a message, and adding a
-  /// duplicate is a no-op.
-  ///
-  /// - Throws: ``ConvoReactionError`` when the input is invalid or the server
-  ///   rejects the call. The optimistic update is rolled back on failure.
-  public func addReaction(messageId: String, emoji: String) async throws {
-    guard MessagesReaction.isValid(emoji) else {
-      throw ConvoReactionError.invalidEmoji(emoji)
-    }
-
-    let snapshot = reactionTarget(messageId)
-    if let target = snapshot, target.messageView != nil {
-      let mine = target.reactions.filter { $0.sender.did.rawValue == senderDid }
-      if mine.contains(where: { $0.value == emoji }) {
-        return
-      }
-      if mine.count >= MessagesConstants.maxReactionsPerSender {
-        throw ConvoReactionError.tooManyReactions
-      }
-      writeMessage(
-        id: messageId,
-        with: appendReaction(
-          target, value: emoji, senderDid: senderDid, at: clock()))
-    }
-
-    do {
-      let updated = try await client.addReaction(
-        convoId: convoId, messageId: messageId, value: emoji)
-      writeMessage(id: messageId, with: .message(updated))
-    } catch {
-      if let snapshot { writeMessage(id: messageId, with: snapshot) }
-      throw error
-    }
-  }
-
-  /// Removes an emoji reaction, optimistically.
-  ///
-  /// Port of `removeReaction`. The optimistic update is rolled back on failure.
-  public func removeReaction(messageId: String, emoji: String) async throws {
-    let snapshot = reactionTarget(messageId)
-    if let target = snapshot, target.messageView != nil {
-      writeMessage(
-        id: messageId,
-        with: removeReaction(target, value: emoji, senderDid: senderDid))
-    }
-
-    do {
-      let updated = try await client.removeReaction(
-        convoId: convoId, messageId: messageId, value: emoji)
-      writeMessage(id: messageId, with: .message(updated))
-    } catch {
-      if let snapshot { writeMessage(id: messageId, with: snapshot) }
-      throw error
-    }
-  }
-
-  /// The current view of a message that can carry reactions.
-  private func reactionTarget(_ messageId: String) -> ConvoMessage? {
-    if let past = pastMessages[messageId] { return past }
-    return newMessages[messageId]
-  }
-
-  /// Writes a message view back into whichever collection holds it.
-  private func writeMessage(id: String, with message: ConvoMessage) {
-    if pastMessages[id] != nil {
-      pastMessages[id] = message
-    } else if newMessages[id] != nil {
-      newMessages[id] = message
-    }
-  }
-
-  private func appendReaction(
-    _ message: ConvoMessage, value: String, senderDid: String, at date: Date
-  ) -> ConvoMessage {
-    guard case .message(let view) = message else { return message }
-    var copy = view
-    let reaction = Chat.Bsky.ConvoDefs_ReactionView(
-      createdAt: FormatString<Date>(
-        rawValue: MessagesDate.datetimeString(date)),
-      sender: Chat.Bsky.ConvoDefs_ReactionViewSender(
-        did: FormatString<SwiftAtproto.DID>(rawValue: senderDid)),
-      value: value)
-    copy.reactions = (view.reactions ?? []) + [reaction]
-    return .message(copy)
-  }
-
-  private func removeReaction(
-    _ message: ConvoMessage, value: String, senderDid: String
-  ) -> ConvoMessage {
-    guard case .message(let view) = message else { return message }
-    var copy = view
-    copy.reactions = (view.reactions ?? []).filter {
-      !($0.value == value && $0.sender.did.rawValue == senderDid)
-    }
-    return .message(copy)
-  }
-
   // MARK: - Read state, mute, delete
 
   /// Marks the conversation read up to `messageId`.
@@ -525,9 +301,7 @@ public actor ConversationModel {
   @discardableResult
   public func updateRead(
     messageId: String? = nil
-  ) async throws
-    -> Chat.Bsky.ConvoDefs_ConvoView
-  {
+  ) async throws -> Chat.Bsky.ConvoDefs_ConvoView {
     let view = try await client.updateRead(convoId: convoId, messageId: messageId)
     convo = view
     return view
@@ -645,43 +419,19 @@ public actor ConversationModel {
       return false
 
     case .readConvo(let rev, _, _), .readMessage(let rev, _, _):
-      bumpRev(rev)
-      updateConvoView { view in
-        var copy = view
-        copy.unreadCount = 0
-        copy.rev = rev
-        return copy
-      }
+      applyConvoChange(rev: rev) { $0.unreadCount = 0 }
       return true
 
     case .acceptConvo(let e):
-      bumpRev(e.rev)
-      updateConvoView { view in
-        var copy = view
-        copy.status = .accepted
-        copy.rev = e.rev
-        return copy
-      }
+      applyConvoChange(rev: e.rev) { $0.status = .accepted }
       return true
 
     case .muteConvo(let e):
-      bumpRev(e.rev)
-      updateConvoView { view in
-        var copy = view
-        copy.muted = true
-        copy.rev = e.rev
-        return copy
-      }
+      applyConvoChange(rev: e.rev) { $0.muted = true }
       return true
 
     case .unmuteConvo(let e):
-      bumpRev(e.rev)
-      updateConvoView { view in
-        var copy = view
-        copy.muted = false
-        copy.rev = e.rev
-        return copy
-      }
+      applyConvoChange(rev: e.rev) { $0.muted = false }
       return true
 
     case .beginConvo(let e), .leaveConvo(let e):
@@ -693,8 +443,21 @@ public actor ConversationModel {
     }
   }
 
+  /// Bumps the convo view's rev and applies `change` to it.
+  private func applyConvoChange(
+    rev: String, _ change: @Sendable (inout Chat.Bsky.ConvoDefs_ConvoView) -> Void
+  ) {
+    bumpRev(rev)
+    updateConvoView { view in
+      var copy = view
+      copy.rev = rev
+      change(&copy)
+      return copy
+    }
+  }
+
   /// Records the newest rev seen, when it is newer than the held one.
-  private func bumpRev(_ rev: String) {
+  func bumpRev(_ rev: String) {
     guard var view = convo else { return }
     if rev > view.rev {
       view.rev = rev
@@ -713,91 +476,7 @@ public actor ConversationModel {
 
   /// Builds the rendered list: past, then new, then pending, then errors,
   /// filtered through the deleted set. Port of `getItems`.
-  private func buildItems() -> [ConvoItem] {
-    var items: [ConvoItem] = []
-
-    for id in pastOrder {
-      guard let message = pastMessages[id] else { continue }
-      items.append(item(for: message, fromHistory: true))
-    }
-
-    if historyFailed {
-      items.append(.error(code: .historyFailed))
-    }
-
-    for id in newOrder {
-      guard let message = newMessages[id] else { continue }
-      items.append(item(for: message, fromHistory: false))
-    }
-
-    for pending in pendingMessages {
-      items.append(
-        .pendingMessage(
-          PendingMessage(
-            id: pending.id, message: pending.message,
-            failed: pendingFailure != nil)))
-    }
-
-    if pendingFailure != nil {
-      items.append(.error(code: .firehoseFailed))
-    }
-
-    return items.filter { item in
-      guard let id = item.messageId else { return true }
-      return !deletedMessages.contains(id)
-    }
-  }
-
-  private func item(for message: ConvoMessage, fromHistory: Bool) -> ConvoItem {
-    switch message {
-    case .message(let view):
-      // A message that quotes the deleted one keeps rendering a tombstone.
-      if case .convoDefsMessageView(let replyTo) = view.replyTo,
-        deletedMessages.contains(replyTo.id)
-      {
-        var copy = view
-        copy.replyTo = .convoDefsDeletedMessageView(ConvoMessage.tombstone(replyTo))
-        return .message(copy)
-      }
-      return .message(view)
-    case .deleted(let view): return .deletedMessage(view)
-    case .system(let view): return .systemMessage(view)
-    case .other: return .error(code: fromHistory ? .historyFailed : .firehoseFailed)
-    }
-  }
 }
 
 /// Reaction-input validation.
-public enum MessagesReaction {
-  /// The maximum wire length of a reaction value, from the lexicon
-  /// (`maxLength: 64`).
-  public static let maxLength = 64
-
-  /// True when `value` is a single grapheme cluster, the lexicon's
-  /// `minGraphemes: 1, maxGraphemes: 1` rule.
-  ///
-  /// Unicode grapheme segmentation is what makes a multi-scalar emoji (a flag,
-  /// a skin-toned hand, a ZWJ family) count as one.
-  public static func isValid(_ value: String) -> Bool {
-    guard !value.isEmpty, value.count <= maxLength else { return false }
-    return value.count == 1
-  }
-}
-
-/// Errors the reaction flow surfaces.
-public enum ConvoReactionError: Error, Sendable, Hashable {
-  /// The value was not a single grapheme.
-  case invalidEmoji(String)
-  /// The sender already holds ``MessagesConstants/maxReactionsPerSender``
-  /// reactions on this message.
-  case tooManyReactions
-}
-
-/// The status-carrying slice of an XRPC error, so the send path can classify a
-/// failure without depending on the concrete error type.
-public protocol XrpcErrorLike: Error {
-  /// The HTTP status, or a negative value for a transport-level failure.
-  var status: Int { get }
-}
-
 extension XrpcError: XrpcErrorLike {}
