@@ -48,9 +48,7 @@ public struct PostEmbed: View {
     case .images(let images):
       ImageGallery(images: images, layout: .forImageCount(images.count))
     case .gallery(let items):
-      ImageGallery(
-        images: galleryImages(items.compactMap(galleryImage)),
-        layout: .forImageCount(items.count))
+      galleryItemsView(items)
     case .external(let external):
       ExternalCard(external: external)
     case .record(let record):
@@ -71,14 +69,19 @@ public struct PostEmbed: View {
     case .images(let images):
       ImageGallery(images: images, layout: .forImageCount(images.count))
     case .gallery(let items):
-      ImageGallery(
-        images: galleryImages(items.compactMap(galleryImage)),
-        layout: .forImageCount(items.count))
+      galleryItemsView(items)
     case .external(let external):
       ExternalCard(external: external)
     case .unknown, .none:
       EmptyView()
     }
+  }
+
+  /// The gallery-item union carries no direct image array, so unwrap the image
+  /// variants first and derive the layout from the count that survives.
+  private func galleryItemsView(_ items: [EmbedGalleryItem]) -> some View {
+    let images = galleryImages(items)
+    return ImageGallery(images: images, layout: .forImageCount(images.count))
   }
 }
 
@@ -320,12 +323,6 @@ public struct UnsupportedEmbed: View {
       .background(theme.atomColors.bgContrast25)
       .clipShape(.rect(cornerRadius: Radius.md, style: .continuous))
   }
-}
-
-/// Unwraps a gallery item into its image, dropping unknown variants.
-func galleryImage(_ item: EmbedGalleryItem) -> EmbedImage? {
-  if case .image(let image) = item { return image }
-  return nil
 }
 
 /// A video embed built from the hydrated `EmbedVideo_View` in a

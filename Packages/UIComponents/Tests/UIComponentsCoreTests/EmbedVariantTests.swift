@@ -81,6 +81,31 @@ struct EmbedVariantTests {
     #expect(galleryImages([], layout: .grid).isEmpty)
   }
 
+  @Test("Gallery items unwrap to their images, dropping unknown variants")
+  func galleryItemUnwrap() {
+    let items: [EmbedGalleryItem] = [
+      .image(EmbedImage(alt: "a", image: "https://cdn.example/a.jpg")),
+      .unknown(type: "app.bsky.embed.gallery#video"),
+      .image(EmbedImage(alt: "b")),
+    ]
+    let images = galleryImages(items)
+    #expect(images.count == 2)
+    #expect(images.first?.alt == "a")
+    #expect(images.last?.alt == "b")
+    #expect(galleryImages([EmbedGalleryItem]()).isEmpty)
+    #expect(galleryImages([.unknown(type: "x")]).isEmpty)
+  }
+
+  @Test("The layout follows the images that survive unwrapping")
+  func galleryLayoutAfterUnwrap() {
+    let items: [EmbedGalleryItem] = [
+      .image(EmbedImage(alt: "a")),
+      .unknown(type: "unknown"),
+    ]
+    let images = galleryImages(items)
+    #expect(ImageGalleryLayout.forImageCount(images.count) == .single)
+  }
+
   @Test("Embed image URLs require a non-empty string")
   func imageURLs() {
     #expect(embedImageURL(EmbedImage(alt: "a", image: nil)) == nil)

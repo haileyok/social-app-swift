@@ -144,6 +144,20 @@ public func galleryImages(_ images: [EmbedImage], layout: ImageGalleryLayout) ->
   Array(images.prefix(layout.cellCount))
 }
 
+/// Unwraps a gallery-item union into its image variants, dropping unknown
+/// entries. The engine's stand-in `EmbedGalleryItem` only models the image
+/// case, so this is total over the union.
+///
+/// The count is taken after filtering, not before: unknown items never occupy a
+/// gallery cell, so a two-item gallery with one unknown renders as ``single``
+/// rather than ``twoUp``.
+public func galleryImages(_ items: [EmbedGalleryItem]) -> [EmbedImage] {
+  items.compactMap { item in
+    if case .image(let image) = item { return image }
+    return nil
+  }
+}
+
 /// A URL string for an embed image, preferring the full-size render.
 ///
 /// The hydrated image carries `image` (the view URL) in the engine's stand-in
