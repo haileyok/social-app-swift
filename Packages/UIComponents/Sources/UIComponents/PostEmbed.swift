@@ -48,7 +48,9 @@ public struct PostEmbed: View {
     case .images(let images):
       ImageGallery(images: images, layout: .forImageCount(images.count))
     case .gallery(let items):
-      ImageGallery(images: galleryImages(items.compactMap(galleryImage), layout: .forImageCount(items.count)))
+      ImageGallery(
+        images: galleryImages(items.compactMap(galleryImage)),
+        layout: .forImageCount(items.count))
     case .external(let external):
       ExternalCard(external: external)
     case .record(let record):
@@ -69,7 +71,9 @@ public struct PostEmbed: View {
     case .images(let images):
       ImageGallery(images: images, layout: .forImageCount(images.count))
     case .gallery(let items):
-      ImageGallery(images: galleryImages(items.compactMap(galleryImage), layout: .forImageCount(items.count)))
+      ImageGallery(
+        images: galleryImages(items.compactMap(galleryImage)),
+        layout: .forImageCount(items.count))
     case .external(let external):
       ExternalCard(external: external)
     case .unknown, .none:
