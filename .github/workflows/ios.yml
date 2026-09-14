@@ -110,36 +110,119 @@ jobs:
           set -e
           xcrun simctl list devices available
           # Prefer the pinned simulator; fall back to newest available iPhone.
+          # This runs on both the hosted runner (iOS 26.5 inventory) and the
+          # self-hosted Mac (iOS 26.5 runtime), so the device list differs run to
+          # run - resolve rather than assume.
           if ! xcrun simctl list devices available | grep -q "${SIM_NAME} (${SIM_OS})"; then
             echo "pinned simulator not found; using newest iPhone runtime (record in run log)"
           fi
 
       - name: Prime simulator services
         run: |
-          UDID=$(xcrun simctl list devices available | grep "${SIM_NAME} (" | grep -oE '[A-F0-9-]{36}' | tail -1)
+          set -e
+          UDID=""
+          for NAME in "${SIM_NAME}" "iPhone 17 Pro" "iPhone 17" "iPhone 16 Pro" "iPhone 16" "iPhone 15"; do
+            UDID=$(xcrun simctl list devices available | grep -E "^[[:space:]]*${NAME} \(" | grep -oE '[A-F0-9-]{36}' | tail -1 || true)
+            if [ -n "$UDID" ]; then
+              echo "resolved simulator: $NAME ($UDID)"
+              break
+            fi
+            UDID=""
+          done
           if [ -z "$UDID" ]; then
-            UDID=$(xcrun simctl list devices available | grep "iPhone" | grep -oE '[A-F0-9-]{36}' | tail -1)
+            UDID=$(xcrun simctl list devices available | grep "iPhone" | grep -oE '[A-F0-9-]{36}' | tail -1 || true)
+            echo "no pinned iPhone found; using newest iPhone ($UDID)"
+          fi
+          if [ -z "$UDID" ]; then
+            echo "::error::no available iPhone simulator on this runner"
+            xcrun simctl list devices available
+            exit 1
           fi
           echo "UDID=$UDID" >> "$GITHUB_ENV"
           xcrun simctl boot "$UDID" || true
           xcrun simctl bootstatus "$UDID" -b
 
-      # NOTE: the App/ xcodeproj target is added in Phase 4. Until then this
-      # workflow is a skeleton: it validates the runner env so the mock-server
-      # spike (Phase 0.6) and screenshot loop have a proven base.
-      - name: Build (placeholder until Phase 4 adds the app target)
+      # NOTE: the host app target is App/SocialApp.xcodeproj (Phase 4.2), a
+      # hand-maintained thin project. `build-for-testing` + `test-without-building`
+      # is the same pair the self-hosted fast loop runs, so a green self-hosted
+      # run predicts this one; the differences are the Xcode and runtime versions.
+      - name: Build app + tests for testing
         run: |
-          echo "App target lands in Phase 4; this step currently only validates the runner."
-          xcodebuild -version
-          xcrun simctl list devices available | head -10
+          cd App
+          set -o pipefail
+          if xcodebuild build-for-testing \
+            -project SocialApp.xcodeproj \
+            -scheme SocialApp \
+            -destination "id=$UDID" \
+            -derivedDataPath "$RUNNER_TEMP/dd-socialapp" \
+            CODE_SIGNING_ALLOWED=NO > "$RUNNER_TEMP/ios-buildtests.log" 2>&1; then
+            tail -3 "$RUNNER_TEMP/ios-buildtests.log"
+          else
+            echo "::error::build-for-testing failed - compile errors:"
+            grep -E 'error:|fatal error:|The following build commands failed' "$RUNNER_TEMP/ios-buildtests.log" | sort -u | head -60
+            echo "--- last 40 lines of build log:"
+            tail -40 "$RUNNER_TEMP/ios-buildtests.log"
+            exit 1
+          fi
 
-      - name: Capture screenshots
+      - name: Run XCUITest launch smoke test
+        run: |
+          cd App
+          set -o pipefail
+          rm -rf "$RUNNER_TEMP/ios-socialapp.xcresult"
+          if xcodebuild test-without-building \
+            -project SocialApp.xcodeproj \
+            -scheme SocialApp \
+            -destination "id=$UDID" \
+            -derivedDataPath "$RUNNER_TEMP/dd-socialapp" \
+            -resultBundlePath "$RUNNER_TEMP/ios-socialapp.xcresult" \
+            CODE_SIGNING_ALLOWED=NO > "$RUNNER_TEMP/ios-tests.log" 2>&1; then
+            echo "iOS test run: PASS"
+            grep -E "Test Suite .* (passed|failed)|Executed [0-9]+ test" "$RUNNER_TEMP/ios-tests.log" | tail -8
+          else
+            echo "::error::iOS test run failed:"
+            grep -E "error:|XCTAssert|failed \(|Failing tests" "$RUNNER_TEMP/ios-tests.log" | head -40
+            echo "--- last 40 lines of test log:"
+            tail -40 "$RUNNER_TEMP/ios-tests.log"
+            exit 1
+          fi
+
+      - name: Capture per-tab screenshots
         if: always()
         run: |
           mkdir -p artifacts/screenshots
-          if [ -n "${UDID:-}" ] && xcrun simctl list | grep -q "$UDID"; then
-            xcrun simctl io "$UDID" screenshot artifacts/screenshots/home.png || true
+          if [ -z "${UDID:-}" ] || ! xcrun simctl list | grep -q "$UDID"; then
+            echo "no simulator; skipping screenshots"
+            exit 0
           fi
+          APP_PATH=$(find "$RUNNER_TEMP/dd-socialapp/Build/Products" -name 'SocialApp.app' -maxdepth 3 | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "SocialApp.app not built; capturing the bare simulator instead"
+            xcrun simctl io "$UDID" screenshot artifacts/screenshots/home.png || true
+            exit 0
+          fi
+          xcrun simctl install "$UDID" "$APP_PATH"
+          i=0
+          for TAB in Home Search Messages Notifications Profile; do
+            xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
+            xcrun simctl launch "$UDID" dev.hailey.socialapp -uiTestInitialTab "$i" || true
+            sleep 4
+            xcrun simctl io "$UDID" screenshot "artifacts/screenshots/${i}-${TAB}.png" || true
+            i=$((i + 1))
+          done
+          xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
+          ls -la artifacts/screenshots
+
+      - name: Upload test logs and result bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-logs
+          path: |
+            ${{ runner.temp }}/ios-buildtests.log
+            ${{ runner.temp }}/ios-tests.log
+            ${{ runner.temp }}/ios-socialapp.xcresult
+          if-no-files-found: ignore
 
       - name: Upload screenshots
         if: always()
