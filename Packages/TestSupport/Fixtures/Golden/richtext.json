@@ -18,6 +18,7 @@
         ],
         "unicode": {
           "graphemeLength": 22,
+          "graphemeCount": 22,
           "utf16Length": 22,
           "utf8ByteLength": 22,
           "utf16ToUtf8": [
@@ -89,6 +90,7 @@
         ],
         "unicode": {
           "graphemeLength": 32,
+          "graphemeCount": 32,
           "utf16Length": 32,
           "utf8ByteLength": 32,
           "utf16ToUtf8": [
@@ -160,6 +162,7 @@
         ],
         "unicode": {
           "graphemeLength": 40,
+          "graphemeCount": 40,
           "utf16Length": 40,
           "utf8ByteLength": 40,
           "utf16ToUtf8": [
@@ -231,6 +234,7 @@
         ],
         "unicode": {
           "graphemeLength": 44,
+          "graphemeCount": 44,
           "utf16Length": 44,
           "utf8ByteLength": 44,
           "utf16ToUtf8": [
@@ -302,6 +306,7 @@
         ],
         "unicode": {
           "graphemeLength": 25,
+          "graphemeCount": 25,
           "utf16Length": 25,
           "utf8ByteLength": 25,
           "utf16ToUtf8": [
@@ -431,6 +436,7 @@
         ],
         "unicode": {
           "graphemeLength": 34,
+          "graphemeCount": 34,
           "utf16Length": 34,
           "utf8ByteLength": 34,
           "utf16ToUtf8": [
@@ -556,6 +562,7 @@
         ],
         "unicode": {
           "graphemeLength": 49,
+          "graphemeCount": 49,
           "utf16Length": 49,
           "utf8ByteLength": 49,
           "utf16ToUtf8": [
@@ -627,6 +634,7 @@
         ],
         "unicode": {
           "graphemeLength": 39,
+          "graphemeCount": 27,
           "utf16Length": 27,
           "utf8ByteLength": 39,
           "utf16ToUtf8": [
@@ -694,6 +702,7 @@
         ],
         "unicode": {
           "graphemeLength": 57,
+          "graphemeCount": 33,
           "utf16Length": 43,
           "utf8ByteLength": 57,
           "utf16ToUtf8": [
@@ -733,6 +742,7 @@
         ],
         "unicode": {
           "graphemeLength": 27,
+          "graphemeCount": 13,
           "utf16Length": 19,
           "utf8ByteLength": 27,
           "utf16ToUtf8": [
@@ -800,6 +810,7 @@
         ],
         "unicode": {
           "graphemeLength": 24,
+          "graphemeCount": 16,
           "utf16Length": 20,
           "utf8ByteLength": 24,
           "utf16ToUtf8": [
@@ -871,6 +882,7 @@
         ],
         "unicode": {
           "graphemeLength": 44,
+          "graphemeCount": 30,
           "utf16Length": 36,
           "utf8ByteLength": 44,
           "utf16ToUtf8": [
@@ -942,6 +954,7 @@
         ],
         "unicode": {
           "graphemeLength": 48,
+          "graphemeCount": 48,
           "utf16Length": 48,
           "utf8ByteLength": 48,
           "utf16ToUtf8": [
@@ -981,6 +994,7 @@
         ],
         "unicode": {
           "graphemeLength": 15,
+          "graphemeCount": 15,
           "utf16Length": 15,
           "utf8ByteLength": 15,
           "utf16ToUtf8": [
@@ -1020,6 +1034,7 @@
         ],
         "unicode": {
           "graphemeLength": 364,
+          "graphemeCount": 124,
           "utf16Length": 124,
           "utf8ByteLength": 364,
           "utf16ToUtf8": [
