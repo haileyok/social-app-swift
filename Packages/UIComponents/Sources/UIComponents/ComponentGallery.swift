@@ -1,5 +1,6 @@
 #if canImport(SwiftUI)
 import DesignSystem
+import DesignSystemCore
 import DesignTokens
 import Moderation
 import SwiftUI
