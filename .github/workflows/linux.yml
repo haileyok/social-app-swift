@@ -61,7 +61,10 @@ jobs:
               for name in sorted(os.listdir(d)):
                   p = os.path.join(d, name)
                   if os.path.isfile(os.path.join(p, "Package.swift")):
-                      if name == "UIComponents" or name.endswith("Views"):
+                      # UIComponents is fully guarded like DesignSystem: its
+                      # Core target builds+tests on Linux. Only *Views
+                      # feature packages are Mac-only.
+                      if name.endswith("Views"):
                           continue
                       pkgs.append(p)
 
