@@ -169,6 +169,7 @@ jobs:
         run: |
           cd App
           set -o pipefail
+          rm -rf "$RUNNER_TEMP/ios-socialapp.xcresult"
           if xcodebuild test-without-building \
             -project SocialApp.xcodeproj \
             -scheme SocialApp \
