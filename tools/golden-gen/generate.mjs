@@ -169,7 +169,11 @@ function runRichTextCase(c) {
   const mid = boundaries[Math.floor(boundaries.length / 2)]
   const probes = [...new Set([0, boundaries[1] ?? utf16Len, mid, utf16Len])]
   const unicode = {
+    // NOTE: the TS engine's `length` is a UTF-8 BYTE count (utf8.byteLength),
+    // not a grapheme count - kept under this (historical) name for compat
+    // with the ported suites. graphemeCount is the true cluster count.
     graphemeLength: us.length,
+    graphemeCount: boundaries.length - 1,
     utf16Length: utf16Len,
     utf8ByteLength: us.utf8.length,
     utf16ToUtf8: probes.map((i) => [i, us.utf16IndexToUtf8Index(i)]),
