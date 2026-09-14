@@ -225,7 +225,6 @@ struct ComposerThreadAssemblyTests {
     #expect(record.text == "  hello")
   }
 }
-}
 
 extension String {
   /// Whether the receiver ends with `suffix`, for readable assertions.
