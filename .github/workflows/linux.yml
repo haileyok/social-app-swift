@@ -29,15 +29,20 @@ jobs:
       - name: Swift version
         run: swift --version
 
+      - name: Compute SPM cache key
+        run: |
+          KEY=$( (git ls-files 'Packages/*/Package.swift' 'App/Package.swift' | sort | xargs sha256sum 2>/dev/null; echo v1) | sha256sum | cut -c1-16 )
+          echo "spm_cache_key=linux-spm-${KEY}" >> "$GITHUB_ENV"
+          echo "key: linux-spm-${KEY}"
+
       - name: Cache SPM build directories
         uses: actions/cache@v4
         with:
           path: |
             Packages/*/.build
-          key: linux-spm-v1-${{ hashFiles('**/Package.swift') }}-${{ github.sha }}
+          key: ${{ env.spm_cache_key }}-${{ github.sha }}
           restore-keys: |
-            linux-spm-v1-${{ hashFiles('**/Package.swift') }}-
-            linux-spm-v1-
+            ${{ env.spm_cache_key }}-
 
       - name: Build & test Linux-verifiable packages
         run: |
