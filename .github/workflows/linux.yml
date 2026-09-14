@@ -49,16 +49,19 @@ jobs:
           set -eo pipefail
           # Parallel per-package build+test (4-way). Skips SwiftUI-only
           # packages (UIComponents, *Views) exactly like the old loop.
+          # Flat packages plus feature Logic packages under Packages/Features/.
+          # Skip SwiftUI-only packages (UIComponents, *Views) and non-package dirs.
           list_pkgs() {
-            for pkg in Packages/*/; do
-              name=$(basename "$pkg")
-              case "$name" in UIComponents|*Views) continue ;; esac
-              printf '%s\n' "$name"
+            for pkg in Packages/*/ Packages/Features/*/; do
+              case "$(basename "$pkg")" in UIComponents|*Views) continue ;; esac
+              [ -f "${pkg}Package.swift" ] || continue
+              printf '%s\n' "${pkg%/}"
             done
           }
           list_pkgs | xargs -P 4 -I '{}' bash -euo pipefail -c '
-            cd "Packages/{}"
-            log=/tmp/ci-{}.log
+            cd "{}"
+            slug=$(echo "{}" | tr "/" "-")
+            log=/tmp/ci-${slug}.log
             if ! (swift build && swift test) > "$log" 2>&1; then
               echo "::error::{} build/test failed"
               grep -E "error:|✘|FAILED" "$log" | head -20
@@ -82,10 +85,11 @@ jobs:
       - name: Lint imports
         run: |
           set -e
+          FEATURE_DIRS=$(find Packages/Features -mindepth 1 -maxdepth 1 -type d ! -name '*Views' 2>/dev/null || true)
           VIOLATIONS=$(grep -rn --include='*.swift' -E '^[[:space:]]*import (SwiftUI|UIKit)[[:space:]]*$' \
             Packages/ATSyntax Packages/Lexicons Packages/ATProtoClient Packages/RichText \
             Packages/Moderation Packages/Preferences Packages/Domain Packages/QueryStore \
-            Packages/Persistence Packages/TestSupport Packages/DesignTokens \
+            Packages/Persistence Packages/TestSupport Packages/DesignTokens $FEATURE_DIRS \
             || true)
           if [ -n "$VIOLATIONS" ]; then
             echo "::error::SwiftUI/UIKit import found in Linux-verifiable package:"
@@ -157,6 +161,17 @@ jobs:
             exit 1
           fi
           echo "golden fixtures idempotent"
+
+  manifest-check:
+    name: Test manifest check (AC.9)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify manifests reference real tests
+        run: tools/check-test-manifest --strict
 
   lint:
     name: swiftlint + swift-format
