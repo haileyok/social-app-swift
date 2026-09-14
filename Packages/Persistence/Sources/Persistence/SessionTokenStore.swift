@@ -65,11 +65,30 @@ public struct FileTokenStore: SessionTokenStore {
   /// Directory holding the per-account token files.
   public let rootDirectory: URL
 
-  private let fileManager: FileManager
+  /**
+   The file system handle.
+
+   `FileManager` is not `Sendable` in the iOS SDK, so it cannot be stored
+   directly in a `Sendable` conformance. The default manager is a thread-safe
+   singleton and this store only ever performs synchronous path operations
+   through it, so the judgement that it is safe to share is recorded here, in
+   one place, rather than by spreading `@unchecked` over the whole type.
+
+   Linux did not catch this: `FoundationEssentials`' `FileManager` is
+   `Sendable`, so the mismatch only appears when the package is compiled for
+   iOS - which first happened when LoginViews linked it into the app target.
+   */
+  private struct FileManagerBox: @unchecked Sendable {
+    let value: FileManager
+  }
+
+  private let fileManagerBox: FileManagerBox
+
+  private var fileManager: FileManager { fileManagerBox.value }
 
   public init(rootDirectory: URL, fileManager: FileManager = .default) {
     self.rootDirectory = rootDirectory
-    self.fileManager = fileManager
+    self.fileManagerBox = FileManagerBox(value: fileManager)
   }
 
   /// On-disk shape of one account's token file.
