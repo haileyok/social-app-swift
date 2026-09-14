@@ -3,7 +3,6 @@ import PackageDescription
 
 let package = Package(
   name: "ATProtoClient",
-  defaultLocalization: "en",
   products: [
     .library(name: "ATProtoClient", targets: ["ATProtoClient"])
   ],
@@ -11,7 +10,11 @@ let package = Package(
     .package(path: "../ATSyntax")
   ],
   targets: [
-    .target(name: "ATProtoClient", dependencies: ["ATSyntax"]),
-    .testTarget(name: "ATProtoClientTests", dependencies: ["ATProtoClient"]),
+    .target(
+      name: "ATProtoClient",
+      dependencies: ["ATSyntax"]),
+    .testTarget(
+      name: "ATProtoClientTests",
+      dependencies: ["ATProtoClient"]),
   ]
 )

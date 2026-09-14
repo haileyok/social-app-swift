@@ -9,4 +9,3 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - '@atproto/*'
   - '@atproto-labs/*'
-minimumReleaseAge: 0
