@@ -32,6 +32,17 @@ Verified: `swift build` + `swift test` (Swift Testing) on an SPM package using F
 
 CI runs the exact same Swift major.minor in a pinned `swift:6.3` Docker container. Version pairing local↔CI must be recorded here; if you bump one, bump both.
 
+## Mock server (dev-env-mock)
+
+**Method (proven in CI 2026-09-14, `macos-26` + Linux):** the vendored `dev-env-mock/` runs with **external** PG/Redis — no Docker needed (GitHub macOS runners have none).
+
+- PostgreSQL on `:5433`, user `pg`, password `password`, db `postgres`.
+- Redis on `:6380`.
+- `pnpm install && pnpm start:external`, then `curl -X POST 'http://localhost:1986?users&follows&posts'` to spawn the network (PDS on `:3000`, mock appview DID `did:plc:bw7ad3erl7btq6qwf66yqiov`).
+- macOS runner recipe: see the `mock-server-spike` job in `.github/workflows/ios.yml` (brew `postgresql@16` + `redis`, configure port/user, drive + assert). **This is the proven ios.yml mock step for AC.6/AC.10.**
+- Local (this workstation): apt `postgresql` (pg 18) + `redis-server`; see `dev-env-mock/README.md`.
+- **Chat is NOT served** (`@atproto/dev-env` TestNetwork has no chat service) — Messages tests use the `TestSupport` fake XRPC chat server (documented plan fallback, confirmed).
+
 ## Workflow conventions
 
 - **Worktrees**: work from `~/worktrees/social-app-swift/<slug>` on branch `hailey/<slug>`. Never leave the primary checkout dirty. Branch from freshly fetched `origin/main`.

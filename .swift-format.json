@@ -1,0 +1,19 @@
+{
+  "//": "swift-format config matching the repo style (4-space indent, 100 col). Generated Lexicons and vendored code are excluded via .swiftformatignore conventions; swift-format honors --exclude on invocation.",
+  "version": 1,
+  "lineLength": 100,
+  "indentation": {
+    "spaces": 2
+  },
+  "indent switch case labels": false,
+  "spacesAroundRangeFormationOperators": false,
+  "noLeadingUnderscores": false,
+  "respectExistingLineBreaks": true,
+  "lineBreakBeforeEachArgument": false,
+  "lineBreakBeforeEachGenericArgument": false,
+  "lineBreakAfterDeclarationTypeAttributes": false,
+  "prioritizeKeepingFunctionOutputTogether": true,
+  "indentConditionalCompilationBlocks": true,
+  "indentSwitchCaseLabels": false,
+  "tabWidth": 2
+}

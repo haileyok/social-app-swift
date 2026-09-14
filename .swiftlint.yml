@@ -1,0 +1,31 @@
+disabled_rules:
+  - trailing_whitespace        # generated code + editor handling
+  - line_length                # generated lexicon files have long lines; source-wide enforcement later
+  - identifier_name            # atproto conventions use short names (uri, cid, did)
+opt_in_rules:
+  - empty_count
+  - closure_spacing
+  - contains_over_first_not_nil
+  - first_where
+  - last_where
+  - lower_acl_than_parent
+  - operator_usage_whitespace
+
+excluded:
+  - .build
+  - Packages/Lexicons/Sources          # generated — never lint
+  - tools/lexicon-codegen              # vendored (MIT) — not our style surface
+  - dev-env-mock
+  - App/DerivedData
+
+type_body_length:
+  warning: 400
+  error: 800
+
+file_length:
+  warning: 600
+  error: 1200
+
+cyclomatic_complexity:
+  warning: 20
+  error: 40

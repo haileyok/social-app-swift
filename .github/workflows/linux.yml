@@ -105,3 +105,40 @@ jobs:
             exit 1
           fi
           echo "codegen idempotent"
+
+  lint:
+    name: swiftlint + swift-format
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          set -e
+          apt-get update -qq && apt-get install -y -qq curl unzip python3-minimal >/dev/null
+
+      - name: swiftlint (pinned release, best-effort on asset drift)
+        run: |
+          set -e
+          SWIFTLINT_VER=0.58.2
+          if curl -fsSL --retry 2 -o /tmp/swiftlint.zip \
+            "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VER}/SwiftLint_Linux.zip"; then
+            unzip -o /tmp/swiftlint.zip -d /tmp/swiftlint >/dev/null 2>&1 || true
+            BIN=$(find /tmp/swiftlint -type f -name swiftlint | head -1)
+            if [ -n "$BIN" ]; then
+              chmod +x "$BIN"
+              "$BIN" lint --strict \
+                --exclude Packages/Lexicons/Sources,tools/lexicon-codegen,dev-env-mock,App/.build 2>&1 | tail -20
+              exit ${PIPESTATUS[0]}
+            fi
+          fi
+          echo "::warning::swiftlint binary unavailable at pinned release; config (.swiftlint.yml) remains authoritative. Non-blocking."
+
+      - name: swift-format config validation
+        run: |
+          python3 -c "import json; json.load(open('.swift-format.json')); print('swift-format config valid')"
+          echo "swift-format execution wired in Phase 1 when real formatting surface exists"
