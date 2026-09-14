@@ -26,6 +26,13 @@ final class AppShellSmokeTests: XCTestCase {
       ["Home", "Search", "Chat", "Notifications", "Profile"])
   }
 
+  /**
+   The RN `testID`s are still the source of truth for the tab bar, but iOS does
+   not deliver them to `UITabBarButton` (SwiftUI drops identifiers set inside
+   `.tabItem`), so the UI test addresses buttons by the RN label and asserts the
+   identifiers on each tab's screen container. The list is kept (and tested) so
+   the mapping is one edit away if a future SwiftUI starts propagating them.
+   */
   func testTabAccessibilityIdentifiersMatchRNTestIDs() {
     XCTAssertEqual(
       AppTab.allCases.map(\.accessibilityIdentifier),
