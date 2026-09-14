@@ -58,6 +58,11 @@ CI runs the exact same Swift major.minor in a pinned `swift:6.3` Docker containe
 
 ## CI
 
+**Never run CI workloads on this workstation.** Self-hosted runners here once
+overloaded the box and crashed it mid-session. Linux checks stay on
+GitHub-hosted runners; iOS checks on the rented Mac (macrent-1/2). The
+workstation is for development, tests-on-demand, and orchestration only.
+
 - `linux.yml` (required): pinned `swift:6.3` container — per-🌐-package build+test, swiftlint, swift-format lint, jq validation of `.xcstrings`, boundary-lint (no SwiftUI/UIKit imports under 🌐 paths), lexicon codegen idempotency (`git diff --exit-code Packages/Lexicons` after regeneration).
 - `ios.yml` (non-blocking): `macos-26`, pinned `DEVELOPER_DIR`, single pinned iPhone simulator, `CODE_SIGNING_ALLOWED=NO`, path-filtered to `App/`, `DesignSystem/`, `UIComponents/`, `Features/**/Views`, `.xcodeproj`, and the workflow itself. Uploads `.xcresult` + screenshots.
 
