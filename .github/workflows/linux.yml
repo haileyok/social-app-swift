@@ -16,61 +16,142 @@ defaults:
     shell: bash
 
 jobs:
+  plan-packages:
+    name: Plan package tests (changed + dependents)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout (with history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute package matrix
+        id: plan
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, re, subprocess, sys
+
+          def run(*args):
+            return subprocess.run(args, capture_output=True, text=True).stdout
+
+          # Diff base: previous main tip for pushes, merge base for PRs.
+          base = os.environ.get("GITHUB_EVENT_BEFORE", "")
+          if base and subprocess.run(
+              ["git", "rev-parse", "--verify", base + "^{commit}"], capture_output=True
+          ).returncode != 0:
+              base = ""
+          if base:
+              changed = run("git", "diff", "--name-only", base, "HEAD").splitlines()
+          else:
+              changed = run("git", "ls-files").splitlines()
+
+          print("changed files ({}):".format(len(changed)))
+          for f in changed[:25]:
+              print("  " + f)
+
+          # Discover all testable packages (flat + Features nesting).
+          pkgs = []
+          for d in ["Packages", "Packages/Features"]:
+              if not os.path.isdir(d):
+                  continue
+              for name in sorted(os.listdir(d)):
+                  p = os.path.join(d, name)
+                  if os.path.isfile(os.path.join(p, "Package.swift")):
+                      if name == "UIComponents" or name.endswith("Views"):
+                          continue
+                      pkgs.append(p)
+
+          # Dependency graph from path references in Package.swift files.
+          deps = {}
+          for p in pkgs:
+              src = open(os.path.join(p, "Package.swift")).read()
+              deps[p] = []
+              for m in re.finditer(r'\.package\(path:\s*"([^"]+)"\)', src):
+                  rel = m.group(1)
+                  target = os.path.normpath(os.path.join(p, rel))
+                  if target in pkgs and target != p:
+                      deps[p].append(target)
+
+          # Map changed files to owning package.
+          seed = set()
+          for f in changed:
+              if not f.startswith("Packages/"):
+                  continue
+              parts = f.split("/")
+              if parts[1] == "Features" and len(parts) >= 4:
+                  seed.add("Packages/Features/" + parts[2])
+              elif parts[1] != "Features" and len(parts) >= 3:
+                  seed.add("Packages/" + parts[1])
+          seed &= set(pkgs)
+
+          # Shared inputs -> conservative full run.
+          full = any(
+              f.startswith("tools/lexicon-codegen") or f.startswith("Packages/TestSupport/")
+              for f in changed
+          )
+
+          if full:
+              selected = set(pkgs)
+          else:
+              # Transitive dependents closure.
+              selected = set()
+              frontier = list(seed)
+              while frontier:
+                  p = frontier.pop()
+                  if p in selected:
+                      continue
+                  selected.add(p)
+                  for q, dd in deps.items():
+                      if p in dd and q not in selected:
+                          frontier.append(q)
+
+          if not selected:
+              # Nothing to build; emit a sentinel so the matrix job can no-op.
+              selected = {"__none__"}
+
+          matrix = json.dumps(sorted(selected))
+          print("selected:", matrix)
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write("matrix=" + matrix + "\n")
+          PY
+
   build-test:
-    name: Build & test Linux-verifiable packages
+    name: Test ${{ matrix.pkg }}
+    needs: plan-packages
     runs-on: ubuntu-latest
     container:
       image: swift:6.3
-    timeout-minutes: 45
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: ${{ fromJSON(needs.plan-packages.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Swift version
-        run: swift --version
-
-      - name: Compute SPM cache key
-        run: |
-          KEY=$( (git ls-files 'Packages/*/Package.swift' 'App/Package.swift' | sort | xargs sha256sum 2>/dev/null; echo v1) | sha256sum | cut -c1-16 )
-          echo "spm_cache_key=linux-spm-${KEY}" >> "$GITHUB_ENV"
-          echo "key: linux-spm-${KEY}"
-
-      - name: Cache SPM build directories
-        uses: actions/cache@v4
-        with:
-          path: |
-            Packages/*/.build
-          key: ${{ env.spm_cache_key }}-${{ github.sha }}
-          restore-keys: |
-            ${{ env.spm_cache_key }}-
-
-      - name: Build & test Linux-verifiable packages
+      - name: Build & test package
         run: |
           set -eo pipefail
-          # Parallel per-package build+test (4-way). Skips SwiftUI-only
-          # packages (UIComponents, *Views) exactly like the old loop.
-          # Flat packages plus feature Logic packages under Packages/Features/.
-          # Skip SwiftUI-only packages (UIComponents, *Views) and non-package dirs.
-          list_pkgs() {
-            for pkg in Packages/*/ Packages/Features/*/; do
-              case "$(basename "$pkg")" in UIComponents|*Views) continue ;; esac
-              [ -f "${pkg}Package.swift" ] || continue
-              printf '%s\n' "${pkg%/}"
-            done
-          }
-          list_pkgs | xargs -P 4 -I '{}' bash -euo pipefail -c '
-            cd "{}"
-            slug=$(echo "{}" | tr "/" "-")
-            log=/tmp/ci-${slug}.log
-            if ! (swift build && swift test) > "$log" 2>&1; then
-              echo "::error::{} build/test failed"
-              grep -E "error:|✘|FAILED" "$log" | head -20
-              echo "--- tail of log:"
-              tail -25 "$log"
-              exit 1
-            fi
-            tail -1 "$log"
-          '
+          if [ "${{ matrix.pkg }}" = "__none__" ]; then
+            echo "no package changes - nothing to test"
+            exit 0
+          fi
+          cd "${{ matrix.pkg }}"
+          slug=$(echo "${{ matrix.pkg }}" | tr "/" "-")
+          log=/tmp/ci-${slug}.log
+          if ! (swift build && swift test) > "$log" 2>&1; then
+            echo "::error::${{ matrix.pkg }} build/test failed"
+            grep -E "error:|✘|FAILED" "$log" | head -20
+            echo "--- tail of log:"
+            tail -25 "$log"
+            exit 1
+          fi
+          tail -1 "$log"
 
   boundary-lint:
     name: Boundary lint (no SwiftUI/UIKit in Linux packages)
@@ -103,7 +184,7 @@ jobs:
           set -e
           apt-get update -qq && apt-get install -y -qq jq >/dev/null
           FOUND=0
-          find . -name '*.xcstrings' -type f -not -path './.build/*' > /tmp/xcstrings-list.txt || true
+          find . -name '*.xcstrings' -type f -not -path '*/.build/*' > /tmp/xcstrings-list.txt || true
           while IFS= read -r f; do
             [ -n "$f" ] || continue
             jq empty "$f" || { echo "::error::invalid xcstrings: $f"; exit 1; }
@@ -198,7 +279,6 @@ jobs:
             BIN=$(find /tmp/swiftlint -type f -name swiftlint | head -1)
             if [ -n "$BIN" ]; then
               chmod +x "$BIN"
-              # exclusions live in .swiftlint.yml (excluded:) - no CLI flag here
               set +e
               "$BIN" lint --strict > /tmp/swiftlint-out.txt 2>&1
               RC=$?
@@ -212,4 +292,4 @@ jobs:
       - name: swift-format config validation
         run: |
           python3 -c "import json; json.load(open('.swift-format.json')); print('swift-format config valid')"
-          echo "swift-format execution wired in Phase 1 when real formatting surface exists"
+          echo "swift-format execution wired when real formatting surface exists"
