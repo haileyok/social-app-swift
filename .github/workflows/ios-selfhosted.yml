@@ -67,3 +67,131 @@ jobs:
       - name: Simulator inventory
         run: |
           xcrun simctl list devices available | head -12
+
+      # --- Phase 4.2: the app target, its XCUITest smoke test and the
+      # per-tab screenshot loop. Everything below drives the hand-maintained
+      # App/SocialApp.xcodeproj rather than a bare SPM scheme.
+
+      - name: Resolve simulator
+        id: sim
+        run: |
+          set -e
+          # Prefer the pinned device; fall back to the newest available iPhone on
+          # whatever runtime this machine happens to have (the self-hosted Mac
+          # and the hosted macos-26 runners ship different iOS runtimes).
+          UDID=""
+          for NAME in "iPhone 16 Pro" "iPhone 16" "iPhone 15"; do
+            UDID=$(xcrun simctl list devices available \
+              | grep -E "^[[:space:]]*${NAME} \(" || true)
+            if [ -n "$UDID" ]; then
+              UDID=$(echo "$UDID" | grep -oE '[A-F0-9-]{36}' | tail -1)
+              echo "resolved pinned simulator: $NAME ($UDID)"
+              break
+            fi
+            UDID=""
+          done
+          if [ -z "$UDID" ]; then
+            UDID=$(xcrun simctl list devices available \
+              | grep "iPhone" | grep -oE '[A-F0-9-]{36}' | tail -1)
+            echo "pinned simulator not found; using newest iPhone ($UDID)"
+          fi
+          if [ -z "$UDID" ]; then
+            echo "::error::no available iPhone simulator on this runner"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "UDID=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+
+      - name: Build app + tests for testing
+        run: |
+          cd App
+          set -o pipefail
+          if xcodebuild build-for-testing \
+            -project SocialApp.xcodeproj \
+            -scheme SocialApp \
+            -destination "id=$UDID" \
+            -derivedDataPath ~/dd-socialapp \
+            CODE_SIGNING_ALLOWED=NO > /tmp/ios-buildtests.log 2>&1; then
+            tail -3 /tmp/ios-buildtests.log
+          else
+            echo "::error::build-for-testing failed - compile errors:"
+            grep -E 'error:|fatal error:|The following build commands failed' /tmp/ios-buildtests.log | sort -u | head -60
+            echo "--- last 40 lines of build log:"
+            tail -40 /tmp/ios-buildtests.log
+            exit 1
+          fi
+
+      - name: Run XCUITest launch smoke test
+        run: |
+          cd App
+          set -o pipefail
+          if xcodebuild test-without-building \
+            -project SocialApp.xcodeproj \
+            -scheme SocialApp \
+            -destination "id=$UDID" \
+            -derivedDataPath ~/dd-socialapp \
+            -resultBundlePath /tmp/ios-socialapp.xcresult \
+            -only-testing:SocialAppUITests \
+            CODE_SIGNING_ALLOWED=NO > /tmp/ios-tests.log 2>&1; then
+            echo "iOS test run: PASS"
+            grep -E "Test Suite .* (passed|failed)|Executed [0-9]+ test" /tmp/ios-tests.log | tail -8
+          else
+            echo "::error::iOS test run failed:"
+            grep -E "error:|XCTAssert|failed \(|Failing tests" /tmp/ios-tests.log | head -40
+            echo "--- last 40 lines of test log:"
+            tail -40 /tmp/ios-tests.log
+            exit 1
+          fi
+
+      - name: Upload test logs and result bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-logs
+          path: |
+            /tmp/ios-buildtests.log
+            /tmp/ios-tests.log
+            /tmp/ios-socialapp.xcresult
+          if-no-files-found: ignore
+
+      # Screenshots of each tab. `-uiTestInitialTab N` is read by AppRootView,
+      # so every run lands on a known tab without needing a login or a tap that
+      # could race the launch.
+      - name: Capture per-tab screenshots
+        if: always()
+        run: |
+          set -e
+          mkdir -p artifacts/screenshots
+          if [ -z "${UDID:-}" ]; then
+            echo "no simulator; skipping screenshots"
+            exit 0
+          fi
+          APP_PATH=$(find ~/dd-socialapp/Build/Products -name 'SocialApp.app' -maxdepth 3 | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "SocialApp.app not built; skipping screenshots"
+            exit 0
+          fi
+          xcrun simctl install "$UDID" "$APP_PATH"
+          i=0
+          for TAB in Home Search Messages Notifications Profile; do
+            xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
+            xcrun simctl launch "$UDID" dev.hailey.socialapp -uiTestInitialTab "$i" || true
+            sleep 4
+            xcrun simctl io "$UDID" screenshot "artifacts/screenshots/${i}-${TAB}.png" || true
+            i=$((i + 1))
+          done
+          # The token gallery (AC.7's visual-review surface) lives on every tab's
+          # toolbar; the XCUITest taps it and its frames land in the .xcresult.
+          xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
+          ls -la artifacts/screenshots
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: artifacts/screenshots
+          if-no-files-found: ignore
