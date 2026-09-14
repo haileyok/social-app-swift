@@ -22,7 +22,9 @@ final class ScriptedTransport: HTTPTransport, @unchecked Sendable {
     self.responses = responses
   }
 
-  static func json(_ payload: [String: Any?], status: Int = 200,
+  static func json(
+    _ payload: [String: Any?],
+    status: Int = 200,
     headers: [String: String] = ["Content-Type": "application/json"]
   ) -> HTTPResponse {
     let data = try! JSONSerialization.data(withJSONObject: payload)
