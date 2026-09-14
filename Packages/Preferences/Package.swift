@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
   name: "Preferences",
+  platforms: [.iOS(.v18), .macOS(.v15)],
   defaultLocalization: "en",
   products: [
     .library(name: "Preferences", targets: ["Preferences"])
