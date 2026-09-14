@@ -112,7 +112,9 @@ manifest_paths() {
 
   # Every Packages/<Pkg>/tests-ported.md, in a stable order, optionally
   # restricted to the requested package names.
-  find "$REPO_ROOT/Packages" -mindepth 2 -maxdepth 2 -name 'tests-ported.md' -print |
+  # Flat packages (depth 2) AND feature packages (Packages/Features/<Name>,
+  # depth 3) — but never anything inside a .build checkout.
+  find "$REPO_ROOT/Packages" -mindepth 2 -maxdepth 3 -name 'tests-ported.md' -not -path '*/.build/*' -print |
     sort |
     while IFS= read -r path; do
       if [ "${#PACKAGE_FILTERS[@]}" -eq 0 ]; then
