@@ -63,8 +63,8 @@ public struct AlfButtonStyle: ButtonStyle {
         .padding(.vertical, metrics.paddingVertical)
         .padding(.horizontal, metrics.paddingHorizontal)
         .frame(
-          minWidth: metrics.side,
-          minHeight: metrics.side
+          minWidth: metrics.side.map(CGFloat.init),
+          minHeight: metrics.side.map(CGFloat.init)
         )
         .background(backgroundColor(background))
         .contentShape(shapeContent)
