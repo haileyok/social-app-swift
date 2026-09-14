@@ -1,48 +1,54 @@
 name: linux
 
-# The Linux gate runs on SELF-HOSTED runners (linuxdev-1/2 on the dev
-# workstation, label linux-selfhosted) with warm SPM caches - minutes, not
-# tens of minutes. Trigger is push-to-main only: merges to main are done by
-# the orchestrator from same-repo branches (trusted). If pull_request checks
-# are ever needed for outside forks, add a separate hosted job then - do not
-# point fork PRs at self-hosted runners.
 on:
   push:
     branches: [main]
+  pull_request:
 
-# Queue (do not cancel): consecutive merges each get verified in order, so
-# the orchestrator never has to block on one run before pushing the next.
 concurrency:
   group: linux-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
+# Container jobs default to `sh` (dash) on the swift image; dash lacks
+# `set -o pipefail`, which the build/test steps rely on.
 defaults:
   run:
     shell: bash
 
-env:
-  # Self-hosted box: swift toolchain + nix-provided node/npm; system git,
-  # jq, python3, swiftlint. (Runners do not inherit the interactive shell
-  # profile, so the PATH is explicit.)
-  PATH: /home/vmtemplate/swift-toolchains/bin:/home/vmtemplate/.nix-profile/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
 jobs:
   build-test:
     name: Build & test Linux-verifiable packages
-    runs-on: [self-hosted, linux-selfhosted]
-    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Swift version
-        run: swift --version | head -1
+        run: swift --version
+
+      - name: Compute SPM cache key
+        run: |
+          KEY=$( (git ls-files 'Packages/*/Package.swift' 'App/Package.swift' | sort | xargs sha256sum 2>/dev/null; echo v1) | sha256sum | cut -c1-16 )
+          echo "spm_cache_key=linux-spm-${KEY}" >> "$GITHUB_ENV"
+          echo "key: linux-spm-${KEY}"
+
+      - name: Cache SPM build directories
+        uses: actions/cache@v4
+        with:
+          path: |
+            Packages/*/.build
+          key: ${{ env.spm_cache_key }}-${{ github.sha }}
+          restore-keys: |
+            ${{ env.spm_cache_key }}-
 
       - name: Build & test Linux-verifiable packages
         run: |
           set -eo pipefail
-          # Parallel per-package build+test. Warm .build dirs persist in the
-          # runner workspace between runs, so unchanged packages are no-ops.
+          # Parallel per-package build+test (4-way). Skips SwiftUI-only
+          # packages (UIComponents, *Views) exactly like the old loop.
           # Flat packages plus feature Logic packages under Packages/Features/.
           # Skip SwiftUI-only packages (UIComponents, *Views) and non-package dirs.
           list_pkgs() {
@@ -68,8 +74,10 @@ jobs:
 
   boundary-lint:
     name: Boundary lint (no SwiftUI/UIKit in Linux packages)
-    runs-on: [self-hosted, linux-selfhosted]
-    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -93,8 +101,9 @@ jobs:
       - name: Validate string catalogs
         run: |
           set -e
+          apt-get update -qq && apt-get install -y -qq jq >/dev/null
           FOUND=0
-          find . -name '*.xcstrings' -type f -not -path '*/.build/*' > /tmp/xcstrings-list.txt || true
+          find . -name '*.xcstrings' -type f -not -path './.build/*' > /tmp/xcstrings-list.txt || true
           while IFS= read -r f; do
             [ -n "$f" ] || continue
             jq empty "$f" || { echo "::error::invalid xcstrings: $f"; exit 1; }
@@ -104,8 +113,10 @@ jobs:
 
   lexicon-codegen-idempotency:
     name: Lexicon codegen idempotency
-    runs-on: [self-hosted, linux-selfhosted]
-    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -113,8 +124,11 @@ jobs:
       - name: Regenerate and verify diff-clean
         run: |
           set -e
+          apt-get update -qq && apt-get install -y -qq python3-minimal git >/dev/null
+          # container checkout is owned by a different uid than the container user
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           tools/lexicon-codegen/regenerate.sh
-          if ! git diff --exit-code -- Packages/Lexicons; then
+          if ! git -C "$GITHUB_WORKSPACE" diff --exit-code -- Packages/Lexicons; then
             echo "::error::Packages/Lexicons is not in sync with codegen output. Regenerate locally and commit. Never hand-edit generated code."
             exit 1
           fi
@@ -122,11 +136,18 @@ jobs:
 
   golden-idempotency:
     name: Golden fixture idempotency
-    runs-on: [self-hosted, linux-selfhosted]
-    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/golden-gen/package-lock.json
 
       - name: Regenerate and verify diff-clean
         run: |
@@ -143,8 +164,8 @@ jobs:
 
   manifest-check:
     name: Test manifest check (AC.9)
-    runs-on: [self-hosted, linux-selfhosted]
-    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -154,24 +175,41 @@ jobs:
 
   lint:
     name: swiftlint + swift-format
-    runs-on: [self-hosted, linux-selfhosted]
-    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: swiftlint
+      - name: Install tools
         run: |
           set -e
-          if command -v swiftlint >/dev/null 2>&1; then
-            swiftlint lint --strict > /tmp/swiftlint-out.txt 2>&1
-            RC=$?
-            grep -v '^Linting' /tmp/swiftlint-out.txt | tail -100
-            exit $RC
+          apt-get update -qq && apt-get install -y -qq curl unzip python3-minimal >/dev/null
+
+      - name: swiftlint (pinned release, best-effort on asset drift)
+        run: |
+          set -e
+          SWIFTLINT_VER=0.58.2
+          if curl -fsSL --retry 2 -o /tmp/swiftlint.zip \
+            "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VER}/SwiftLint_Linux.zip"; then
+            unzip -o /tmp/swiftlint.zip -d /tmp/swiftlint >/dev/null 2>&1 || true
+            BIN=$(find /tmp/swiftlint -type f -name swiftlint | head -1)
+            if [ -n "$BIN" ]; then
+              chmod +x "$BIN"
+              # exclusions live in .swiftlint.yml (excluded:) - no CLI flag here
+              set +e
+              "$BIN" lint --strict > /tmp/swiftlint-out.txt 2>&1
+              RC=$?
+              set -e
+              grep -v '^Linting' /tmp/swiftlint-out.txt | tail -100
+              exit $RC
+            fi
           fi
-          echo "::warning::swiftlint not installed on runner; lint skipped (install per repo AGENTS.md)"
+          echo "::warning::swiftlint binary unavailable at pinned release; config (.swiftlint.yml) remains authoritative. Non-blocking."
 
       - name: swift-format config validation
         run: |
           python3 -c "import json; json.load(open('.swift-format.json')); print('swift-format config valid')"
-          echo "swift-format execution wired when real formatting surface exists"
+          echo "swift-format execution wired in Phase 1 when real formatting surface exists"
