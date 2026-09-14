@@ -8,6 +8,7 @@ on:
       - 'Packages/DesignSystem/**'
       - 'Packages/UIComponents/**'
       - 'Packages/Features/**'
+      - 'dev-env-mock/**'
       - '.github/workflows/ios.yml'
   pull_request:
     paths:
@@ -15,6 +16,7 @@ on:
       - 'Packages/DesignSystem/**'
       - 'Packages/UIComponents/**'
       - 'Packages/Features/**'
+      - 'dev-env-mock/**'
       - '.github/workflows/ios.yml'
 
 # Non-blocking by policy: linux.yml is the sole required check.
@@ -24,6 +26,66 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  mock-server-spike:
+    # Phase 0.6 spike: prove the vendored dev-env mock runs on a macOS runner
+    # (no Docker there) with brew PG/Redis + Node. Non-blocking by policy.
+    name: Mock server spike (brew PG/Redis + Node)
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install services
+        run: |
+          set -e
+          brew install postgresql@16 redis || true
+          brew services start postgresql@16 || true
+          brew services start redis || true
+
+      - name: Configure postgres (port 5433, user pg)
+        run: |
+          set -e
+          export PATH="/opt/homebrew/opt/postgresql@16/bin:$PATH"
+          for i in $(seq 1 30); do pg_isready && break; sleep 2; done
+          # listener on 5433
+          PGCONF="$(brew --prefix)/var/postgresql@16/postgresql.conf"
+          grep -q '^port = 5433' "$PGCONF" || echo "port = 5433" >> "$PGCONF"
+          brew services restart postgresql@16
+          for i in $(seq 1 30); do pg_isready -p 5433 && break; sleep 2; done
+          psql -p 5433 -U "$(whoami)" -d postgres -c "CREATE ROLE pg LOGIN PASSWORD 'password' SUPERUSER;" || true
+          psql -p 5433 -U "$(whoami)" -d postgres -c "SELECT 1;"
+
+      - name: Configure redis (port 6380)
+        run: |
+          set -e
+          REDISCONF="$(brew --prefix)/etc/redis.conf"
+          grep -q '^port 6380' "$REDISCONF" || echo "port 6380" >> "$REDISCONF"
+          brew services restart redis
+          for i in $(seq 1 30); do redis-cli -p 6380 ping && break; sleep 2; done
+
+      - name: Run mock server and drive it
+        run: |
+          set -e
+          cd dev-env-mock
+          corepack enable
+          pnpm install
+          pnpm start:external &
+          MOCK_PID=$!
+          for i in $(seq 1 30); do
+            curl -s http://localhost:1986 -o /dev/null && break
+            sleep 2
+          done
+          curl -s -X POST 'http://localhost:1986?users&follows&posts' --max-time 120
+          echo
+          # assert login works
+          RESP=$(curl -s -X POST http://localhost:3000/xrpc/com.atproto.server.createSession \
+            -H 'Content-Type: application/json' \
+            -d '{"identifier":"alice.test","password":"hunter2"}')
+          echo "$RESP" | head -c 200; echo
+          echo "$RESP" | grep -q accessJwt && echo "MOCK SERVER SPIKE: PASS" || { echo "MOCK SERVER SPIKE: FAIL"; kill $MOCK_PID; exit 1; }
+          kill $MOCK_PID || true
+
   build-test:
     name: iOS build + UI smoke + screenshots
     runs-on: macos-26
