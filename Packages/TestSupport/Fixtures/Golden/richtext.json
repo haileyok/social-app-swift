@@ -1,0 +1,1047 @@
+{
+  "version": 1,
+  "generator": "@bsky/sdk@1.1.0 (pinned; matches RN social-app package.json)",
+  "cases": [
+    {
+      "name": "plain",
+      "input": {
+        "text": "just a normal sentence"
+      },
+      "expected": {
+        "graphemeLength": 22,
+        "facets": [],
+        "segments": [
+          {
+            "text": "just a normal sentence",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 22,
+          "utf16Length": 22,
+          "utf8ByteLength": 22,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              11,
+              11
+            ],
+            [
+              22,
+              22
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "url-simple",
+      "input": {
+        "text": "look at https://example.com here"
+      },
+      "expected": {
+        "graphemeLength": 32,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 8,
+              "byteEnd": 27
+            },
+            "features": [
+              {
+                "uri": "https://example.com",
+                "$type": "app.bsky.richtext.facet#link"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "look at ",
+            "facet": null
+          },
+          {
+            "text": "https://example.com",
+            "facet": {
+              "index": {
+                "byteStart": 8,
+                "byteEnd": 27
+              },
+              "features": [
+                {
+                  "uri": "https://example.com",
+                  "$type": "app.bsky.richtext.facet#link"
+                }
+              ]
+            }
+          },
+          {
+            "text": " here",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 32,
+          "utf16Length": 32,
+          "utf8ByteLength": 32,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              16,
+              16
+            ],
+            [
+              32,
+              32
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "url-trailing-punctuation",
+      "input": {
+        "text": "check this out https://example.com/path."
+      },
+      "expected": {
+        "graphemeLength": 40,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 15,
+              "byteEnd": 39
+            },
+            "features": [
+              {
+                "uri": "https://example.com/path",
+                "$type": "app.bsky.richtext.facet#link"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "check this out ",
+            "facet": null
+          },
+          {
+            "text": "https://example.com/path",
+            "facet": {
+              "index": {
+                "byteStart": 15,
+                "byteEnd": 39
+              },
+              "features": [
+                {
+                  "uri": "https://example.com/path",
+                  "$type": "app.bsky.richtext.facet#link"
+                }
+              ]
+            }
+          },
+          {
+            "text": ".",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 40,
+          "utf16Length": 40,
+          "utf8ByteLength": 40,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              20,
+              20
+            ],
+            [
+              40,
+              40
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "url-with-query-and-fragment",
+      "input": {
+        "text": "see https://example.com/a/b?x=1&y=2#frag end"
+      },
+      "expected": {
+        "graphemeLength": 44,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 4,
+              "byteEnd": 40
+            },
+            "features": [
+              {
+                "uri": "https://example.com/a/b?x=1&y=2#frag",
+                "$type": "app.bsky.richtext.facet#link"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "see ",
+            "facet": null
+          },
+          {
+            "text": "https://example.com/a/b?x=1&y=2#frag",
+            "facet": {
+              "index": {
+                "byteStart": 4,
+                "byteEnd": 40
+              },
+              "features": [
+                {
+                  "uri": "https://example.com/a/b?x=1&y=2#frag",
+                  "$type": "app.bsky.richtext.facet#link"
+                }
+              ]
+            }
+          },
+          {
+            "text": " end",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 44,
+          "utf16Length": 44,
+          "utf8ByteLength": 44,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              22,
+              22
+            ],
+            [
+              44,
+              44
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "mention",
+      "input": {
+        "text": "hello @alice.test welcome"
+      },
+      "expected": {
+        "graphemeLength": 25,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 6,
+              "byteEnd": 17
+            },
+            "features": [
+              {
+                "did": "alice.test",
+                "$type": "app.bsky.richtext.facet#mention"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "hello ",
+            "facet": null
+          },
+          {
+            "text": "@alice.test",
+            "facet": {
+              "index": {
+                "byteStart": 6,
+                "byteEnd": 17
+              },
+              "features": [
+                {
+                  "did": "alice.test",
+                  "$type": "app.bsky.richtext.facet#mention"
+                }
+              ]
+            }
+          },
+          {
+            "text": " welcome",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 25,
+          "utf16Length": 25,
+          "utf8ByteLength": 25,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              13,
+              13
+            ],
+            [
+              25,
+              25
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "hashtag",
+      "input": {
+        "text": "a post #about #Things and #notatag"
+      },
+      "expected": {
+        "graphemeLength": 34,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 7,
+              "byteEnd": 13
+            },
+            "features": [
+              {
+                "tag": "about",
+                "$type": "app.bsky.richtext.facet#tag"
+              }
+            ]
+          },
+          {
+            "index": {
+              "byteStart": 14,
+              "byteEnd": 21
+            },
+            "features": [
+              {
+                "tag": "Things",
+                "$type": "app.bsky.richtext.facet#tag"
+              }
+            ]
+          },
+          {
+            "index": {
+              "byteStart": 26,
+              "byteEnd": 34
+            },
+            "features": [
+              {
+                "tag": "notatag",
+                "$type": "app.bsky.richtext.facet#tag"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "a post ",
+            "facet": null
+          },
+          {
+            "text": "#about",
+            "facet": {
+              "index": {
+                "byteStart": 7,
+                "byteEnd": 13
+              },
+              "features": [
+                {
+                  "tag": "about",
+                  "$type": "app.bsky.richtext.facet#tag"
+                }
+              ]
+            }
+          },
+          {
+            "text": " ",
+            "facet": null
+          },
+          {
+            "text": "#Things",
+            "facet": {
+              "index": {
+                "byteStart": 14,
+                "byteEnd": 21
+              },
+              "features": [
+                {
+                  "tag": "Things",
+                  "$type": "app.bsky.richtext.facet#tag"
+                }
+              ]
+            }
+          },
+          {
+            "text": " and ",
+            "facet": null
+          },
+          {
+            "text": "#notatag",
+            "facet": {
+              "index": {
+                "byteStart": 26,
+                "byteEnd": 34
+              },
+              "features": [
+                {
+                  "tag": "notatag",
+                  "$type": "app.bsky.richtext.facet#tag"
+                }
+              ]
+            }
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 34,
+          "utf16Length": 34,
+          "utf8ByteLength": 34,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              17,
+              17
+            ],
+            [
+              34,
+              34
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "mixed-facets",
+      "input": {
+        "text": "@alice.test posted #news from https://example.com"
+      },
+      "expected": {
+        "graphemeLength": 49,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 0,
+              "byteEnd": 11
+            },
+            "features": [
+              {
+                "did": "alice.test",
+                "$type": "app.bsky.richtext.facet#mention"
+              }
+            ]
+          },
+          {
+            "index": {
+              "byteStart": 19,
+              "byteEnd": 24
+            },
+            "features": [
+              {
+                "tag": "news",
+                "$type": "app.bsky.richtext.facet#tag"
+              }
+            ]
+          },
+          {
+            "index": {
+              "byteStart": 30,
+              "byteEnd": 49
+            },
+            "features": [
+              {
+                "uri": "https://example.com",
+                "$type": "app.bsky.richtext.facet#link"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "@alice.test",
+            "facet": {
+              "index": {
+                "byteStart": 0,
+                "byteEnd": 11
+              },
+              "features": [
+                {
+                  "did": "alice.test",
+                  "$type": "app.bsky.richtext.facet#mention"
+                }
+              ]
+            }
+          },
+          {
+            "text": " posted ",
+            "facet": null
+          },
+          {
+            "text": "#news",
+            "facet": {
+              "index": {
+                "byteStart": 19,
+                "byteEnd": 24
+              },
+              "features": [
+                {
+                  "tag": "news",
+                  "$type": "app.bsky.richtext.facet#tag"
+                }
+              ]
+            }
+          },
+          {
+            "text": " from ",
+            "facet": null
+          },
+          {
+            "text": "https://example.com",
+            "facet": {
+              "index": {
+                "byteStart": 30,
+                "byteEnd": 49
+              },
+              "features": [
+                {
+                  "uri": "https://example.com",
+                  "$type": "app.bsky.richtext.facet#link"
+                }
+              ]
+            }
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 49,
+          "utf16Length": 49,
+          "utf8ByteLength": 49,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              25,
+              25
+            ],
+            [
+              49,
+              49
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "cjk-plus-url",
+      "input": {
+        "text": "中文测试 https://example.com 结束"
+      },
+      "expected": {
+        "graphemeLength": 39,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 13,
+              "byteEnd": 32
+            },
+            "features": [
+              {
+                "uri": "https://example.com",
+                "$type": "app.bsky.richtext.facet#link"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "中文测试 ",
+            "facet": null
+          },
+          {
+            "text": "https://example.com",
+            "facet": {
+              "index": {
+                "byteStart": 13,
+                "byteEnd": 32
+              },
+              "features": [
+                {
+                  "uri": "https://example.com",
+                  "$type": "app.bsky.richtext.facet#link"
+                }
+              ]
+            }
+          },
+          {
+            "text": " 结束",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 39,
+          "utf16Length": 27,
+          "utf8ByteLength": 39,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              14,
+              22
+            ],
+            [
+              27,
+              39
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "family-emoji-then-url",
+      "input": {
+        "text": "👨‍👩‍👧‍👦 family then https://example.com"
+      },
+      "expected": {
+        "graphemeLength": 57,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 38,
+              "byteEnd": 57
+            },
+            "features": [
+              {
+                "uri": "https://example.com",
+                "$type": "app.bsky.richtext.facet#link"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "👨‍👩‍👧‍👦 family then ",
+            "facet": null
+          },
+          {
+            "text": "https://example.com",
+            "facet": {
+              "index": {
+                "byteStart": 38,
+                "byteEnd": 57
+              },
+              "features": [
+                {
+                  "uri": "https://example.com",
+                  "$type": "app.bsky.richtext.facet#link"
+                }
+              ]
+            }
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 57,
+          "utf16Length": 43,
+          "utf8ByteLength": 57,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              11,
+              25
+            ],
+            [
+              27,
+              41
+            ],
+            [
+              43,
+              57
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "flag-emoji-pair",
+      "input": {
+        "text": "flags 🇺🇸🇯🇸 done"
+      },
+      "expected": {
+        "graphemeLength": 27,
+        "facets": [],
+        "segments": [
+          {
+            "text": "flags 🇺🇸🇯🇸 done",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 27,
+          "utf16Length": 19,
+          "utf8ByteLength": 27,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              10,
+              14
+            ],
+            [
+              19,
+              27
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "combining-diacritics",
+      "input": {
+        "text": "café résumé #tág"
+      },
+      "expected": {
+        "graphemeLength": 24,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 18,
+              "byteEnd": 24
+            },
+            "features": [
+              {
+                "tag": "tág",
+                "$type": "app.bsky.richtext.facet#tag"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "café résumé ",
+            "facet": null
+          },
+          {
+            "text": "#tág",
+            "facet": {
+              "index": {
+                "byteStart": 18,
+                "byteEnd": 24
+              },
+              "features": [
+                {
+                  "tag": "tág",
+                  "$type": "app.bsky.richtext.facet#tag"
+                }
+              ]
+            }
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 24,
+          "utf16Length": 20,
+          "utf8ByteLength": 24,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              20,
+              24
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "emoji-skin-tone",
+      "input": {
+        "text": "👍🏽 thumbs https://example.com 👍🏽"
+      },
+      "expected": {
+        "graphemeLength": 44,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 16,
+              "byteEnd": 35
+            },
+            "features": [
+              {
+                "uri": "https://example.com",
+                "$type": "app.bsky.richtext.facet#link"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "👍🏽 thumbs ",
+            "facet": null
+          },
+          {
+            "text": "https://example.com",
+            "facet": {
+              "index": {
+                "byteStart": 16,
+                "byteEnd": 35
+              },
+              "features": [
+                {
+                  "uri": "https://example.com",
+                  "$type": "app.bsky.richtext.facet#link"
+                }
+              ]
+            }
+          },
+          {
+            "text": " 👍🏽",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 44,
+          "utf16Length": 36,
+          "utf8ByteLength": 44,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              18,
+              22
+            ],
+            [
+              36,
+              44
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "multiline",
+      "input": {
+        "text": "line one\nline two https://example.com\nline three"
+      },
+      "expected": {
+        "graphemeLength": 48,
+        "facets": [
+          {
+            "index": {
+              "byteStart": 18,
+              "byteEnd": 37
+            },
+            "features": [
+              {
+                "uri": "https://example.com",
+                "$type": "app.bsky.richtext.facet#link"
+              }
+            ]
+          }
+        ],
+        "segments": [
+          {
+            "text": "line one\nline two ",
+            "facet": null
+          },
+          {
+            "text": "https://example.com",
+            "facet": {
+              "index": {
+                "byteStart": 18,
+                "byteEnd": 37
+              },
+              "features": [
+                {
+                  "uri": "https://example.com",
+                  "$type": "app.bsky.richtext.facet#link"
+                }
+              ]
+            }
+          },
+          {
+            "text": "\nline three",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 48,
+          "utf16Length": 48,
+          "utf8ByteLength": 48,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              24,
+              24
+            ],
+            [
+              48,
+              48
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "no-facets-punctuation-only",
+      "input": {
+        "text": "!!! ??? ... ---"
+      },
+      "expected": {
+        "graphemeLength": 15,
+        "facets": [],
+        "segments": [
+          {
+            "text": "!!! ??? ... ---",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 15,
+          "utf16Length": 15,
+          "utf8ByteLength": 15,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              8,
+              8
+            ],
+            [
+              15,
+              15
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "name": "long-grapheme-count",
+      "input": {
+        "text": "ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ end"
+      },
+      "expected": {
+        "graphemeLength": 364,
+        "facets": [],
+        "segments": [
+          {
+            "text": "ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ end",
+            "facet": null
+          }
+        ],
+        "unicode": {
+          "graphemeLength": 364,
+          "utf16Length": 124,
+          "utf8ByteLength": 364,
+          "utf16ToUtf8": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              62,
+              186
+            ],
+            [
+              124,
+              364
+            ]
+          ]
+        }
+      }
+    }
+  ]
+}
