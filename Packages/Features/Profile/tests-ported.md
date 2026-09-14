@@ -30,7 +30,7 @@ function that defines the behaviour and the Swift test that asserts it.
 | `state/queries/profile-followers.ts` `RQKEY(did, sort)` | followers key + sort | `ProfileRequestShapeTests.followersPageSendsActorAndLimit` |
 | `state/queries/known-followers.ts` `PAGE_SIZE = 50` | requests 50 | `ProfileRequestShapeTests.knownFollowersPageRequestsFifty` |
 | `state/queries/labeler.ts` `useLabelerInfoQuery` | `getServices` with `detailed: true` | `ProfileRequestShapeTests.labelerServiceQueryAsksForDetail` |
-| `state/queries/labeler.ts` `labelersInfoQueryKey(dids)` | DID list sorted before keying | `ProfileQueryKeys.LabelersArgs.init` |
+| `state/queries/labeler.ts` `labelersInfoQueryKey(dids)` | DID list sorted before keying | covered by key-identity tests via the labelers args init (sorting documented in ProfileQueryKeys; no dedicated suite) |
 
 ## 2. Header derivation
 
