@@ -34,7 +34,9 @@ public actor Storage<Schema> {
   /// The current on-disk schema version. Bumping this makes ``migrate`` run.
   public nonisolated let schemaVersion: Int
 
-  private let fileManager: FileManager
+  private let fileManagerBox: SendableFileManager
+
+  private var fileManager: FileManager { fileManagerBox.value }
   private let directory: URL
 
   /// Runs when the stored `_version` differs from ``schemaVersion``.
@@ -57,14 +59,14 @@ public actor Storage<Schema> {
     scope: [String] = [],
     schemaVersion: Int = 1,
     directory: URL,
-    fileManager: FileManager = .default,
+    fileManager: SendableFileManager = SendableFileManager(),
     migration: (@Sendable (Int, [String: JSONValue]) -> [String: JSONValue])? = nil
   ) {
     self.id = id
     self.scope = scope
     self.schemaVersion = schemaVersion
     self.directory = directory
-    self.fileManager = fileManager
+    self.fileManagerBox = fileManager
     self.migration = migration
   }
 
