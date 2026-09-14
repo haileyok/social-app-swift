@@ -58,6 +58,12 @@ CI runs the exact same Swift major.minor in a pinned `swift:6.3` Docker containe
 
 ## CI
 
+**The RN reference repo (`~/bluesky/social-app`) is chmod read-only on this
+workstation.** Agents resolving paths against the wrong root now fail loudly
+instead of writing there. If a task genuinely needs to build in the RN repo
+(e.g. `pnpm web` for the parity audit), unlock temporarily with
+`chmod -R u+w ~/bluesky/social-app` and re-lock after.
+
 **Never run CI workloads on this workstation.** Self-hosted runners here once
 overloaded the box and crashed it mid-session. Linux checks stay on
 GitHub-hosted runners; iOS checks on the rented Mac (macrent-1/2). The
