@@ -33,4 +33,17 @@ public enum ShellLaunchArgument {
    `UserDefaults`, which parses the `-key value` form automatically.
    */
   public static let initialTab = "uiTestInitialTab"
+
+  /**
+   Full-screen surface to show for CI screenshot capture (`-uiTestScreen
+   tokens|components|...`). Empty/unset means the normal tab shell. New
+   capturable screens register in `AppRootView.captureSurface`.
+   */
+  public static let screen = "uiTestScreen"
+
+  /**
+   Theme override for screenshot capture (`-uiTestTheme light|dark|dim`).
+   Unset means the user's stored theme preference.
+   */
+  public static let theme = "uiTestTheme"
 }

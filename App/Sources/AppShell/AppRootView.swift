@@ -2,6 +2,7 @@ import DesignSystem
 import DesignSystemCore
 import DesignTokens
 import SwiftUI
+import UIComponents
 
 /**
  The app shell root: five tabs, one `NavigationStack` each.
@@ -19,19 +20,46 @@ public struct AppRootView: View {
 
   @State private var selection: AppTab
 
+  /** Capturable full-screen surface requested via `-uiTestScreen` ("" = tabs). */
+  private let captureScreen: String
+
+  /** Theme override from `-uiTestTheme light|dark|dim` (nil = stored preference). */
+  private let captureTheme: ThemePreference?
+
   @Environment(\.colorScheme) private var colorScheme
 
   /**
    Reads `-uiTestInitialTab N` from the launch arguments (the CI screenshot loop
-   passes it to capture a specific tab) and falls back to Home.
+   passes it to capture a specific tab) and falls back to Home. Also reads the
+   screen/theme capture overrides used by the gallery screenshot loop.
    */
   public init() {
-    let index = UserDefaults.standard.integer(forKey: ShellLaunchArgument.initialTab)
+    let defaults = UserDefaults.standard
+    let index = defaults.integer(forKey: ShellLaunchArgument.initialTab)
     let tabs = AppTab.allCases
     _selection = State(initialValue: tabs.indices.contains(index) ? tabs[index] : .home)
+    captureScreen = defaults.string(forKey: ShellLaunchArgument.screen) ?? ""
+    captureTheme = defaults.string(forKey: ShellLaunchArgument.theme)
+      .flatMap(ThemePreference.init(rawValue:))
   }
 
   public var body: some View {
+    Group {
+      switch captureScreen {
+      case "tokens":
+        TokenGallery(theme: resolvedTheme)
+      case "components":
+        ComponentGallery(theme: captureTheme ?? activePreference)
+      default:
+        tabView
+      }
+    }
+    .accessibilityIdentifier(ShellAccessibility.root)
+    .theme(resolvedTheme)
+  }
+
+  /** The normal five-tab shell. */
+  private var tabView: some View {
     TabView(selection: $selection) {
       ForEach(AppTab.allCases) { tab in
         TabPlaceholderScreen(tab: tab)
@@ -42,17 +70,19 @@ public struct AppRootView: View {
           .tag(tab)
       }
     }
-    .accessibilityIdentifier(ShellAccessibility.root)
-    .theme(resolvedTheme)
+  }
+
+  private var activePreference: ThemePreference {
+    ThemePreference(rawValue: themePreference) ?? .system
   }
 
   /**
-   Resolves the stored preference against the current appearance, so `.system`
-   follows the OS and the explicit names win.
+   Resolves the capture override (if any) or the stored preference against the
+   current appearance, so `.system` follows the OS and the explicit names win.
    */
   private var resolvedTheme: DesignTokens.Theme {
     ThemeResolver.resolve(
-      preference: ThemePreference(rawValue: themePreference) ?? .system,
+      preference: captureTheme ?? activePreference,
       systemScheme: colorScheme == .dark ? .dark : .light)
   }
 }

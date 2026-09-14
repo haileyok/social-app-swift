@@ -186,8 +186,19 @@ jobs:
             xcrun simctl io "$UDID" screenshot "artifacts/screenshots/${i}-${TAB}.png" || true
             i=$((i + 1))
           done
-          # The token gallery (AC.7's visual-review surface) lives on every tab's
-          # toolbar; the XCUITest taps it and its frames land in the .xcresult.
+          # Gallery screens x all three ALF themes (AC.7 visual evidence).
+          # `-uiTestScreen`/`-uiTestTheme` are read by AppRootView; new
+          # capturable screens register there.
+          for SCREEN in tokens components; do
+            for THEME in light dark dim; do
+              xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
+              xcrun simctl launch "$UDID" dev.hailey.socialapp \
+                -uiTestScreen "$SCREEN" -uiTestTheme "$THEME" || true
+              sleep 4
+              xcrun simctl io "$UDID" screenshot \
+                "artifacts/screenshots/screen-${SCREEN}-${THEME}.png" || true
+            done
+          done
           xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
           ls -la artifacts/screenshots
 
