@@ -20,7 +20,15 @@ The ONE `#if canImport(FoundationNetworking)` shim lives in ATProtoClient. No ot
 
 ## Toolchain (Linux)
 
-**Method (recorded after Phase 0 spike): TBD — fill in once the spike lands.**
+**Method (verified 2026-09-14, Phase 0 spike):** official Ubuntu 24.04 tarball works directly on Ubuntu 26.04 (glibc back-compat), with one compat shim:
+
+1. Toolchain: `~/swift-toolchains/swift-6.3.3/` — from `https://download.swift.org/swift-6.3.3-release/ubuntu2404/swift-6.3.3-RELEASE/swift-6.3.3-RELEASE-ubuntu24.04.tar.gz`.
+2. Compat libs: `~/swift-compat/` holds `libxml2.so.2` (2.9.14) and `libicu*.so.74` extracted from the Ubuntu 24.04 (noble) debs — 26.04 ships newer sonames (.so.16 / .so.76+). **Do NOT put these in the system ldconfig path** (noble libxml2 pulls libssh.so.4 via noble libcurl and breaks system curl); they are scoped via `LD_LIBRARY_PATH` only.
+3. Shims: `~/swift-toolchains/bin/<tool>` wrapper scripts set `LD_LIBRARY_PATH=$HOME/swift-compat` and exec the real binary. `~/.bashrc`/`~/.profile` put `~/swift-toolchains/bin` on PATH.
+
+Verified: `swift build` + `swift test` (Swift Testing) on an SPM package using FoundationEssentials and a live URLSession request via `#if canImport(FoundationNetworking)`.
+
+**Version pairing local↔CI**: local 6.3.3 ↔ CI container `swift:6.3`. If you bump one, bump both and record it here.
 
 CI runs the exact same Swift major.minor in a pinned `swift:6.3` Docker container. Version pairing local↔CI must be recorded here; if you bump one, bump both.
 

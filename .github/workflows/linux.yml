@@ -1,0 +1,133 @@
+name: linux
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build & test (swift 6.3)
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build all Linux-verifiable packages
+        run: |
+          set -e
+          for pkg in Packages/*/; do
+            pkg_name=$(basename "$pkg")
+            # Skip macOS-only packages (they cannot build on Linux)
+            case "$pkg_name" in
+              DesignSystem|UIComponents) continue ;;
+            esac
+            # Skip feature Views targets via per-package build scripts when present
+            if [ -f "$pkg/ci-linux.sh" ]; then
+              (cd "$pkg" && ./ci-linux.sh)
+            else
+              (cd "$pkg" && swift build)
+            fi
+          done
+
+      - name: Test all Linux-verifiable packages
+        run: |
+          set -e
+          for pkg in Packages/*/; do
+            pkg_name=$(basename "$pkg")
+            case "$pkg_name" in
+              DesignSystem|UIComponents) continue ;;
+            esac
+            if [ -f "$pkg/ci-linux.sh" ]; then
+              (cd "$pkg" && ./ci-linux.sh test)
+            else
+              (cd "$pkg" && swift test)
+            fi
+          done
+
+      - name: Boundary lint (no SwiftUI/UIKit in Linux-verifiable packages)
+        run: |
+          set -e
+          # Linux-verifiable (🌐) packages must not import SwiftUI or UIKit.
+          # DesignTokens lives under DesignSystem/ but is Linux-verifiable; handle via path allowlist below.
+          violations=$(grep -rn --include='*.swift' -E '^\s*import (SwiftUI|UIKit)\s*$' \
+            Packages/ATSyntax Packages/Lexicons Packages/ATProtoClient Packages/RichText \
+            Packages/Moderation Packages/Preferences Packages/Domain Packages/QueryStore \
+            Packages/Persistence Packages/TestSupport \
+            || true)
+          if [ -n "$violations" ]; then
+            echo "BOUNDARY VIOLATION: SwiftUI/UIKit import found in Linux-verifiable package:"
+            echo "$violations"
+            exit 1
+          fi
+
+      - name: Validate string catalogs
+        run: |
+          set -e
+          # Every .xcstrings file must be valid JSON.
+          find . -name '*.xcstrings' -type f | while read -r f; do
+            jq empty "$f"
+            echo "valid: $f"
+          done
+
+  lexicon-codegen-idempotency:
+    name: Lexicon codegen idempotency
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    timeout-minutes: 30
+    # Path-filtered: only when codegen tooling or lexicon sources change.
+    # Non-required for general pushes; kept on same workflow for visibility.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Regenerate and verify diff-clean
+        run: |
+          set -e
+          if [ ! -d tools/lexicon-codegen ]; then
+            echo "codegen tooling not yet present - skipping"
+            exit 0
+          fi
+          cd tools/lexicon-codegen
+          swift run lexicon-codegen ../../Packages/Lexicons
+          cd ../..
+          if ! git diff --exit-code -- Packages/Lexicons; then
+            echo "FAIL: Packages/Lexicons is not in sync with codegen output."
+            echo "Regenerate locally and commit the diff. Never hand-edit generated code."
+            exit 1
+          fi
+
+  lint:
+    name: swiftlint + swift-format
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.3
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install lint tools
+        run: |
+          set -e
+          # swiftlint & swift-format release binaries; picked to be swift-6.3-compatible
+          cd /tmp
+          curl -fsSL --retry 3 -o swiftformat.tar.gz \
+            https://github.com/apple/swift-format/releases/download/6.2.0-release/swift-format-6.2.0-RELEASE.bin artifact://x86_64-unknown-linux-gnu.tar.gz || true
+          echo "lint tools installed (best-effort; placeholders until pinned URLs verified)"
+
+      - name: Run linters
+        run: |
+          echo "Lint step is a placeholder until tool binaries are pinned; will be wired in Phase 1."
+          exit 0

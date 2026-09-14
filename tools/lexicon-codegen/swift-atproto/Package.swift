@@ -1,0 +1,160 @@
+// swift-tools-version: 6.1
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
+import CompilerPluginSupport
+import PackageDescription
+
+let package = Package(
+  name: "SwiftAtproto",
+  platforms: [.macOS(.v14), .iOS(.v17)],
+  products: [
+    .library(
+      name: "SwiftAtproto",
+      targets: ["SwiftAtproto"]
+    ),
+    .library(
+      name: "ATProtoCrypto",
+      targets: ["ATProtoCrypto"]),
+    .library(
+      name: "ATProtoMacro",
+      targets: ["ATProtoMacro"]),
+    .executable(
+      name: "swift-atproto",
+      targets: ["swift-atproto"]
+    ),
+    .plugin(
+      name: "ATProtoLexiconFetcher",
+      targets: ["ATProtoLexiconFetcher"]
+    ),
+    .plugin(
+      name: "SwiftAtprotoPlugin",
+      targets: ["Generate Source Code"]
+    ),
+    .plugin(
+      name: "ATProtoGenerator",
+      targets: ["ATProtoGenerator"]
+    ),
+  ],
+  dependencies: [
+    .package(url: "https://github.com/nnabeyang/swift-cbor.git", exact: "0.1.0"),
+    .package(url: "https://github.com/swift-libp2p/swift-cid", exact: "0.2.2"),
+    .package(url: "https://github.com/swift-libp2p/swift-multibase.git", exact: "0.2.3"),
+    .package(url: "https://github.com/swiftlang/swift-syntax.git", "600.0.0"..<"604.0.0"),
+    .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.3.1")),
+    .package(url: "https://github.com/apple/swift-crypto", .upToNextMajor(from: "4.0.0")),
+    .package(url: "https://github.com/21-DOT-DEV/swift-secp256k1", "0.23.0"..<"0.24.0"),
+    .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
+  ],
+  targets: [
+    .target(
+      name: "SwiftAtproto",
+      dependencies: [
+        .product(name: "CID", package: "swift-cid"),
+        .product(name: "HTTPTypes", package: "swift-http-types"),
+        .product(name: "SwiftCbor", package: "swift-cbor"),
+      ]
+    ),
+    .target(
+      name: "ATProtoCrypto",
+      dependencies: [
+        .product(name: "Crypto", package: "swift-crypto"),
+        .product(name: "P256K", package: "swift-secp256k1"),
+        .product(name: "libsecp256k1", package: "swift-secp256k1"),
+        .product(name: "Multibase", package: "swift-multibase"),
+      ]
+    ),
+    .target(
+      name: "SwiftAtprotoLex",
+      dependencies: [
+        .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+        .product(name: "SwiftBasicFormat", package: "swift-syntax"),
+        .target(name: "SourceControl", condition: .when(platforms: [.macOS, .linux])),
+      ]
+    ),
+    .target(
+      name: "SourceControl",
+      dependencies: [
+        .product(name: "Crypto", package: "swift-crypto")
+      ]
+    ),
+    .executableTarget(
+      name: "swift-atproto",
+      dependencies: [
+        "SwiftAtprotoLex",
+        .target(name: "SourceControl", condition: .when(platforms: [.macOS, .linux])),
+        .product(name: "ArgumentParser", package: "swift-argument-parser"),
+      ],
+      path: "CommandLineTool"
+    ),
+    .macro(
+      name: "Macros",
+      dependencies: [
+        .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+        .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+        .product(name: "SwiftDiagnostics", package: "swift-syntax"),
+        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+        .product(name: "SwiftSyntax", package: "swift-syntax"),
+      ]
+    ),
+    .target(name: "ATProtoMacro", dependencies: ["Macros", "SwiftAtproto"]),
+    .testTarget(
+      name: "SwiftAtprotoTests",
+      dependencies: [
+        "SwiftAtproto",
+        .product(name: "SwiftCbor", package: "swift-cbor"),
+      ]
+    ),
+    .testTarget(
+      name: "SwiftAtprotoLexTests",
+      dependencies: [
+        "SwiftAtprotoLex",
+        .target(name: "SourceControl", condition: .when(platforms: [.macOS, .linux])),
+        .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
+      ]
+    ),
+    .testTarget(
+      name: "MacrosTests",
+      dependencies: [
+        "Macros",
+        .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+        .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+      ]
+    ),
+    .testTarget(
+      name: "ATProtoCryptoTests",
+      dependencies: ["ATProtoCrypto"]
+    ),
+    .testTarget(
+      name: "SourceControlTests",
+      dependencies: [
+        .target(name: "SourceControl", condition: .when(platforms: [.macOS, .linux]))
+      ]
+    ),
+    .plugin(
+      name: "ATProtoLexiconFetcher",
+      capability: .command(
+        intent: .custom(verb: "swift-atproto-fetch", description: "Fetch AT Protocol lexicons files from remote resources."),
+        permissions: [
+          .writeToPackageDirectory(reason: "To save the downloaded lexicons to your project."),
+          .allowNetworkConnections(scope: .all(ports: [443]), reason: "fetch lexicons"),
+        ]
+      ),
+      dependencies: [.target(name: "swift-atproto")],
+    ),
+    .plugin(
+      name: "Generate Source Code",
+      capability: .command(
+        intent: .custom(verb: "swift-atproto", description: "Generate source code from AT Protocol definitions."),
+        permissions: [
+          .writeToPackageDirectory(reason: "This command reformats source files"),
+          .allowNetworkConnections(scope: .all(ports: [443]), reason: "fetch lexicons"),
+        ]
+      ),
+      dependencies: [.target(name: "swift-atproto")],
+      path: "Plugins/SwiftAtprotoPlugin"),
+    .plugin(name: "ATProtoGenerator", capability: .buildTool(), dependencies: ["swift-atproto"]),
+  ]
+)

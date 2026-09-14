@@ -1,0 +1,341 @@
+import Crypto
+import Multibase
+import P256K
+import libsecp256k1
+
+#if !canImport(Darwin)
+  import FoundationEssentials
+#else
+  import Foundation
+#endif
+
+/// A signing algorithm an AT Protocol identity can use.
+///
+/// The raw values are the W3C verification method type names that appear
+/// verbatim in a DID document, so a document's `type` field maps straight onto
+/// a case. See <doc:SigningAndVerifying>.
+public enum KeyType: String {
+  case secp256k1 = "EcdsaSecp256k1VerificationKey2019"
+  case p256 = "EcdsaSecp256r1VerificationKey2019"
+  case ed25519 = "Ed25519VerificationKey2020"
+}
+
+/// A signing key.
+///
+/// See <doc:SigningAndVerifying>.
+public struct PrivateKey {
+  /// The algorithm this key signs with.
+  public let type: KeyType
+  let raw: Raw
+
+  /// Generates a new key of the given type.
+  public init(type: KeyType) throws {
+    self.type = type
+    switch type {
+    case .ed25519:
+      raw = .ed25519(Curve25519.Signing.PrivateKey())
+    case .p256:
+      raw = .p256(P256.Signing.PrivateKey())
+    case .secp256k1:
+      raw = try .secp256k1(P256K.Signing.PrivateKey())
+    }
+  }
+
+  /// Restores a key from bytes previously read from ``rawRepresentation``.
+  ///
+  /// The type is not encoded in the bytes, so it has to be supplied separately.
+  public init(type: KeyType, rawValue: Data) throws {
+    self.type = type
+    switch type {
+    case .ed25519:
+      raw = try .ed25519(Curve25519.Signing.PrivateKey(rawRepresentation: rawValue))
+    case .p256:
+      raw = try .p256(P256.Signing.PrivateKey(rawRepresentation: rawValue))
+    case .secp256k1:
+      raw = try .secp256k1(P256K.Signing.PrivateKey(dataRepresentation: rawValue))
+    }
+  }
+
+  /// The key material, in the form to persist and pass back to
+  /// ``init(type:rawValue:)``.
+  public var rawRepresentation: Data {
+    switch raw {
+    case .ed25519(let raw):
+      raw.rawRepresentation
+    case .p256(let raw):
+      raw.rawRepresentation
+    case .secp256k1(let raw):
+      raw.dataRepresentation
+    }
+  }
+
+  /// The public half of this key.
+  public var publicKey: PublicKey {
+    switch raw {
+    case .ed25519(let raw):
+      PublicKey(type: type, raw: .ed25519(raw.publicKey))
+    case .p256(let raw):
+      PublicKey(type: type, raw: .p256(raw.publicKey))
+    case .secp256k1(let raw):
+      PublicKey(type: type, raw: .secp256k1(raw.publicKey))
+    }
+  }
+
+  /// Signs `data`.
+  ///
+  /// The result is a compact 64-byte ECDSA signature for ``KeyType/secp256k1``
+  /// and ``KeyType/p256``, and the Ed25519 signature for ``KeyType/ed25519``.
+  public func sign(_ data: Data) throws -> Data {
+    switch raw {
+    case .ed25519(let raw):
+      try raw.signature(for: data)
+    case .p256(let raw):
+      try raw.signature(for: data).rawRepresentation
+    case .secp256k1(let raw):
+      raw.signature(for: data).compactRepresentation
+    }
+  }
+
+  public enum Raw {
+    case ed25519(Curve25519.Signing.PrivateKey)
+    case p256(P256.Signing.PrivateKey)
+    case secp256k1(P256K.Signing.PrivateKey)
+  }
+}
+
+/// A failure to decode the multicodec varint prefix of a multibase key.
+public enum VarintError: Error {
+  case overflow
+  case notMinimalFound
+  case underflow
+}
+
+/// A verification key, obtained from a ``PrivateKey`` or decoded from what a
+/// DID document publishes.
+///
+/// See <doc:SigningAndVerifying>.
+public struct PublicKey {
+  let type: KeyType
+  let raw: Raw
+
+  /// Wraps an already-decoded key.
+  ///
+  /// Prefer ``publicKeyFromMultibaseString(string:)`` or
+  /// ``PrivateKey/publicKey``.
+  public init(type: KeyType, raw: Raw) {
+    self.type = type
+    self.raw = raw
+  }
+
+  var prefix: UInt64 {
+    switch type {
+    case .ed25519:
+      0xED
+    case .p256:
+      0x1200
+    case .secp256k1:
+      0xE7
+    }
+  }
+
+  /// The base58btc multibase encoding of this key, prefixed with the
+  /// multicodec code for its curve.
+  ///
+  /// This is the value a DID document publishes as `publicKeyMultibase`.
+  public var multibaseString: String {
+    BaseEncoding.base58btc.encode(data: varEncode(pref: prefix, body: rawBytes))
+  }
+
+  /// The key material, compressed for ``KeyType/secp256k1``.
+  public var rawBytes: Data {
+    switch raw {
+    case .ed25519(let key):
+      key.rawRepresentation
+    case .p256(let key):
+      key.rawRepresentation
+    case .secp256k1(let key):
+      Data(key.dataRepresentation)
+    }
+  }
+
+  private func varEncode(pref: UInt64, body: Data) -> Data {
+    var buf = varint(UInt64(pref))
+    buf.append(contentsOf: body)
+    return buf
+  }
+
+  private func varint(_ x: UInt64) -> Data {
+    var buf: [UInt8] = []
+    var x = x
+    var i = 0
+    repeat {
+      buf.append(UInt8(truncatingIfNeeded: x) | 0x80)
+      x >>= 7
+      i += 1
+    } while x >= 0x80
+    buf.append(UInt8(x))
+    return Data(buf)
+  }
+
+  private static func varDecode(buf: Data) throws -> (UInt64, Data) {
+    let (prefix, left) = try fromUvarint(buf: buf)
+    return (prefix, buf[left...])
+  }
+
+  private static let maxLenUvariant63 = 9
+  private static let maxValueUvariant63 = (1 << 63) - 1
+
+  private static func fromUvarint(buf: Data) throws -> (UInt64, Int) {
+    var x: UInt64 = 0
+    var s: UInt = 0
+    for (i, b) in buf.enumerated() {
+      if (i == 8 && b >= 0x80) || i >= maxLenUvariant63 {
+        throw VarintError.overflow
+      }
+      if b < 0x80 {
+        if b == 0, s > 0 {
+          throw VarintError.notMinimalFound
+        }
+        return (x | UInt64(b) << s, i + 1)
+      }
+      x |= UInt64(b & 0x7F) << s
+      s += 7
+    }
+    throw VarintError.underflow
+  }
+
+  private static func keyType(prefix: UInt64) -> KeyType {
+    switch prefix {
+    case 0xED:
+      .ed25519
+    case 0x1200:
+      .p256
+    case 0xE7:
+      .secp256k1
+    default:
+      fatalError("Not supported keyType: \(prefix)")
+    }
+  }
+
+  /// Decodes a key from its multibase form, taking the curve from the
+  /// multicodec prefix.
+  ///
+  /// A `secp256k1` key is accepted in either compressed or uncompressed form
+  /// and is normalized to compressed.
+  public static func publicKeyFromMultibaseString(string: String) throws -> PublicKey {
+    let data = try Multibase.BaseEncoding.decode(string).data
+    let (prefix, raw) = try varDecode(buf: data)
+    let keyType = keyType(prefix: prefix)
+    return try keyDataAndTypeToKey(keyType: keyType, raw: raw)
+  }
+
+  static func keyDataAndTypeToKey(keyType: KeyType, raw: Data) throws -> PublicKey {
+    switch keyType {
+    case .ed25519:
+      let raw = try Curve25519.Signing.PublicKey(rawRepresentation: raw)
+      return PublicKey(type: keyType, raw: .ed25519(raw))
+    case .p256:
+      let raw = try P256.Signing.PublicKey(rawRepresentation: raw)
+      return PublicKey(type: keyType, raw: .p256(raw))
+    case .secp256k1:
+      let format: P256K.Format = raw.count == P256K.Format.compressed.length ? .compressed : .uncompressed
+      let pubKey = try P256K.Signing.PublicKey(dataRepresentation: raw, format: format)
+      return try PublicKey(type: keyType, raw: .secp256k1(pubKey.compressed))
+    }
+  }
+
+  /// Whether `signature` is a valid signature of `message` under this key.
+  ///
+  /// A `secp256k1` signature is normalized to low-S before verification.
+  /// Returns `false` rather than throwing when the signature is malformed.
+  public func isValidSignature(signature: any DataProtocol, for message: any DataProtocol) -> Bool {
+    switch raw {
+    case .ed25519(let raw):
+      return raw.isValidSignature(signature, for: message)
+    case .secp256k1(let raw):
+      guard let signature = try? P256K.Signing.ECDSASignature(compactRepresentation: signature).normalize else { return false }
+      let hash = SHA256.hash(data: message)
+      return raw.isValidSignature(signature, for: hash)
+    case .p256(let raw):
+      guard let signature = try? P256.Signing.ECDSASignature(rawRepresentation: signature) else { return false }
+      return raw.isValidSignature(signature, for: message)
+    }
+  }
+
+  /// The `did:key:` identifier for this key.
+  public var did: String {
+    "did:key:\(multibaseString)"
+  }
+
+  public enum Raw {
+    case ed25519(Curve25519.Signing.PublicKey)
+    case p256(P256.Signing.PublicKey)
+    case secp256k1(P256K.Signing.PublicKey)
+  }
+}
+
+extension P256K.Signing.PublicKey {
+  var compressed: Self {
+    get throws {
+      guard format != .compressed else {
+        return self
+      }
+      let format = P256K.Format.compressed
+      let context = P256K.Context.rawRepresentation
+      var pubKeyLen = format.length
+      var combinedKey = secp256k1_pubkey()
+      var combinedBytes = [UInt8](repeating: 0, count: pubKeyLen)
+      var pubkey = secp256k1_pubkey()
+      let result = dataRepresentation.withUnsafeBytes { (rawPtr: UnsafeRawBufferPointer) in
+        secp256k1_ec_pubkey_parse(
+          context,
+          &pubkey,
+          rawPtr.baseAddress!.assumingMemoryBound(to: UInt8.self),
+          dataRepresentation.count
+        )
+      }
+      guard result == 1 else {
+        throw secp256k1Error.underlyingCryptoError
+      }
+      let item = withUnsafeBytes(of: pubkey) { buf in
+        buf.baseAddress!.assumingMemoryBound(to: secp256k1_pubkey.self)
+      }
+      guard secp256k1_ec_pubkey_combine(context, &combinedKey, [item], 1) > 0,
+        secp256k1_ec_pubkey_serialize(context, &combinedBytes, &pubKeyLen, &combinedKey, format.rawValue) > 0
+      else {
+        throw secp256k1Error.underlyingCryptoError
+      }
+      return try Self(dataRepresentation: combinedBytes, format: format)
+    }
+  }
+}
+
+extension P256K.Signing.ECDSASignature {
+  fileprivate var normalize: P256K.Signing.ECDSASignature {
+    get throws {
+      let context = P256K.Context.rawRepresentation
+      var signature = secp256k1_ecdsa_signature()
+      var resultSignature = secp256k1_ecdsa_signature()
+
+      dataRepresentation.copyToUnsafeMutableBytes(of: &signature.data)
+
+      guard
+        secp256k1_ecdsa_signature_normalize(
+          context,
+          &resultSignature,
+          &signature
+        ) != 0
+      else {
+        return self
+      }
+
+      // `resultSignature` carries no public accessor for its bytes; serialize
+      // it through the C API instead of reaching into vendor internals.
+      var compact = [UInt8](repeating: 0, count: 64)
+      guard secp256k1_ecdsa_signature_serialize_compact(context, &compact, &resultSignature) != 0 else {
+        throw secp256k1Error.underlyingCryptoError
+      }
+      return try P256K.Signing.ECDSASignature(compactRepresentation: compact)
+    }
+  }
+}

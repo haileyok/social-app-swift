@@ -1,0 +1,97 @@
+name: ios
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'App/**'
+      - 'Packages/DesignSystem/**'
+      - 'Packages/UIComponents/**'
+      - 'Packages/Features/**'
+      - 'App.xcodeproj/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'App/**'
+      - 'Packages/DesignSystem/**'
+      - 'Packages/UIComponents/**'
+      - 'Packages/Features/**'
+      - 'App.xcodeproj/**'
+      - '.github/workflows/ios.yml'
+
+# Non-blocking by policy: linux.yml is the sole required check.
+# Failures here spawn follow-up fixes, never merge blockers.
+concurrency:
+  group: ios-ci
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: iOS build, UI tests, screenshots
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pin Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.4.app
+
+      - name: Show toolchain
+        run: |
+          xcodebuild -version
+          xcrun simctl list runtimes | head -20
+
+      - name: Prime simulator services
+        run: |
+          xcrun simctl list devices available
+          # Prime simulator services before build/test to reduce first-boot flakes
+          xcrun simctl boot "${SIM_NAME}" || true
+          xcrun simctl bootstatus "${SIM_NAME}" -b
+        env:
+          SIM_NAME: iPhone 16 Pro (26.4)
+
+      - name: Build for testing
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project App/SocialAppSwift.xcodeproj \
+            -scheme SocialAppSwift \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=26.4' \
+            -derivedDataPath .build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            build-for-testing | xcpretty || exit 1
+
+      - name: Test without building
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project App/SocialAppSwift.xcodeproj \
+            -scheme SocialAppSwift \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=26.4' \
+            -derivedDataPath .build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            test-without-building | xcpretty || exit 1
+
+      - name: Capture screenshots
+        if: always()
+        run: |
+          mkdir -p artifacts/screenshots
+          xcrun simctl io "${SIM_NAME}" screenshot artifacts/screenshots/launch.png || true
+        env:
+          SIM_NAME: iPhone 16 Pro (26.4)
+
+      - name: Upload xcresult
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcresult
+          path: .build/DerivedData/Logs/Test/*.xcresult
+          if-no-files-found: ignore
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: {name: screenshots, path: artifacts/screenshots, if-no-files-found: ignore}

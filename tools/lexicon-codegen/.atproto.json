@@ -1,0 +1,12 @@
+{
+  "dependencies": [
+    {
+      "location": "file://lexicon-deps/atproto-repo",
+      "lexicons": [{ "path": "lexicons" }],
+      "state": { "revision": "2e1787c2bf5bd47b55c3df930d688bb40b5ae63d" }
+    }
+  ],
+  "module": "Lexicons",
+  "generate": "client",
+  "accessModifier": "public"
+}
