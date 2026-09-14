@@ -131,6 +131,18 @@ public actor PasswordSession {
 
   public func isDestroyed() -> Bool { data == nil }
 
+  /// Locally destroys the session without a server round-trip.
+  ///
+  /// Used when an account is removed or switched away from: the caller has
+  /// already decided the session must stop being usable, and a
+  /// `deleteSession` call is not wanted (remove vs. logout have different
+  /// server semantics). The hooks are deliberately not invoked, because the
+  /// caller performing the removal owns the state transition.
+  public func markDestroyed() {
+    data = nil
+    refreshTask = nil
+  }
+
   public func sessionData() throws -> SessionData {
     guard let data else { throw LoggedOutError() }
     return data
