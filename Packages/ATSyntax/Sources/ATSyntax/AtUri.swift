@@ -1,4 +1,8 @@
 import FoundationEssentials
+// swiftlint:disable force_try large_tuple
+// (this file builds two compile-time-constant Regex values; force-try
+// surfaces pattern errors at first build, and the capture tuple shape is
+// fixed by the pattern)
 
 /// at:// URI (e.g. `at://did:plc:abc/app.bsky.feed.post/3jz7e4l`).
 ///
@@ -102,9 +106,6 @@ public struct AtUri: Hashable, Sendable, CustomStringConvertible {
   /// `^(at://(authority)(/(collection)(/(rkey))?)(/)?)(?(query)?)(#(hash))?$`
   /// (The `at://` prefix group is intentionally non-capturing here since
   /// `wholeMatch` already anchors both ends.)
-  // swiftlint:disable:next force_try large_tuple
-  // (a compile-time-constant regex: force-try surfaces init errors at first
-  // test run, and the capture tuple shape is fixed by the pattern)
   private nonisolated(unsafe) static let atUriRegex: Regex<(
     Substring, Substring, Substring?, Substring?, Substring?, Substring?,
     Substring?
@@ -116,7 +117,6 @@ public struct AtUri: Hashable, Sendable, CustomStringConvertible {
   /// requires *valid* percent-encoding.
   private static func validateFragment(_ value: String, strict: Bool) throws {
     // chars: alnum + ._~:@!$&'()*+,;=% + []/- (trailing dash literal)
-    // swiftlint:disable:next force_try
     let pointer = try! Regex(
       "/[a-zA-Z0-9._~:@!$&')(*+,;=%\\[\\]/-]*"
     )
