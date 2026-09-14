@@ -1,4 +1,3 @@
-import Domain
 import Foundation
 import Moderation
 import RichText
@@ -161,7 +160,7 @@ public struct FeedItemCounts: Equatable, Sendable {
 /// `PostControl` which omits a zero-count label.
 public func formatOptionalCount(_ value: Int?, locale: Locale = Locale(identifier: "en_US")) -> String? {
   guard let value, value > 0 else { return nil }
-  return FormatCount.formatCount(value, locale: locale)
+  return MetricFormat.formatCount(value, locale: locale)
 }
 
 /// Parses the loose `indexedAt` string into a relative label.
@@ -174,8 +173,8 @@ public func relativeTimeString(
   indexedAt: String?, now: Date = Date(), locale: Locale = Locale(identifier: "en_US")
 ) -> String {
   guard let indexedAt, let date = parseIndexedAt(indexedAt) else { return "" }
-  let diff = DomainTime.dateDiff(earlier: date, later: now)
-  return DomainTime.formatDateDiff(diff, locale: locale)
+  let diff = MetricTime.dateDiff(earlier: date, later: now)
+  return MetricTime.formatDateDiff(diff, locale: locale)
 }
 
 /// Parses the timestamp formats the API emits (with and without fractional

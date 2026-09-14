@@ -56,3 +56,20 @@ implementation can downsample rather than decode full-resolution bytes.
 - A full-lexicon adapter from `App.Bsky.FeedDefs_PostView` onto the render model.
 - Localization of the component copy (v1 ships English strings, like the
   gallery).
+
+## Deviations from the brief
+
+- **No `Domain` dependency.** `Packages/Domain` declares no iOS platform, and it
+  transitively depends on `Lexicons` (iOS 18) and `SwiftAtproto` (iOS 17), so
+  linking it into an iOS target fails. The two functions the library needs
+  (`formatCount`, `formatDateDiff`) are reproduced unchanged in
+  `UIComponentsCore/MetricFormatting.swift`, with a note to delete them once
+  `Domain` gains an iOS platform declaration.
+- **`Moderation`'s stand-in types are the render model.** The generated
+  `App.Bsky.FeedDefs_PostView` keeps `record` as an opaque `UnknownATPValue`, so
+  the post text and facets are not directly reachable; the engine's `PostView`
+  carries them and is what `moderatePost` already decides. The engagement counts
+  are passed separately (`FeedItemCounts`), because the engine's stand-in type
+  has no count fields.
+- **Engagement counts are supplied, not read.** See above: the view takes
+  `FeedItemCounts` alongside the `PostView`.

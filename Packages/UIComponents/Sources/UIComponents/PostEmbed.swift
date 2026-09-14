@@ -1,7 +1,6 @@
 #if canImport(SwiftUI)
 import DesignSystem
 import DesignTokens
-import Domain
 import Moderation
 import RichText
 import SwiftUI

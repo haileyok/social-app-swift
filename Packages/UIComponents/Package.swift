@@ -25,7 +25,6 @@ let package = Package(
   dependencies: [
     .package(path: "../DesignSystem"),
     .package(path: "../DesignTokens"),
-    .package(path: "../Domain"),
     .package(path: "../Moderation"),
     .package(path: "../RichText"),
   ],
@@ -33,7 +32,6 @@ let package = Package(
     .target(
       name: "UIComponentsCore",
       dependencies: [
-        .product(name: "Domain", package: "Domain"),
         .product(name: "Moderation", package: "Moderation"),
         .product(name: "RichText", package: "RichText"),
       ],
@@ -47,7 +45,6 @@ let package = Package(
         .product(name: "DesignSystem", package: "DesignSystem"),
         .product(name: "DesignSystemCore", package: "DesignSystem"),
         .product(name: "DesignTokens", package: "DesignTokens"),
-        .product(name: "Domain", package: "Domain"),
         .product(name: "Moderation", package: "Moderation"),
         .product(name: "RichText", package: "RichText"),
       ],
