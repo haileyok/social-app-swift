@@ -29,7 +29,7 @@ the RN hydration composed in `src/state/queries/preferences/index.ts`.
 | `upsertMutedWords` (deprecated) | `upsertMutedWords(_:)` | covered by `addMutedWordsAppliesInOrder` |
 | `updateMutedWord` | `updateMutedWord(_:)` | `updateMutedWordMatchesById`, `updateMutedWordFallsBackToValueMatchForLegacy` |
 | `removeMutedWord` | `removeMutedWord(_:)` | `removeMutedWordMatchesFirstByIdOrValue`, `removeMutedWordWithoutPrefWritesUnchanged` |
-| `removeMutedWords` | `removeMutedWords(_:)` | covered by `removeMutedWords` fan-out in `everyTypedMethodReachesTheServer` |
+| `removeMutedWords` | `removeMutedWords(_:)` | **not covered** - no test calls it, and it is not exercised by `everyTypedMethodReachesTheServer` |
 | `hidePost` | `hidePost(_:)` | `hidePostAppends`, `hidePostSkipsWhenAlreadyHidden` |
 | `unhidePost` | `unhidePost(_:)` | `unhidePostFilters`, `unhidePostSkipsWhenPrefAbsent` |
 | `addLabeler` | `addLabeler(_:)` | `addLabelerAppends`, `addLabelerSkipsDuplicate` |
@@ -43,7 +43,7 @@ the RN hydration composed in `src/state/queries/preferences/index.ts`.
 | `setVerificationPrefs` | `setVerificationPrefs(_:)` | `setVerificationPrefsMerges` |
 | `setPostInteractionSettings` | `setPostInteractionSettings(_:)` | `setPostInteractionSettingsReplacesExplicitly` |
 | `updateLiveEventPreferences` | `updateLiveEventPreferences(_:)` | `updateLiveEventPreferencesTogglesAndTracksIds` |
-| `updateSeenNotifications` | `updateSeenNotifications(_:)` | covered by `everyTypedMethodReachesTheServer` (own endpoint) |
+| `updateSeenNotifications` | `updateSeenNotifications(_:)` | **not covered** - not exercised by `everyTypedMethodReachesTheServer` |
 
 ## Behavior ports with no single SDK function
 

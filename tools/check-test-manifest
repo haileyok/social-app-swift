@@ -1,0 +1,562 @@
+#!/usr/bin/env bash
+#
+# check-test-manifest - verify Packages/*/tests-ported.md references real Swift tests.
+#
+# Each package that ports tests from the React Native app carries a
+# `tests-ported.md` manifest mapping ported TS test cases to named Swift tests.
+# This script extracts every Swift test reference from those manifests and checks
+# that it resolves to a `@Test func` (or to a test suite type) in that package's
+# `Tests` sources. Stale or typo'd references fail the build.
+#
+# Exit status: 0 when every reference resolves, 1 when any does not.
+#
+# Usage:
+#   tools/check-test-manifest [options] [<package> ...]
+#
+# Options:
+#   --run            after the name check, run `swift test` for each checked
+#                    package and fail on test failures (slow; needs a toolchain)
+#   --strict         treat unresolved bare identifiers as errors too (default is
+#                    to warn, because manifests also mention upstream symbols)
+#   --list           print every extracted reference with its resolution, then exit
+#   --manifest PATH  check one specific manifest (repeatable)
+#   --quiet          only print problems and the final summary
+#   -h, --help       show this help
+#
+# With no package arguments, every `Packages/*/tests-ported.md` is checked.
+#
+# See tools/check-test-manifest.README.md for the manifest conventions this
+# script understands.
+
+set -euo pipefail
+
+# ---------------------------------------------------------------- environment
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$REPO_ROOT" ]; then
+  REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
+
+# The Swift toolchain is not always on PATH; pick it up when it lives in the
+# conventional per-machine location. Only needed for --run.
+if ! command -v swift >/dev/null 2>&1; then
+  for candidate in "$HOME/swift-toolchains/bin" "/usr/local/swift/usr/bin"; do
+    if [ -x "$candidate/swift" ]; then
+      PATH="$candidate:$PATH"
+      export PATH
+      break
+    fi
+  done
+fi
+
+RUN_TESTS=0
+STRICT=0
+LIST_ONLY=0
+QUIET=0
+declare -a EXPLICIT_MANIFESTS=()
+declare -a PACKAGE_FILTERS=()
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --run) RUN_TESTS=1 ;;
+    --strict) STRICT=1 ;;
+    --list) LIST_ONLY=1 ;;
+    --quiet) QUIET=1 ;;
+    --manifest)
+      shift
+      [ $# -gt 0 ] || { echo "check-test-manifest: --manifest needs a path" >&2; exit 2; }
+      EXPLICIT_MANIFESTS+=("$1")
+      ;;
+    -h|--help)
+      sed -n '2,40p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    -*)
+      echo "check-test-manifest: unknown option '$1' (try --help)" >&2
+      exit 2
+      ;;
+    *)
+      PACKAGE_FILTERS+=("$1")
+      ;;
+  esac
+  shift
+done
+
+# ---------------------------------------------------------------- colours
+
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  C_RED=$'\033[31m'; C_YEL=$'\033[33m'; C_GRN=$'\033[32m'
+  C_BOLD=$'\033[1m'; C_DIM=$'\033[2m'; C_OFF=$'\033[0m'
+else
+  C_RED=''; C_YEL=''; C_GRN=''; C_BOLD=''; C_DIM=''; C_OFF=''
+fi
+
+WORK_DIR="$(mktemp -d)"
+trap 'rm -rf "$WORK_DIR"' EXIT
+
+# ---------------------------------------------------------------- manifests
+
+manifest_paths() {
+  if [ "${#EXPLICIT_MANIFESTS[@]}" -gt 0 ]; then
+    local m
+    for m in "${EXPLICIT_MANIFESTS[@]}"; do
+      if [ -f "$m" ]; then
+        printf '%s\n' "$m"
+      else
+        echo "check-test-manifest: no such manifest: $m" >&2
+        return 1
+      fi
+    done
+    return 0
+  fi
+
+  # Every Packages/<Pkg>/tests-ported.md, in a stable order, optionally
+  # restricted to the requested package names.
+  find "$REPO_ROOT/Packages" -mindepth 2 -maxdepth 2 -name 'tests-ported.md' -print |
+    sort |
+    while IFS= read -r path; do
+      if [ "${#PACKAGE_FILTERS[@]}" -eq 0 ]; then
+        printf '%s\n' "$path"
+        continue
+      fi
+      pkg="$(basename "$(dirname "$path")")"
+      local wanted
+      for wanted in "${PACKAGE_FILTERS[@]}"; do
+        if [ "$wanted" = "$pkg" ]; then
+          printf '%s\n' "$path"
+          break
+        fi
+      done
+    done
+}
+
+# ---------------------------------------------------------------- test index
+#
+# Builds three indexes for one package:
+#   $1/suites   - test-suite type names (`struct`/`class`/`enum` that own @Tests)
+#                 plus `@Suite("display name")` display names
+#   $1/tests    - "<Suite>.<member>\t<file:line>" for @Test funcs with an owner
+#   $1/bare     - "<member>\t<Suite>\t<file:line>" for every @Test func
+#   $1/helpers  - funcs that are not @Test (informational only)
+
+build_index() {
+  local pkg_dir="$1" out_dir="$2"
+  local tests_dir="$pkg_dir/Tests"
+
+  : >"$out_dir/suites"
+  : >"$out_dir/tests"
+  : >"$out_dir/bare"
+  : >"$out_dir/helpers"
+
+  [ -d "$tests_dir" ] || return 0
+
+  local rel
+  while IFS= read -r rel; do
+    # Suite display names: @Suite("...") / @Suite(...) with a string literal.
+    grep -oE '@Suite[[:space:]]*\([[:space:]]*"[^"]+"' "$rel" 2>/dev/null |
+      sed -E 's/.*"([^"]+)"$/\1/' >>"$out_dir/suites" || true
+
+    # Emits one row per `func`: <owner>\t<name>\t<kind>\t<file:line>
+    awk -v file="$rel" '
+      function ltrim(s) { sub(/^[ \t]+/, "", s); return s }
+      BEGIN { owner = ""; isTest = 0 }
+      {
+        cur = ltrim($0)
+
+        # `@Suite struct Foo {` -> inspect only the declaration part.
+        if (cur ~ /^@Suite/) {
+          sub(/^@Suite[ \t]*\([^)]*\)[ \t]*/, "", cur)
+          sub(/^@Suite[ \t]+/, "", cur)
+        }
+        if (cur ~ /^(struct|final class|class|enum)[ \t]+[A-Za-z_][A-Za-z0-9_]*/) {
+          t = cur
+          sub(/^(struct|final class|class|enum)[ \t]+/, "", t)
+          sub(/[^A-Za-z0-9_].*$/, "", t)
+          owner = t
+        }
+
+        # `@Test`, `@Test func f`, `@Test("name") func f` and multi-line
+        # `@Test(\n  "name"\n)\nfunc f` all count. Matching only at the start of
+        # the line keeps prose mentions (and `// @Test`) out.
+        if (cur ~ /^@Test([^A-Za-z0-9_]|$)/) isTest = 1
+
+        if (match($0, /func[ \t]+[A-Za-z_][A-Za-z0-9_]*[ \t]*\(/)) {
+          m = substr($0, RSTART, RLENGTH)
+          sub(/^func[ \t]+/, "", m)
+          sub(/[ \t]*\($/, "", m)
+          printf "%s\t%s\t%s\t%s:%d\n", owner, m, (isTest ? "test" : "helper"), file, FNR
+          isTest = 0
+        }
+      }
+    ' "$rel" >"$WORK_DIR/raw.tsv"
+
+    # <Suite>.<member> -> location, for @Test funcs that sit in a known suite.
+    awk -F'\t' '$3 == "test" && $1 != "" { print $1 "." $2 "\t" $4 }' "$WORK_DIR/raw.tsv" >>"$out_dir/tests"
+    # <member> -> <Suite> and location, for every @Test func.
+    awk -F'\t' '$3 == "test" { print $2 "\t" ($1 == "" ? "?" : $1) "\t" $4 }' "$WORK_DIR/raw.tsv" >>"$out_dir/bare"
+    # Suite type names that actually own @Tests.
+    awk -F'\t' '$3 == "test" && $1 != "" { print $1 }' "$WORK_DIR/raw.tsv" >>"$out_dir/suites"
+    # Non-test funcs, so we can explain "exists but is not an @Test".
+    awk -F'\t' '$3 == "helper" { print $1 "." $2 "\t" $4 }' "$WORK_DIR/raw.tsv" >>"$out_dir/helpers"
+  done < <(find "$tests_dir" -name '*.swift' | sort)
+
+  sort -u -o "$out_dir/suites" "$out_dir/suites"
+  sort -u -o "$out_dir/tests" "$out_dir/tests"
+  sort -u -o "$out_dir/bare" "$out_dir/bare"
+  sort -u -o "$out_dir/helpers" "$out_dir/helpers"
+}
+
+# ---------------------------------------------------------------- extraction
+#
+# Pulls Swift test-name candidates out of a manifest. Only table cells in
+# "test-bearing" columns are considered (see README); inside those cells every
+# backticked span is a candidate, plus a whole-cell bare identifier.
+#
+# Emits "<candidate>\t<line>\t<cell>" per candidate.
+
+extract_candidates() {
+  local manifest="$1"
+  awk -F'|' '
+    function trim(s) { sub(/^[ \t]+/, "", s); sub(/[ \t]+$/, "", s); return s }
+    function is_test_header(h,   n) {
+      # Only columns that name Swift tests are scanned. Matching the whole
+      # header (not "contains test") keeps descriptive columns like
+      # "Rule under test" or "Upstream behaviour pinned" out of the check.
+      n = h
+      gsub(/[ \t]+/, " ", n)
+      if (n == "test" || n == "tests" || n == "suite" || n == "suites") return 1
+      if (n == "swift test" || n == "swift tests") return 1
+      if (n == "swift suite" || n == "swift suites") return 1
+      if (n ~ /^swift test/) return 1
+      if (n ~ /^swift suite/) return 1
+      return 0
+    }
+    BEGIN { inTable = 0 }
+    {
+      if ($0 !~ /^[ \t]*\|/) { inTable = 0; next }
+
+      # Separator row (|---|:--:|) means the preceding row was the header.
+      if ($0 ~ /^[ \t]*\|[ \t]*:?-+:?[ \t]*\|/) { inTable = 1; next }
+
+      if (!inTable) {
+        ncell = split($0, cells, "|")
+        nsel = 0
+        delete sel
+        for (i = 2; i < ncell; i++) {
+          if (is_test_header(tolower(trim(cells[i])))) {
+            nsel++
+            sel[i] = 1
+          }
+        }
+        # No test column in this header: it is a reference table (source ->
+        # port, module -> file) rather than a test mapping, so scan nothing.
+        # A manifest whose tables are all unrecognized yields zero candidates
+        # and fails loudly in the main loop.
+        inTable = 1
+        next
+      }
+
+      ncell = split($0, cells, "|")
+      for (i = 2; i < ncell; i++) {
+        if (!(i in sel)) continue
+        cell = trim(cells[i])
+        if (cell == "") continue
+
+        rest = cell
+        while (match(rest, /`[^`]+`/)) {
+          tok = substr(rest, RSTART + 1, RLENGTH - 2)
+          print tok "\t" FNR "\t" cell
+          rest = substr(rest, RSTART + RLENGTH)
+        }
+
+        if (cell ~ /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*(\.[0-9A-Za-z_*]*)?\*?$/) {
+          print cell "\t" FNR "\t" cell
+        }
+      }
+    }
+  ' "$manifest"
+}
+
+# True when $1 is a dotted identifier of one or more components.
+is_ident() {
+  printf '%s' "$1" | grep -qE '^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$'
+}
+
+# Drops tokens that are obviously not Swift test references (paths, version
+# numbers, all-caps upstream constants, punctuation-only fragments).
+is_candidate_token() {
+  local tok="$1"
+  [ -n "$tok" ] || return 1
+  case "$tok" in
+    */*|*\$*|*:*|*\(*|*\)*|\<*\>*) return 1 ;;
+    -*) return 1 ;;
+    *.swift|*.ts|*.tsx|*.js|*.mjs|*.json|*.md|*.sh) return 1 ;;
+  esac
+  # all-caps upstream constant, e.g. MAX_GRAPHEME_LENGTH or STALE
+  if printf '%s' "$tok" | grep -qE '^[A-Z][A-Z0-9_]*$'; then return 1; fi
+
+  # Globs: `prefix*`, `Suite.prefix*`, and `Suite.*`. The bare `Suite.*` form has
+  # no identifier after the dot, so strip the star and any trailing dot before
+  # validating the remainder.
+  case "$tok" in
+    *\*)
+      local prefix="${tok%\*}"
+      prefix="${prefix%.}"
+      is_ident "$prefix"
+      return $?
+      ;;
+  esac
+
+  is_ident "$tok"
+}
+
+# ---------------------------------------------------------------- resolution
+#
+# Prints one of:
+#   suite:<name>     candidate named a suite
+#   test:<Suite.member>
+#   wildcard:<n>     candidate was a glob that matched n tests
+#   warn:<reason>
+#   error:<reason>
+#
+# True when <key> is the first tab-separated field of some line in <file>
+# (index lines look like "<key>\t<location>"). Uses index() rather than a regex
+# so keys containing regex metacharacters match literally.
+idx_has_key() {
+  awk -F'\t' -v k="$2" 'index($0, k "\t") == 1 || $0 == k { found = 1; exit } END { exit(found ? 0 : 1) }' "$1"
+}
+
+# Globals: IDX_* paths for the package index.
+resolve_candidate() {
+  local cand="$1"
+
+  # Suite name (type name or @Suite display name).
+  if idx_has_key "$IDX/suites" "$cand"; then
+    printf 'suite:%s\n' "$cand"
+    return 0
+  fi
+
+  case "$cand" in
+    *\*)
+      local prefix="${cand%\*}"
+      local n=0
+      if [ -z "$prefix" ]; then
+        printf 'error:empty wildcard\n'
+        return 0
+      fi
+      case "$prefix" in
+        *.)
+          local suite="${prefix%.}"
+          if ! idx_has_key "$IDX/suites" "$suite"; then
+            printf 'error:unknown suite "%s"\n' "$suite"
+            return 0
+          fi
+          n=$(awk -F'\t' -v s="$suite" '$1 ~ ("^" s "\\.") { c++ } END { print c + 0 }' "$IDX/tests")
+          if [ "$n" -eq 0 ]; then
+            printf 'error:suite "%s" has no tests\n' "$suite"
+            return 0
+          fi
+          printf 'wildcard:%s\n' "$n"
+          return 0
+          ;;
+        *.*)
+          local suite="${prefix%.*}"
+          local member="${prefix##*.}"
+          if ! idx_has_key "$IDX/suites" "$suite"; then
+            printf 'error:unknown suite "%s"\n' "$suite"
+            return 0
+          fi
+          n=$(awk -F'\t' -v s="$suite." -v m="$member" \
+                'index($1, s) == 1 && index(substr($1, length(s) + 1), m) == 1 { c++ } END { print c + 0 }' \
+                "$IDX/tests")
+          if [ "$n" -eq 0 ]; then
+            printf 'error:no test "%s" in suite "%s"\n' "$member*" "$suite"
+            return 0
+          fi
+          printf 'wildcard:%s\n' "$n"
+          return 0
+          ;;
+        *)
+          n=$(awk -F'\t' -v m="$prefix" 'index($1, m) == 1 { c++ } END { print c + 0 }' "$IDX/bare")
+          if [ "$n" -eq 0 ]; then
+            printf 'error:no test or suite matching "%s"\n' "$cand"
+            return 0
+          fi
+          printf 'wildcard:%s\n' "$n"
+          return 0
+          ;;
+      esac
+      ;;
+  esac
+
+  case "$cand" in
+    *.*)
+      local suite="${cand%.*}"
+      local member="${cand##*.}"
+      if idx_has_key "$IDX/tests" "$suite.$member"; then
+        printf 'test:%s\n' "$cand"
+        return 0
+      fi
+      if ! idx_has_key "$IDX/suites" "$suite"; then
+        printf 'error:unknown suite "%s"\n' "$suite"
+        return 0
+      fi
+      if idx_has_key "$IDX/helpers" "$cand"; then
+        printf 'error:func "%s" exists but is not an @Test\n' "$cand"
+        return 0
+      fi
+      printf 'error:no test "%s" in suite "%s"\n' "$member" "$suite"
+      return 0
+      ;;
+  esac
+
+  # Bare identifier: unambiguous only when it names a test in this package.
+  if idx_has_key "$IDX/bare" "$cand"; then
+    printf 'test:%s\n' "$cand"
+    return 0
+  fi
+  if [ "$STRICT" -eq 1 ]; then
+    printf 'error:no test named "%s" in this package\n' "$cand"
+  else
+    printf 'warn:no test named "%s" in this package (upstream symbol?)\n' "$cand"
+  fi
+}
+
+# ---------------------------------------------------------------- main loop
+
+total_cands=0
+total_resolved=0
+total_warn=0
+total_err=0
+declare -a RUN_PACKAGES=()
+declare -a FAILED_MANIFESTS=()
+
+while IFS= read -r manifest; do
+  [ -n "$manifest" ] || continue
+
+  pkg_dir="$(dirname "$manifest")"
+  pkg="$(basename "$pkg_dir")"
+  rel_manifest="${manifest#"$REPO_ROOT"/}"
+
+  IDX="$WORK_DIR/idx-$pkg"
+  mkdir -p "$IDX"
+  build_index "$pkg_dir" "$IDX"
+
+  raw="$WORK_DIR/cands-$pkg.tsv"
+  extract_candidates "$manifest" >"$raw"
+
+  cands=0
+  resolved=0
+  warns=0
+  errs=0
+  report=""
+
+  while IFS=$'\t' read -r raw_tok line_no cell; do
+    [ -n "$raw_tok" ] || continue
+    # One backticked span can carry several comma/space separated references,
+    # e.g. `FooTests.a`, `b`, `c*`.
+    tokens="$(printf '%s' "$raw_tok" | tr ',' '\n' | tr -s '[:space:]' '\n')"
+    while IFS= read -r tok; do
+      tok="${tok#\`}"
+      tok="${tok%\`}"
+      tok="${tok%\,}"
+      tok="${tok%.}"
+      [ -n "$tok" ] || continue
+      is_candidate_token "$tok" || continue
+
+      cands=$((cands + 1))
+      verdict="$(resolve_candidate "$tok")"
+      case "$verdict" in
+        error:*)
+          errs=$((errs + 1))
+          report+="$(printf '  %s✗%s %s:%s  %s\n' "$C_RED" "$C_OFF" "$rel_manifest" "$line_no" "${verdict#error:}")"$'\n'
+          ;;
+        warn:*)
+          warns=$((warns + 1))
+          report+="$(printf '  %s!%s %s:%s  %s\n' "$C_YEL" "$C_OFF" "$rel_manifest" "$line_no" "${verdict#warn:}")"$'\n'
+          ;;
+        *)
+          resolved=$((resolved + 1))
+          if [ "$LIST_ONLY" -eq 1 ]; then
+            report+="$(printf '  %s✓%s %s:%s  %s -> %s\n' "$C_GRN" "$C_OFF" "$rel_manifest" "$line_no" "$tok" "$verdict")"$'\n'
+          fi
+          ;;
+      esac
+    done <<<"$tokens"
+  done <"$raw"
+
+  total_cands=$((total_cands + cands))
+  total_resolved=$((total_resolved + resolved))
+  total_warn=$((total_warn + warns))
+  total_err=$((total_err + errs))
+
+  if [ "$LIST_ONLY" -eq 0 ]; then
+    if [ "$QUIET" -eq 0 ] || [ "$errs" -gt 0 ] || [ "$warns" -gt 0 ]; then
+      printf '%s%s%s  %s%d%s references, %s%d%s resolved' \
+        "$C_BOLD" "$pkg" "$C_OFF" \
+        "$C_BOLD" "$cands" "$C_OFF" \
+        "$C_GRN" "$resolved" "$C_OFF"
+      [ "$warns" -gt 0 ] && printf ", %s%d%s warned" "$C_YEL" "$warns" "$C_OFF"
+      [ "$errs" -gt 0 ] && printf ", %s%d%s unknown" "$C_RED" "$errs" "$C_OFF"
+      printf '  %s(%s)%s\n' "$C_DIM" "$rel_manifest" "$C_OFF"
+    fi
+  fi
+
+  if [ -n "$report" ]; then
+    printf '%s' "$report"
+  fi
+
+  # A manifest that yields no candidates at all is a failure, not a pass: it
+  # means this script can no longer read the file, and silently checking
+  # nothing is worse than checking badly.
+  if [ "$cands" -eq 0 ]; then
+    printf '%s  ✗ %s: no Swift test references extracted - manifest format changed?%s\n' \
+      "$C_RED" "$rel_manifest" "$C_OFF" >&2
+    errs=$((errs + 1))
+    total_err=$((total_err + 1))
+  fi
+
+  if [ "$errs" -gt 0 ]; then
+    FAILED_MANIFESTS+=("$pkg")
+  fi
+  RUN_PACKAGES+=("$pkg")
+done < <(manifest_paths)
+
+if [ "$LIST_ONLY" -eq 1 ]; then
+  printf '\n%s%d%s references extracted, %s%d%s resolved, %s%d%s warned, %s%d%s unknown\n' \
+    "$C_BOLD" "$total_cands" "$C_OFF" \
+    "$C_GRN" "$total_resolved" "$C_OFF" \
+    "$C_YEL" "$total_warn" "$C_OFF" \
+    "$C_RED" "$total_err" "$C_OFF"
+  [ "$total_err" -eq 0 ] && exit 0 || exit 1
+fi
+
+status=0
+if [ "$total_err" -gt 0 ]; then
+  printf '\n%sFAIL%s: %d unknown test reference(s) in: %s\n' \
+    "$C_RED" "$C_OFF" "$total_err" "${FAILED_MANIFESTS[*]}"
+  status=1
+else
+  printf '\n%sOK%s: %d manifest reference(s) across %d package(s) all resolve (%d warned)\n' \
+    "$C_GRN" "$C_OFF" "$total_resolved" "${#RUN_PACKAGES[@]}" "$total_warn"
+fi
+
+# ---------------------------------------------------------------- swift test
+
+if [ "$RUN_TESTS" -eq 1 ]; then
+  if ! command -v swift >/dev/null 2>&1; then
+    printf '%sFAIL%s: --run needs a Swift toolchain on PATH (try: export PATH=$HOME/swift-toolchains/bin:$PATH)\n' \
+      "$C_RED" "$C_OFF"
+    exit 1
+  fi
+
+  for pkg in "${RUN_PACKAGES[@]}"; do
+    printf '\n%s==> swift test%s  Packages/%s\n' "$C_BOLD" "$C_OFF" "$pkg"
+    if ! (cd "$REPO_ROOT/Packages/$pkg" && swift test); then
+      printf '%sFAIL%s: swift test failed for %s\n' "$C_RED" "$C_OFF" "$pkg"
+      status=1
+    fi
+  done
+fi
+
+exit "$status"
