@@ -29,31 +29,40 @@ jobs:
       - name: Swift version
         run: swift --version
 
-      - name: Build
-        run: |
-          set -eo pipefail
-          for pkg in Packages/*/; do
-            name=$(basename "$pkg")
-            # UIComponents and any *Views feature package import SwiftUI and
-            # cannot build on Linux; they are Mac-verified only. DesignSystem
-            # is fully #if canImport(SwiftUI)-guarded, so it DOES build+test
-            # on Linux (its DesignSystemCore target is Linux-verified).
-            case "$name" in UIComponents|*Views) continue ;; esac
-            echo "::group::Build $name"
-            (cd "$pkg" && swift build 2>&1 | tail -2) || { echo "::error::$name build failed"; exit 1; }
-            echo "::endgroup::"
-          done
+      - name: Cache SPM build directories
+        uses: actions/cache@v4
+        with:
+          path: |
+            Packages/*/.build
+          key: linux-spm-v1-${{ hashFiles('**/Package.swift') }}-${{ github.sha }}
+          restore-keys: |
+            linux-spm-v1-${{ hashFiles('**/Package.swift') }}-
+            linux-spm-v1-
 
-      - name: Test
+      - name: Build & test Linux-verifiable packages
         run: |
           set -eo pipefail
-          for pkg in Packages/*/; do
-            name=$(basename "$pkg")
-            case "$name" in UIComponents|*Views) continue ;; esac
-            echo "::group::Test $name"
-            (cd "$pkg" && swift test 2>&1 | tail -3) || { echo "::error::$name tests failed"; exit 1; }
-            echo "::endgroup::"
-          done
+          # Parallel per-package build+test (4-way). Skips SwiftUI-only
+          # packages (UIComponents, *Views) exactly like the old loop.
+          list_pkgs() {
+            for pkg in Packages/*/; do
+              name=$(basename "$pkg")
+              case "$name" in UIComponents|*Views) continue ;; esac
+              printf '%s\n' "$name"
+            done
+          }
+          list_pkgs | xargs -P 4 -I '{}' bash -euo pipefail -c '
+            cd "Packages/{}"
+            log=/tmp/ci-{}.log
+            if ! (swift build && swift test) > "$log" 2>&1; then
+              echo "::error::{} build/test failed"
+              grep -E "error:|✘|FAILED" "$log" | head -20
+              echo "--- tail of log:"
+              tail -25 "$log"
+              exit 1
+            fi
+            tail -1 "$log"
+          '
 
   boundary-lint:
     name: Boundary lint (no SwiftUI/UIKit in Linux packages)
