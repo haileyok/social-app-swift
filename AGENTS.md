@@ -10,11 +10,12 @@ A native Swift/SwiftUI rewrite of the Bluesky social app (the React Native repo 
 
 The package boundary *is* the platform boundary:
 
-- **🌐 packages** (Linux-verifiable): ATSyntax, Lexicons, ATProtoClient, RichText, Moderation, Preferences, Domain, QueryStore, Persistence, DesignTokens, TestSupport, and all `Features/*/Logic` targets. These must:
+- **🌐 packages** (Linux-verifiable): ATSyntax, Lexicons, ATProtoClient, RichText, Moderation, Preferences, Domain, QueryStore, Persistence, DesignTokens, TestSupport, and feature Logic packages (`Packages/Features/<Name>`, product `<Name>Logic`). These must:
   - build and test with `swift build && swift test` on Linux
   - never `import SwiftUI` or `import UIKit` (CI boundary-lint enforces this)
   - stay `defaultIsolation: nonisolated` (no MainActor dependency)
-- **❌ packages** (macOS-CI-only): DesignSystem, UIComponents, all `Features/*/Views` targets, and `App/`. SwiftUI allowed here. Verified by `ios.yml` only.
+- **❌ packages** (macOS-CI-only): DesignSystem, UIComponents, feature Views packages, and `App/`. SwiftUI allowed here. Verified by the Mac CI (`ios-selfhosted.yml` fast loop on the self-hosted runners; hosted `ios.yml` as verification of record).
+- **Feature package convention**: each feature is TWO SPM packages — `Packages/Features/<Name>` (Logic, 🌐) and `Packages/Features/<Name>Views` (SwiftUI, ❌). The Linux CI build/test loop skips any package whose name ends in `Views`. DesignSystem is the one hybrid: fully `#if canImport(SwiftUI)`-guarded, so it builds AND tests on Linux (its DesignSystemCore target is Linux-verified) — keep it that way.
 
 The ONE `#if canImport(FoundationNetworking)` shim lives in ATProtoClient. No other package does platform networking shims.
 
