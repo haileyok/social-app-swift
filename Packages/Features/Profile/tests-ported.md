@@ -37,7 +37,7 @@ function that defines the behaviour and the Swift test that asserts it.
 | RN source | Behaviour | Swift test |
 |---|---|---|
 | `view/screens/Profile.tsx` `isMe` | self-detection | `ProfileHeaderDerivationTests.headerDerivationTable` |
-| `viewer.following` | follow state | table row `following` |
+| `viewer.following` | follow state | table row named following (see the follow-state derivation suite) |
 | `state/cache/profile-shadow.ts` `mergeShadow` | shadow overrides viewer fields | `ProfileHeaderDerivationTests.shadowApplicationIsNonMutating`, `.shadowMergingKeepsEarlierFields` |
 | `profile-shadow.ts` `'pending'` sentinel | an in-flight follow renders pending | `ProfileHeaderDerivationTests.headerDerivationTable` |
 | `profile-shadow.ts` `isProfileShadowApplied` | field presence, not truthiness | `ProfileShadowStoreTests.clearedFieldsSurviveMerging` |
