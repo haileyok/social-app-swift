@@ -32,7 +32,10 @@ jobs:
       - name: Build
         run: |
           set -eo pipefail
-          for pkg in Packages/*/; do
+          # Feature packages live one level deeper (Packages/Features/<Name>)
+          # alongside the flat Packages/<Name> packages, so expand both.
+          for pkg in Packages/*/ Packages/Features/*/; do
+            [ -f "$pkg/Package.swift" ] || continue
             name=$(basename "$pkg")
             # DesignSystem/UIComponents and any *Views feature package import
             # SwiftUI and cannot build on Linux; they are Mac-verified only.
@@ -45,7 +48,8 @@ jobs:
       - name: Test
         run: |
           set -eo pipefail
-          for pkg in Packages/*/; do
+          for pkg in Packages/*/ Packages/Features/*/; do
+            [ -f "$pkg/Package.swift" ] || continue
             name=$(basename "$pkg")
             case "$name" in DesignSystem|UIComponents|*Views) continue ;; esac
             echo "::group::Test $name"
