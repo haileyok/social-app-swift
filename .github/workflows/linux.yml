@@ -131,9 +131,13 @@ jobs:
             BIN=$(find /tmp/swiftlint -type f -name swiftlint | head -1)
             if [ -n "$BIN" ]; then
               chmod +x "$BIN"
-              "$BIN" lint --strict \
-                --exclude Packages/Lexicons/Sources,tools/lexicon-codegen,dev-env-mock,App/.build 2>&1 | tail -20
-              exit ${PIPESTATUS[0]}
+              # exclusions live in .swiftlint.yml (excluded:) - no CLI flag here
+              set +e
+              "$BIN" lint --strict > /tmp/swiftlint-out.txt 2>&1
+              RC=$?
+              set -e
+              tail -20 /tmp/swiftlint-out.txt
+              exit $RC
             fi
           fi
           echo "::warning::swiftlint binary unavailable at pinned release; config (.swiftlint.yml) remains authoritative. Non-blocking."
