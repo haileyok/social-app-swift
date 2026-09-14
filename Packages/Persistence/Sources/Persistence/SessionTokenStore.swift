@@ -65,11 +65,24 @@ public struct FileTokenStore: SessionTokenStore {
   /// Directory holding the per-account token files.
   public let rootDirectory: URL
 
-  private let fileManager: FileManager
+  private let fileManager: FileManagerBox
 
   public init(rootDirectory: URL, fileManager: FileManager = .default) {
     self.rootDirectory = rootDirectory
-    self.fileManager = fileManager
+    self.fileManager = FileManagerBox(fileManager)
+  }
+
+  /// The `FileManager` behind ``fileManager``.
+  ///
+  /// `SessionTokenStore` refines `Sendable`, so every stored property must be
+  /// Sendable, and `FileManager` is not. The box carries the instance without
+  /// adding state: this type is a value that is copied, never shared, and all
+  /// of its file work happens inline in the calling task, so there is no
+  /// concurrent access to guard.
+  private struct FileManagerBox: @unchecked Sendable {
+    let manager: FileManager
+
+    init(_ manager: FileManager) { self.manager = manager }
   }
 
   /// On-disk shape of one account's token file.
@@ -85,14 +98,14 @@ public struct FileTokenStore: SessionTokenStore {
 
   private func read(did: String) throws -> TokenFile? {
     let url = url(for: did)
-    guard fileManager.fileExists(atPath: url.path) else { return nil }
+    guard fileManager.manager.fileExists(atPath: url.path) else { return nil }
     let data = try Data(contentsOf: url)
     return try JSONDecoder().decode(TokenFile.self, from: data)
   }
 
   private func write(_ file: TokenFile, did: String) throws {
     do {
-      try fileManager.createDirectory(
+      try fileManager.manager.createDirectory(
         at: rootDirectory, withIntermediateDirectories: true)
       let data = try JSONEncoder().encode(file)
       try data.write(to: url(for: did), options: .atomic)
@@ -129,7 +142,7 @@ public struct FileTokenStore: SessionTokenStore {
   }
 
   public func removeAll() async throws {
-    guard let names = try? fileManager.contentsOfDirectory(atPath: rootDirectory.path)
+    guard let names = try? fileManager.manager.contentsOfDirectory(atPath: rootDirectory.path)
     else { return }
     for name in names where name.hasPrefix("tokens-") && name.hasSuffix(".json") {
       try removeFile(named: name)
@@ -137,7 +150,7 @@ public struct FileTokenStore: SessionTokenStore {
   }
 
   public func dids() async throws -> [String] {
-    guard let names = try? fileManager.contentsOfDirectory(atPath: rootDirectory.path)
+    guard let names = try? fileManager.manager.contentsOfDirectory(atPath: rootDirectory.path)
     else { return [] }
     var result: [String] = []
     for name in names.sorted() where name.hasPrefix("tokens-") && name.hasSuffix(".json") {
@@ -159,9 +172,9 @@ public struct FileTokenStore: SessionTokenStore {
   }
 
   private func removeFile(url: URL) throws {
-    guard fileManager.fileExists(atPath: url.path) else { return }
+    guard fileManager.manager.fileExists(atPath: url.path) else { return }
     do {
-      try fileManager.removeItem(at: url)
+      try fileManager.manager.removeItem(at: url)
     } catch {
       throw SessionTokenStoreError.fileSystem("\(error)")
     }
