@@ -181,8 +181,7 @@ public enum MutedWordsEditor {
   /// Port of the `.reverse()` in the RN list render (muted words are appended,
   /// so reversing shows the most recent first).
   public static func rows(_ words: [MutedWord], items: [PrefObject]? = nil, now: Date = Date())
-    -> [MutedWordRowModel]
-  {
+    -> [MutedWordRowModel] {
     let byValue = items.map { objects in
       Dictionary(
         objects.compactMap { object in

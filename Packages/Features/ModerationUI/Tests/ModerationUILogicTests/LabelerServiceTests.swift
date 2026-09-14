@@ -20,12 +20,11 @@ struct LabelerServiceTests {
   /// The generated decoder is `$type`-discriminated, so the discriminant is
   /// injected into each encoded object.
   private func detailedPageJSON(_ labelers: [App.Bsky.LabelerDefs_LabelerViewDetailed]) throws
-    -> String
-  {
+    -> String {
     let encoder = JSONEncoder()
     let views = try labelers.map { labeler -> String in
       let data = try encoder.encode(labeler)
-      var text = String(decoding: data, as: UTF8.self)
+      var text = String(data: data, encoding: .utf8) ?? ""
       text.insert(
         contentsOf: #""$type":"app.bsky.labeler.defs#labelerViewDetailed","#,
         at: text.index(after: text.startIndex))

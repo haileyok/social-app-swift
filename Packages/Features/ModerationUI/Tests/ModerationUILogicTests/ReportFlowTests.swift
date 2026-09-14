@@ -11,27 +11,6 @@ import Testing
 @Suite("Report submission")
 struct ReportFlowTests {
 
-  private func state(
-    reason: String = ReportReasons.harassmentTroll,
-    labelerDid: String = bskyModerationDid,
-    details: String? = nil,
-    includeVideoTimestamp: Bool = false
-  ) -> ReportState {
-    ReportState(
-      selectedReason: ReportReason(reason: reason, title: "reason"),
-      selectedLabelerDid: labelerDid,
-      details: details,
-      includeVideoTimestamp: includeVideoTimestamp)
-  }
-
-  /// Encodes a value to canonical JSON for exact comparison.
-  private func json(_ value: ReportJSON) -> String { value.canonicalJSON }
-
-  /// Encodes a whole body to canonical JSON.
-  private func json(_ body: [String: ReportJSON]) -> String {
-    ReportJSON.canonicalJSON(body)
-  }
-
   // MARK: - Subject bodies
 
   @Test("an account report sends a repoRef subject")
@@ -487,4 +466,30 @@ struct ReportFlowTests {
       #expect(newToOldReasonsMap[option.reason] != nil)
     }
   }
+}
+
+/// Fixture builders for the report-submission tests.
+///
+/// These are file-level rather than members so the suite's own body stays
+/// within the type-body budget; the names are unchanged, so the call sites
+/// inside `ReportFlowTests` resolve to them directly.
+private func state(
+  reason: String = ReportReasons.harassmentTroll,
+  labelerDid: String = bskyModerationDid,
+  details: String? = nil,
+  includeVideoTimestamp: Bool = false
+) -> ReportState {
+  ReportState(
+    selectedReason: ReportReason(reason: reason, title: "reason"),
+    selectedLabelerDid: labelerDid,
+    details: details,
+    includeVideoTimestamp: includeVideoTimestamp)
+}
+
+/// Encodes a value to canonical JSON for exact comparison.
+private func json(_ value: ReportJSON) -> String { value.canonicalJSON }
+
+/// Encodes a whole body to canonical JSON.
+private func json(_ body: [String: ReportJSON]) -> String {
+  ReportJSON.canonicalJSON(body)
 }

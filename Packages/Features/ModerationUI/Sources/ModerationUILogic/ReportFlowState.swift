@@ -114,6 +114,30 @@ public enum ReportAction: Sendable {
 public func reportReducer(_ state: ReportState, _ action: ReportAction) -> ReportState {
   var next = state
   switch action {
+  case .setDetails(let details):
+    next.details = details
+  case .setError(let error):
+    next.error = error
+  case .clearError:
+    next.error = nil
+  case .showDetails:
+    next.detailsOpen = true
+  case .setIncludeVideoTimestamp(let include):
+    next.includeVideoTimestamp = include
+  default:
+    return reportReducerNavigation(state, action)
+  }
+  return next
+}
+
+/// The reducer's navigation-affecting actions: the ones that pick or clear a
+/// category, reason or labeler and therefore reposition the dialog.
+///
+/// Split from ``reportReducer(_:_:)`` so neither function exceeds the
+/// function-body-length budget.
+func reportReducerNavigation(_ state: ReportState, _ action: ReportAction) -> ReportState {
+  var next = state
+  switch action {
   case .selectCategory(let category, let otherReason):
     next.selectedCategory = category
     next.activeStepIndex1 = category.key == .other ? 3 : 2
@@ -165,20 +189,10 @@ public func reportReducer(_ state: ReportState, _ action: ReportAction) -> Repor
     next.activeStepIndex1 = 3
     next.includeVideoTimestamp = false
 
-  case .setDetails(let details):
-    next.details = details
-
-  case .setError(let error):
-    next.error = error
-
-  case .clearError:
-    next.error = nil
-
-  case .showDetails:
-    next.detailsOpen = true
-
-  case .setIncludeVideoTimestamp(let include):
-    next.includeVideoTimestamp = include
+  default:
+    // The plain setters are handled by `reportReducer`; reaching here means a
+    // new case was added to `ReportAction` without a handler.
+    return state
   }
   return next
 }

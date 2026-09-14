@@ -226,8 +226,7 @@ public enum ContentLabels {
     _ value: String, customDefinitions: [LabelValueDefinition]?
   ) -> LabelValueDefinition? {
     if !value.hasPrefix("!"), let customDefinitions,
-      let match = customDefinitions.first(where: { $0.identifier == value })
-    {
+      let match = customDefinitions.first(where: { $0.identifier == value }) {
       return match
     }
     return labels[value]

@@ -46,8 +46,8 @@ public struct BlockedAccountsQuery: Sendable {
   public let query: InfiniteQuery<App.Bsky.ActorDefs_ProfileView>
 
   public init(store: QueryStore, client: XrpcClient, args: BlockedMutedList.ListArgs = .init()) {
-    let fetch: @Sendable (String?) async throws -> QueryPage<App.Bsky.ActorDefs_ProfileView> = {
-      cursor in
+    typealias Page = QueryPage<App.Bsky.ActorDefs_ProfileView>
+    let fetch: @Sendable (String?) async throws -> Page = { cursor in
       let output: App.Bsky.GraphGetBlocks_Output = try await client.get(
         App.Bsky.GraphGetBlocks.id,
         params: [
@@ -70,8 +70,8 @@ public struct MutedAccountsQuery: Sendable {
   public let query: InfiniteQuery<App.Bsky.ActorDefs_ProfileView>
 
   public init(store: QueryStore, client: XrpcClient, args: BlockedMutedList.ListArgs = .init()) {
-    let fetch: @Sendable (String?) async throws -> QueryPage<App.Bsky.ActorDefs_ProfileView> = {
-      cursor in
+    typealias Page = QueryPage<App.Bsky.ActorDefs_ProfileView>
+    let fetch: @Sendable (String?) async throws -> Page = { cursor in
       let output: App.Bsky.GraphGetMutes_Output = try await client.get(
         App.Bsky.GraphGetMutes.id,
         params: [

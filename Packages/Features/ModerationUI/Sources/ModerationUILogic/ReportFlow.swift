@@ -384,8 +384,7 @@ public enum ReportFlow {
 
     var modTool: [String: ReportJSON]?
     if state.includeVideoTimestamp, let videoTimestampSeconds, modToolName != nil,
-      isPost(subject), labelerDid == apiModerationDid
-    {
+      isPost(subject), labelerDid == apiModerationDid {
       modTool = [
         "name": ReportJSON(modToolName ?? ""),
         "meta": .object(["videoTimestampSeconds": ReportJSON(videoTimestampSeconds)]),
