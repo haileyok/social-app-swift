@@ -1,0 +1,5726 @@
+{
+  "version": 1,
+  "generator": "@bsky/sdk@1.1.0 (pinned; matches RN social-app package.json)",
+  "cases": [
+    {
+      "name": "clean-post",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "just a normal post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "content-label-porn-hide",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "explicit post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {
+              "porn": "hide"
+            },
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 2,
+            "target": "content",
+            "setting": "hide",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn"
+            },
+            "labelDefIdentifier": "porn",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "content-label-porn-warn",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "explicit post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {
+              "porn": "warn"
+            },
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 7,
+            "target": "content",
+            "setting": "warn",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn"
+            },
+            "labelDefIdentifier": "porn",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 7,
+                "target": "content",
+                "setting": "warn",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "content-label-porn-ignore",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "explicit post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {
+              "porn": "ignore"
+            },
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "adult-content-disabled-forces-hide",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "explicit post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": false,
+            "labels": {
+              "porn": "warn"
+            },
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 1,
+            "target": "content",
+            "setting": "hide",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn"
+            },
+            "labelDefIdentifier": "porn",
+            "noOverride": true
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": true
+              }
+            ],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": true
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "labeler-not-configured-label-ignored",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "post with label from unconfigured labeler",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "gore",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "account-label-porn-blurs-profile-surfaces",
+      "input": {
+        "fn": "moderateProfile",
+        "subject": {
+          "did": "did:plc:author123",
+          "handle": "author.test",
+          "displayName": "Author",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "did:plc:author123",
+              "val": "porn",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {
+              "porn": "hide"
+            },
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 2,
+            "target": "account",
+            "setting": "hide",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "did:plc:author123",
+              "val": "porn"
+            },
+            "labelDefIdentifier": "porn",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "muted-by-viewer",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {
+              "muted": true
+            }
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "muted author post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": true,
+        "causes": [
+          {
+            "type": "muted",
+            "source": {
+              "type": "user"
+            },
+            "priority": 6
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": false,
+            "alert": false,
+            "inform": true,
+            "filters": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [],
+            "alerts": [],
+            "informs": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ]
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": true,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": true,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ]
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "blocking-by-viewer",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {
+              "blocking": "at://did:plc:memoderator/app.bsky.graph.block/3kabc"
+            }
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "blocked author post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": true,
+        "muted": false,
+        "causes": [
+          {
+            "type": "blocking",
+            "source": {
+              "type": "user"
+            },
+            "priority": 3
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 3
+              }
+            ],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": true,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 3
+              }
+            ],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 3
+              }
+            ],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "blocked-by-author",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {
+              "blockedBy": true
+            }
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "post from someone who blocked me",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": true,
+        "muted": false,
+        "causes": [
+          {
+            "type": "blocked-by",
+            "source": {
+              "type": "user"
+            },
+            "priority": 4
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": true,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "muted-by-list",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {
+              "muted": true,
+              "mutedByList": {
+                "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst",
+                "name": "noisy",
+                "blocked": false
+              }
+            }
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "list-muted author post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": true,
+        "causes": [
+          {
+            "type": "muted",
+            "source": {
+              "type": "list",
+              "list": {
+                "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst",
+                "name": "noisy",
+                "blocked": false
+              }
+            },
+            "priority": 6
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": false,
+            "alert": false,
+            "inform": true,
+            "filters": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst",
+                    "name": "noisy",
+                    "blocked": false
+                  }
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [],
+            "alerts": [],
+            "informs": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst",
+                    "name": "noisy",
+                    "blocked": false
+                  }
+                },
+                "priority": 6
+              }
+            ]
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": true,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst",
+                    "name": "noisy",
+                    "blocked": false
+                  }
+                },
+                "priority": 6
+              }
+            ],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst",
+                    "name": "noisy",
+                    "blocked": false
+                  }
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst",
+                    "name": "noisy",
+                    "blocked": false
+                  }
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": true,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst",
+                    "name": "noisy",
+                    "blocked": false
+                  }
+                },
+                "priority": 6
+              }
+            ]
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "blocking-by-list",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {
+              "blocking": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+              "blockingByList": {
+                "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                "name": "bad",
+                "blocked": true
+              }
+            }
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "list-blocked author post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": true,
+        "muted": false,
+        "causes": [
+          {
+            "type": "blocking",
+            "source": {
+              "type": "list",
+              "list": {
+                "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                "name": "bad",
+                "blocked": true
+              }
+            },
+            "priority": 3
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                    "name": "bad",
+                    "blocked": true
+                  }
+                },
+                "priority": 3
+              }
+            ],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                    "name": "bad",
+                    "blocked": true
+                  }
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": true,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                    "name": "bad",
+                    "blocked": true
+                  }
+                },
+                "priority": 3
+              }
+            ],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                    "name": "bad",
+                    "blocked": true
+                  }
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                    "name": "bad",
+                    "blocked": true
+                  }
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                    "name": "bad",
+                    "blocked": true
+                  }
+                },
+                "priority": 3
+              }
+            ],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                    "name": "bad",
+                    "blocked": true
+                  }
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocking",
+                "source": {
+                  "type": "list",
+                  "list": {
+                    "uri": "at://did:plc:memoderator/app.bsky.graph.list/3klst2",
+                    "name": "bad",
+                    "blocked": true
+                  }
+                },
+                "priority": 3
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "muted-word-content-match",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "a post about spoiler definitely",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [
+              {
+                "value": "spoiler",
+                "targets": [
+                  "content"
+                ],
+                "actorTarget": "all"
+              }
+            ],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "mute-word",
+            "source": {
+              "type": "user"
+            },
+            "priority": 6
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "quote-post-muted-word-in-embed",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "look at this quote",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "embed": {
+            "$type": "app.bsky.embed.record#view",
+            "record": {
+              "$type": "app.bsky.embed.record#viewRecord",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/fake",
+              "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+              "author": {
+                "did": "did:plc:author123",
+                "handle": "author.test",
+                "displayName": "Author"
+              },
+              "value": {
+                "$type": "app.bsky.feed.post",
+                "text": "big spoiler inside the quote",
+                "langs": [
+                  "en"
+                ],
+                "createdAt": "2024-01-01T00:00:00.000Z"
+              },
+              "indexedAt": "2024-01-01T00:00:00.000Z"
+            }
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [
+              {
+                "value": "spoiler",
+                "targets": [
+                  "content"
+                ],
+                "actorTarget": "all"
+              }
+            ],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "mute-word",
+            "source": {
+              "type": "user"
+            },
+            "priority": 6
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "muted-word-no-match",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "a post about nothing in particular",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [
+              {
+                "value": "spoiler",
+                "targets": [
+                  "content"
+                ],
+                "actorTarget": "all"
+              }
+            ],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "muted-word-exclude-following-follows-so-no-match",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {
+              "following": "at://did:plc:memoderator/app.bsky.graph.follow/3kfol"
+            }
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "spoiler talk from a friend",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [
+              {
+                "value": "spoiler",
+                "targets": [
+                  "content"
+                ],
+                "actorTarget": "exclude-following"
+              }
+            ],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "hidden-post-filtered",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "post I hid",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": [
+              "at://did:plc:author123/app.bsky.feed.post/3kttw"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "hidden",
+            "source": {
+              "type": "user"
+            },
+            "priority": 6
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "hidden",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "hidden",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [
+              {
+                "type": "hidden",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "hidden",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "label-gore-default-hide",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "gory post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "gore",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 7,
+            "target": "content",
+            "setting": "warn",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "gore"
+            },
+            "labelDefIdentifier": "gore",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 7,
+                "target": "content",
+                "setting": "warn",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "gore"
+                },
+                "labelDefIdentifier": "gore",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "unknown-label-value-ignored",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "weird label",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "some-unknown-val",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "custom-labeler-definition",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "custom labeled post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "self-ghi",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          },
+          "labelDefs": {
+            "did:plc:labeler789": [
+              {
+                "identifier": "self-ghi",
+                "severity": "inform",
+                "blurs": "content",
+                "defaultSetting": "warn",
+                "adult": false,
+                "noOverride": false,
+                "definedBy": "did:plc:labeler789",
+                "configurable": true,
+                "flags": [
+                  "no-self"
+                ],
+                "behaviors": {
+                  "account": {
+                    "profileList": "inform",
+                    "profileView": "inform",
+                    "contentList": "blur",
+                    "contentView": "inform"
+                  },
+                  "profile": {
+                    "profileList": "inform",
+                    "profileView": "inform"
+                  },
+                  "content": {
+                    "contentList": "blur",
+                    "contentView": "inform"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 7,
+            "target": "content",
+            "setting": "warn",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "self-ghi"
+            },
+            "labelDefIdentifier": "self-ghi",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 7,
+                "target": "content",
+                "setting": "warn",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "self-ghi"
+                },
+                "labelDefIdentifier": "self-ghi",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": true,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 7,
+                "target": "content",
+                "setting": "warn",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "self-ghi"
+                },
+                "labelDefIdentifier": "self-ghi",
+                "noOverride": false
+              }
+            ]
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "custom-labeler-labeler-scoped-setting",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "custom labeled post, scoped to hide",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "self-ghi",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {
+                  "self-ghi": "hide"
+                }
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          },
+          "labelDefs": {
+            "did:plc:labeler789": [
+              {
+                "identifier": "self-ghi",
+                "severity": "inform",
+                "blurs": "content",
+                "defaultSetting": "warn",
+                "adult": false,
+                "noOverride": false,
+                "definedBy": "did:plc:labeler789",
+                "configurable": true,
+                "flags": [
+                  "no-self"
+                ],
+                "behaviors": {
+                  "account": {
+                    "profileList": "inform",
+                    "profileView": "inform",
+                    "contentList": "blur",
+                    "contentView": "inform"
+                  },
+                  "profile": {
+                    "profileList": "inform",
+                    "profileView": "inform"
+                  },
+                  "content": {
+                    "contentList": "blur",
+                    "contentView": "inform"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 2,
+            "target": "content",
+            "setting": "hide",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "self-ghi"
+            },
+            "labelDefIdentifier": "self-ghi",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "self-ghi"
+                },
+                "labelDefIdentifier": "self-ghi",
+                "noOverride": false
+              }
+            ],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "self-ghi"
+                },
+                "labelDefIdentifier": "self-ghi",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": true,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "self-ghi"
+                },
+                "labelDefIdentifier": "self-ghi",
+                "noOverride": false
+              }
+            ]
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "content-self-label-by-author",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author"
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "self labeled post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:author123",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {
+              "porn": "hide"
+            },
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "user"
+            },
+            "priority": 2,
+            "target": "content",
+            "setting": "hide",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:author123",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "porn"
+            },
+            "labelDefIdentifier": "porn",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": true,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 2,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:author123",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 2,
+                "target": "content",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:author123",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "is-me-own-account-label",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:memoderator",
+            "handle": "author.test",
+            "displayName": "Author",
+            "labels": [
+              {
+                "ver": 1,
+                "src": "did:plc:labeler789",
+                "uri": "did:plc:memoderator",
+                "val": "porn",
+                "cts": "2024-01-01T00:00:00.000Z"
+              }
+            ]
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "my own post",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {
+              "porn": "hide"
+            },
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 2,
+            "target": "account",
+            "setting": "hide",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "did:plc:memoderator",
+              "val": "porn"
+            },
+            "labelDefIdentifier": "porn",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:memoderator",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 2,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:memoderator",
+                  "val": "porn"
+                },
+                "labelDefIdentifier": "porn",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "multiple-causes-priority-order",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {
+              "muted": true,
+              "blockedBy": true
+            }
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "spoiler: gore content",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "gore",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [
+              {
+                "value": "spoiler",
+                "targets": [
+                  "content"
+                ],
+                "actorTarget": "all"
+              }
+            ],
+            "hiddenPosts": [
+              "at://did:plc:author123/app.bsky.feed.post/3kttw"
+            ]
+          }
+        }
+      },
+      "expected": {
+        "blocked": true,
+        "muted": true,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 7,
+            "target": "content",
+            "setting": "warn",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+              "val": "gore"
+            },
+            "labelDefIdentifier": "gore",
+            "noOverride": false
+          },
+          {
+            "type": "hidden",
+            "source": {
+              "type": "user"
+            },
+            "priority": 6
+          },
+          {
+            "type": "mute-word",
+            "source": {
+              "type": "user"
+            },
+            "priority": 6
+          },
+          {
+            "type": "muted",
+            "source": {
+              "type": "user"
+            },
+            "priority": 6
+          },
+          {
+            "type": "blocked-by",
+            "source": {
+              "type": "user"
+            },
+            "priority": 4
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": true,
+            "filters": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              },
+              {
+                "type": "hidden",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              },
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "alerts": [],
+            "informs": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ]
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": true,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              },
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              },
+              {
+                "type": "hidden",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              },
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              },
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              },
+              {
+                "type": "hidden",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              },
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              },
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": true,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "blocked-by",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 4
+              },
+              {
+                "type": "hidden",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              },
+              {
+                "type": "mute-word",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ],
+            "alerts": [],
+            "informs": [
+              {
+                "type": "muted",
+                "source": {
+                  "type": "user"
+                },
+                "priority": 6
+              }
+            ]
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 7,
+                "target": "content",
+                "setting": "warn",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+                  "val": "gore"
+                },
+                "labelDefIdentifier": "gore",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "profile-with-forced-hide-label",
+      "input": {
+        "fn": "moderateProfile",
+        "subject": {
+          "did": "did:plc:author123",
+          "handle": "author.test",
+          "displayName": "Author",
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "did:plc:author123",
+              "val": "!hide",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 1,
+            "target": "account",
+            "setting": "hide",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "did:plc:author123",
+              "val": "!hide"
+            },
+            "labelDefIdentifier": "!hide",
+            "noOverride": true
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": true,
+            "filter": true,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": true,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 1,
+                "target": "account",
+                "setting": "hide",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "did:plc:author123",
+                  "val": "!hide"
+                },
+                "labelDefIdentifier": "!hide",
+                "noOverride": true
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "user-list-with-label",
+      "input": {
+        "fn": "moderateUserList",
+        "subject": {
+          "uri": "at://did:plc:other456/app.bsky.graph.list/3klstx",
+          "cid": "bafylst",
+          "name": "A List",
+          "purpose": "app.bsky.graph.defs.modlist",
+          "viewer": {
+            "muted": false,
+            "blocked": false
+          },
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:other456/app.bsky.graph.list/3klstx",
+              "val": "gore",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 7,
+            "target": "content",
+            "setting": "warn",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:other456/app.bsky.graph.list/3klstx",
+              "val": "gore"
+            },
+            "labelDefIdentifier": "gore",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 7,
+                "target": "content",
+                "setting": "warn",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:other456/app.bsky.graph.list/3klstx",
+                  "val": "gore"
+                },
+                "labelDefIdentifier": "gore",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "feed-generator-with-label",
+      "input": {
+        "fn": "moderateFeedGenerator",
+        "subject": {
+          "uri": "at://did:plc:other456/app.bsky.feed.generator/myskyline",
+          "cid": "bafygen",
+          "did": "did:web:feed.did:plc:other456",
+          "displayName": "My Skyline",
+          "creator": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {}
+          },
+          "viewer": {},
+          "labels": [
+            {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:other456/app.bsky.feed.generator/myskyline",
+              "val": "gore",
+              "cts": "2024-01-01T00:00:00.000Z"
+            }
+          ]
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [
+              {
+                "did": "did:plc:labeler789",
+                "labels": {}
+              }
+            ],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "blocked": false,
+        "muted": false,
+        "causes": [
+          {
+            "type": "label",
+            "source": {
+              "type": "labeler",
+              "did": "did:plc:labeler789"
+            },
+            "priority": 7,
+            "target": "content",
+            "setting": "warn",
+            "label": {
+              "ver": 1,
+              "src": "did:plc:labeler789",
+              "uri": "at://did:plc:other456/app.bsky.feed.generator/myskyline",
+              "val": "gore"
+            },
+            "labelDefIdentifier": "gore",
+            "noOverride": false
+          }
+        ],
+        "ui": {
+          "profileList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "profileView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "avatar": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "banner": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "displayName": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentList": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentView": {
+            "noOverride": false,
+            "filter": false,
+            "blur": false,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [],
+            "alerts": [],
+            "informs": []
+          },
+          "contentMedia": {
+            "noOverride": false,
+            "filter": false,
+            "blur": true,
+            "alert": false,
+            "inform": false,
+            "filters": [],
+            "blurs": [
+              {
+                "type": "label",
+                "source": {
+                  "type": "labeler",
+                  "did": "did:plc:labeler789"
+                },
+                "priority": 7,
+                "target": "content",
+                "setting": "warn",
+                "label": {
+                  "ver": 1,
+                  "src": "did:plc:labeler789",
+                  "uri": "at://did:plc:other456/app.bsky.feed.generator/myskyline",
+                  "val": "gore"
+                },
+                "labelDefIdentifier": "gore",
+                "noOverride": false
+              }
+            ],
+            "alerts": [],
+            "informs": []
+          }
+        }
+      }
+    },
+    {
+      "name": "downgrade-softens-blur-to-inform",
+      "input": {
+        "fn": "moderatePost",
+        "subject": {
+          "$type": "app.bsky.feed.defs#postView",
+          "uri": "at://did:plc:author123/app.bsky.feed.post/3kttw",
+          "cid": "bafyreiclp443lavogvhj3d2ob2cxbfuscni2k5jk7bebjzg7khl3esabwq",
+          "author": {
+            "did": "did:plc:author123",
+            "handle": "author.test",
+            "displayName": "Author",
+            "viewer": {
+              "blockedBy": true
+            }
+          },
+          "record": {
+            "$type": "app.bsky.feed.post",
+            "text": "post from someone who blocked me",
+            "langs": [
+              "en"
+            ],
+            "createdAt": "2024-01-01T00:00:00.000Z"
+          },
+          "indexedAt": "2024-01-01T00:00:00.000Z"
+        },
+        "opts": {
+          "userDid": "did:plc:memoderator",
+          "prefs": {
+            "adultContentEnabled": true,
+            "labels": {},
+            "labelers": [],
+            "mutedWords": [],
+            "hiddenPosts": []
+          }
+        }
+      },
+      "expected": {
+        "before": {
+          "blocked": true,
+          "muted": false,
+          "causes": [
+            {
+              "type": "blocked-by",
+              "source": {
+                "type": "user"
+              },
+              "priority": 4
+            }
+          ],
+          "ui": {
+            "profileList": {
+              "noOverride": true,
+              "filter": true,
+              "blur": true,
+              "alert": false,
+              "inform": false,
+              "filters": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4
+                }
+              ],
+              "blurs": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4
+                }
+              ],
+              "alerts": [],
+              "informs": []
+            },
+            "profileView": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": true,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4
+                }
+              ],
+              "informs": []
+            },
+            "avatar": {
+              "noOverride": true,
+              "filter": false,
+              "blur": true,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4
+                }
+              ],
+              "alerts": [],
+              "informs": []
+            },
+            "banner": {
+              "noOverride": true,
+              "filter": false,
+              "blur": true,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4
+                }
+              ],
+              "alerts": [],
+              "informs": []
+            },
+            "displayName": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            },
+            "contentList": {
+              "noOverride": true,
+              "filter": true,
+              "blur": true,
+              "alert": false,
+              "inform": false,
+              "filters": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4
+                }
+              ],
+              "blurs": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4
+                }
+              ],
+              "alerts": [],
+              "informs": []
+            },
+            "contentView": {
+              "noOverride": true,
+              "filter": false,
+              "blur": true,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4
+                }
+              ],
+              "alerts": [],
+              "informs": []
+            },
+            "contentMedia": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            }
+          }
+        },
+        "afterDowngrade": {
+          "blocked": true,
+          "muted": false,
+          "causes": [
+            {
+              "type": "blocked-by",
+              "source": {
+                "type": "user"
+              },
+              "priority": 4,
+              "downgraded": true
+            }
+          ],
+          "ui": {
+            "profileList": {
+              "noOverride": false,
+              "filter": true,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4,
+                  "downgraded": true
+                }
+              ],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            },
+            "profileView": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            },
+            "avatar": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            },
+            "banner": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            },
+            "displayName": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            },
+            "contentList": {
+              "noOverride": false,
+              "filter": true,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [
+                {
+                  "type": "blocked-by",
+                  "source": {
+                    "type": "user"
+                  },
+                  "priority": 4,
+                  "downgraded": true
+                }
+              ],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            },
+            "contentView": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            },
+            "contentMedia": {
+              "noOverride": false,
+              "filter": false,
+              "blur": false,
+              "alert": false,
+              "inform": false,
+              "filters": [],
+              "blurs": [],
+              "alerts": [],
+              "informs": []
+            }
+          }
+        }
+      }
+    }
+  ]
+}

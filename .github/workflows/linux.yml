@@ -112,6 +112,34 @@ jobs:
           fi
           echo "codegen idempotent"
 
+  golden-idempotency:
+    name: Golden fixture idempotency
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: tools/golden-gen/package-lock.json
+
+      - name: Regenerate and verify diff-clean
+        run: |
+          set -eo pipefail
+          cd tools/golden-gen
+          npm ci --no-audit --no-fund
+          npm run generate
+          cd ../..
+          if ! git diff --exit-code -- Packages/TestSupport/Fixtures/Golden; then
+            echo "::error::Golden fixtures out of sync with tools/golden-gen. Regenerate locally (npm run generate in tools/golden-gen) and commit both. Never hand-edit golden files."
+            exit 1
+          fi
+          echo "golden fixtures idempotent"
+
   lint:
     name: swiftlint + swift-format
     runs-on: ubuntu-latest

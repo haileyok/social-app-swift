@@ -1,0 +1,13 @@
+{
+  "name": "golden-gen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Generates golden fixture files by running the pinned TypeScript engines (@bsky/sdk 1.1.0, exactly as pinned by the RN social-app) over checked-in fixture inputs. Output is committed to Packages/TestSupport/Fixtures/Golden and consumed by the Swift Moderation/RichText port test suites (AC.4).",
+  "scripts": {
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "@bsky/sdk": "1.1.0"
+  }
+}
