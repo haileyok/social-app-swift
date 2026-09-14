@@ -67,7 +67,7 @@ jobs:
           VIOLATIONS=$(grep -rn --include='*.swift' -E '^[[:space:]]*import (SwiftUI|UIKit)[[:space:]]*$' \
             Packages/ATSyntax Packages/Lexicons Packages/ATProtoClient Packages/RichText \
             Packages/Moderation Packages/Preferences Packages/Domain Packages/QueryStore \
-            Packages/Persistence Packages/TestSupport \
+            Packages/Persistence Packages/TestSupport Packages/DesignTokens \
             || true)
           if [ -n "$VIOLATIONS" ]; then
             echo "::error::SwiftUI/UIKit import found in Linux-verifiable package:"
