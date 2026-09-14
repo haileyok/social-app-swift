@@ -1,0 +1,54 @@
+name: ios-selfhosted
+
+# Fast iOS iteration loop on the rented Mac mini (self-hosted runners
+# macrent-1/macrent-2, label macos-selfhosted). This is the *inner* loop:
+# every push that touches the iOS surface gets a real xcodebuild against the
+# iOS Simulator SDK within minutes. The hosted macos-26 `ios.yml` remains the
+# verification of record for acceptance criteria.
+#
+# Trusted-workflow-only posture: self-hosted label is used exclusively by this
+# push-triggered workflow (never pull_request), so fork PR code never executes
+# on the self-hosted machine.
+
+on:
+  push:
+    branches: [main, 'hailey/**']
+    paths:
+      - 'App/**'
+      - 'Packages/DesignSystem/**'
+      - 'Packages/UIComponents/**'
+      - 'Packages/DesignTokens/**'
+      - 'Packages/Features/**'
+      - '.github/workflows/ios-selfhosted.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-selfhosted-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: iOS build (self-hosted)
+    runs-on: [self-hosted, macos-selfhosted]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          xcrun simctl list runtimes | tail -2
+
+      - name: Build AppShell for iOS Simulator
+        run: |
+          set -o pipefail
+          cd App
+          xcodebuild -scheme AppShell \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath ~/dd-appshell \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tail -4
+
+      - name: Simulator inventory
+        run: |
+          xcrun simctl list devices available | head -12
