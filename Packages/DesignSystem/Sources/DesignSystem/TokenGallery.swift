@@ -29,7 +29,7 @@ public struct TokenGallery: View {
 
   public var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: Spacing.xl.value) {
+      VStack(alignment: .leading, spacing: Spacing.xl) {
         header
         paletteSection
         atomSection
@@ -40,7 +40,7 @@ public struct TokenGallery: View {
         shadowSection
         breakpointSection
       }
-      .padding(Spacing.lg.value)
+      .padding(Spacing.lg)
       .frame(maxWidth: .infinity, alignment: .leading)
     }
     .background(theme.atomColors.bg)
@@ -50,7 +50,7 @@ public struct TokenGallery: View {
   // MARK: - Sections
 
   private var header: some View {
-    VStack(alignment: .leading, spacing: Spacing.xs.value) {
+    VStack(alignment: .leading, spacing: Spacing.xs) {
       AlfText("ALF tokens — \(theme.name.rawValue)", scale: .xxl, weight: Scales.FontWeight.bold)
       AlfText(
         "scheme \(theme.scheme.rawValue) · shadow opacity \(formatted(theme.shadowOpacity))",
@@ -63,8 +63,8 @@ public struct TokenGallery: View {
 
   private var paletteSection: some View {
     GallerySection("Palette") {
-      ForEach(PaletteSwatch.groups(palette: theme.colors)) { group in
-        VStack(alignment: .leading, spacing: Spacing.xxs.value) {
+      ForEach(PaletteSwatch.groups(palette: theme.colors), id: \.name) { group in
+        VStack(alignment: .leading, spacing: Spacing.xxs) {
           AlfText(group.name, scale: .xs, color: theme.atomColors.textContrastMedium)
           HStack(spacing: 0) {
             ForEach(group.swatches) { swatch in
@@ -74,7 +74,7 @@ public struct TokenGallery: View {
                 .accessibilityLabel(Text(swatch.name))
             }
           }
-          .clipShape(.rect(cornerRadius: Radius.sm.value, style: .continuous))
+          .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
         }
       }
     }
@@ -91,13 +91,13 @@ public struct TokenGallery: View {
         ("bgContrast900", atoms.bgContrast900), ("borderContrastLow", atoms.borderContrastLow),
         ("borderContrastMedium", atoms.borderContrastMedium),
       ]
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))], spacing: Spacing.sm.value) {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: 120))], spacing: Spacing.sm) {
         ForEach(pairs, id: \.0) { entry in
-          HStack(spacing: Spacing.xs.value) {
-            RoundedRectangle(cornerRadius: Radius.xs.value)
+          HStack(spacing: Spacing.xs) {
+            RoundedRectangle(cornerRadius: Radius.xs)
               .fill(entry.1)
               .frame(width: 20, height: 20)
-              .overlay(RoundedRectangle(cornerRadius: Radius.xs.value).strokeBorder(theme.atomColors.borderContrastLow))
+              .overlay(RoundedRectangle(cornerRadius: Radius.xs).strokeBorder(theme.atomColors.borderContrastLow))
             AlfText(entry.0, scale: .xs, color: theme.atomColors.textContrastMedium)
           }
         }
@@ -108,14 +108,14 @@ public struct TokenGallery: View {
   private var typeSection: some View {
     GallerySection("Type scale") {
       ForEach(TypeScale.allCases, id: \.self) { scale in
-        HStack(alignment: .firstTextBaseline, spacing: Spacing.sm.value) {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.sm) {
           AlfText(label(for: scale), scale: .xs, color: theme.atomColors.textContrastLow)
             .frame(width: 68, alignment: .leading)
           AlfText("The quick brown fox 0123", scale: scale)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
-      VStack(alignment: .leading, spacing: Spacing.xxs.value) {
+      VStack(alignment: .leading, spacing: Spacing.xxs) {
         ForEach(
           [(Scales.FontWeight.normal, "normal"), (Scales.FontWeight.medium, "medium"),
            (Scales.FontWeight.semiBold, "semiBold"), (Scales.FontWeight.bold, "bold")],
@@ -130,7 +130,7 @@ public struct TokenGallery: View {
   private var spacingSection: some View {
     GallerySection("Spacing ladder") {
       ForEach(Spacing.Step.allCases, id: \.self) { step in
-        HStack(spacing: Spacing.sm.value) {
+        HStack(spacing: Spacing.sm) {
           AlfText("\(name(for: step)) · \(formatted(step.value))", scale: .xs, color: theme.atomColors.textContrastMedium)
             .frame(width: 110, alignment: .leading)
           Rectangle()
@@ -143,9 +143,9 @@ public struct TokenGallery: View {
 
   private var radiusSection: some View {
     GallerySection("Radius") {
-      HStack(spacing: Spacing.md.value) {
+      HStack(spacing: Spacing.md) {
         ForEach(Radius.Step.allCases, id: \.self) { step in
-          VStack(spacing: Spacing.xxs.value) {
+          VStack(spacing: Spacing.xxs) {
             RoundedRectangle(cornerRadius: min(step.value, 20))
               .fill(theme.colors.primary200)
               .frame(width: 44, height: 44)
@@ -158,10 +158,10 @@ public struct TokenGallery: View {
 
   private var gradientSection: some View {
     GallerySection("Gradients") {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: Spacing.sm.value) {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: Spacing.sm) {
         ForEach(GradientName.allCases, id: \.self) { name in
-          VStack(alignment: .leading, spacing: Spacing.xxs.value) {
-            RoundedRectangle(cornerRadius: Radius.md.value, style: .continuous)
+          VStack(alignment: .leading, spacing: Spacing.xxs) {
+            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
               .fill(name.linearGradient)
               .frame(height: 56)
             AlfText(name.rawValue, scale: .xs, color: theme.atomColors.textContrastMedium)
@@ -173,10 +173,10 @@ public struct TokenGallery: View {
 
   private var shadowSection: some View {
     GallerySection("Shadows") {
-      LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: Spacing.lg.value) {
+      LazyVGrid(columns: [GridItem(.adaptive(minimum: 140))], spacing: Spacing.lg) {
         ForEach(DesignSystemCore.ShadowGeometry.Size.allCases, id: \.self) { size in
-          VStack(spacing: Spacing.xxs.value) {
-            RoundedRectangle(cornerRadius: Radius.md.value, style: .continuous)
+          VStack(spacing: Spacing.xxs) {
+            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
               .fill(theme.atomColors.bgContrast100)
               .alfShadow(size)
               .frame(height: 64)
@@ -187,7 +187,7 @@ public struct TokenGallery: View {
           }
         }
       }
-      .padding(.vertical, Spacing.sm.value)
+      .padding(.vertical, Spacing.sm)
     }
   }
 
@@ -261,12 +261,12 @@ struct GallerySection<Content: View>: View {
   @Environment(\.alfTheme) private var theme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.sm.value) {
+    VStack(alignment: .leading, spacing: Spacing.sm) {
       AlfText(title, scale: .lg, weight: Scales.FontWeight.semiBold)
-      VStack(alignment: .leading, spacing: Spacing.sm.value) { content }
-        .padding(Spacing.md.value)
+      VStack(alignment: .leading, spacing: Spacing.sm) { content }
+        .padding(Spacing.md)
         .background(theme.atomColors.bgContrast50)
-        .clipShape(.rect(cornerRadius: Radius.md.value, style: .continuous))
+        .clipShape(.rect(cornerRadius: Radius.md, style: .continuous))
     }
   }
 }
