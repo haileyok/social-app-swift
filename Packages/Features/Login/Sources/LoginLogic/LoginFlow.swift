@@ -94,6 +94,10 @@ public final class LoginFlow: @unchecked Sendable {
     let password: String
   }
 
+  /// The last attempted identifier and service, for the login screen's
+  /// diagnostic caption: a failing sign-in shows *what was sent where*.
+  public private(set) var lastAttempt: String?
+
   /// Creates a flow.
   ///
   /// - Parameters:
@@ -349,6 +353,7 @@ public final class LoginFlow: @unchecked Sendable {
     let requestBase = ServiceURL.requestBase(normalizedService)
     pending = PendingAttempt(
       service: requestBase, fullIdentifier: fullIdentifier, password: password)
+    lastAttempt = "sent id=\(fullIdentifier) to \(requestBase)"
 
     do {
       let session = try await PasswordSession.login(
