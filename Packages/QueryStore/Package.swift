@@ -3,7 +3,6 @@ import PackageDescription
 
 let package = Package(
   name: "QueryStore",
-  platforms: [.iOS(.v18), .macOS(.v14)],
   defaultLocalization: "en",
   platforms: [.iOS(.v18), .macOS(.v14)],
   products: [

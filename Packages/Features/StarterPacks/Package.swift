@@ -3,8 +3,8 @@ import PackageDescription
 
 let package = Package(
   name: "StarterPacks",
-  platforms: [.iOS(.v18), .macOS(.v14)],
   defaultLocalization: "en",
+  platforms: [.iOS(.v18), .macOS(.v14)],
   products: [
     .library(name: "StarterPacksLogic", targets: ["StarterPacksLogic"])
   ],
