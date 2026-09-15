@@ -26,6 +26,15 @@ public enum ShellAccessibility {
   /** The login sheet's dismiss control. */
   public static let loginCloseButton = "app.login.close"
 
+  /** The debug toolbar button that presents the notifications list. */
+  public static let notificationsButton = "app.debug.notifications"
+
+  /** The presented notifications list, wrapped in its navigation stack. */
+  public static let notificationsSheet = "app.notifications"
+
+  /** The notifications sheet's dismiss control. */
+  public static let notificationsCloseButton = "app.notifications.close"
+
   /** Per-screen content container, e.g. `screen.Home`. */
   public static func screen(_ routeName: String) -> String {
     "screen.\(routeName)"
