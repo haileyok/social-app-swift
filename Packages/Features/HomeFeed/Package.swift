@@ -4,6 +4,7 @@ import PackageDescription
 let package = Package(
   name: "HomeFeed",
   defaultLocalization: "en",
+  platforms: [.iOS(.v18), .macOS(.v14)],
   products: [
     .library(name: "HomeFeedLogic", targets: ["HomeFeedLogic"])
   ],

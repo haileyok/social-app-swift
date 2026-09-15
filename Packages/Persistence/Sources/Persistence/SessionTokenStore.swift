@@ -65,11 +65,13 @@ public struct FileTokenStore: SessionTokenStore {
   /// Directory holding the per-account token files.
   public let rootDirectory: URL
 
-  private let fileManager: FileManager
+  private let fileManagerBox: SendableFileManager
 
-  public init(rootDirectory: URL, fileManager: FileManager = .default) {
+  private var fileManager: FileManager { fileManagerBox.value }
+
+  public init(rootDirectory: URL, fileManager: SendableFileManager = SendableFileManager()) {
     self.rootDirectory = rootDirectory
-    self.fileManager = fileManager
+    self.fileManagerBox = fileManager
   }
 
   /// On-disk shape of one account's token file.

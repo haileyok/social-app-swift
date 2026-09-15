@@ -6,7 +6,7 @@ import PackageDescription
 
 let package = Package(
   name: "SwiftAtproto",
-  platforms: [.macOS(.v14), .iOS(.v17)],
+  platforms: [.macOS(.v14), .iOS(.v18)],
   products: [
     .library(
       name: "SwiftAtproto",
@@ -37,8 +37,10 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/nnabeyang/swift-cbor.git", exact: "0.1.0"),
-    .package(url: "https://github.com/swift-libp2p/swift-cid", exact: "0.2.2"),
-    .package(url: "https://github.com/swift-libp2p/swift-multibase.git", exact: "0.2.3"),
+    .package(url: "https://github.com/swift-libp2p/swift-cid", exact: "0.3.0"),
+    .package(url: "https://github.com/swift-libp2p/swift-multibase.git", exact: "0.3.0"),
+    .package(url: "https://github.com/swift-libp2p/swift-multicodec.git", exact: "0.3.0"),
+    .package(url: "https://github.com/swift-libp2p/swift-multihash.git", exact: "0.3.0"),
     .package(url: "https://github.com/swiftlang/swift-syntax.git", "600.0.0"..<"604.0.0"),
     .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.3.1")),
     .package(url: "https://github.com/apple/swift-crypto", .upToNextMajor(from: "4.0.0")),
@@ -52,6 +54,12 @@ let package = Package(
         .product(name: "CID", package: "swift-cid"),
         .product(name: "HTTPTypes", package: "swift-http-types"),
         .product(name: "SwiftCbor", package: "swift-cbor"),
+        // Imported directly by SwiftAtproto sources; without direct product
+        // declarations the iOS PackageProduct framework link closure omits
+        // them ("type metadata accessor" undefined symbols in test bundles).
+        .product(name: "Multibase", package: "swift-multibase"),
+        .product(name: "Multicodec", package: "swift-multicodec"),
+        .product(name: "Multihash", package: "swift-multihash"),
       ]
     ),
     .target(

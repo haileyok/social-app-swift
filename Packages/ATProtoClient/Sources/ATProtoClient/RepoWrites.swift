@@ -42,7 +42,7 @@ extension XrpcClient {
     /// The wire member is `$link` (atproto prefixes metadata keys with `$`);
     /// without this mapping the decoded `link` is always nil and the uploaded
     /// CID is silently dropped.
-    enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey {  // swiftlint:disable:this nesting
       case link = "$link"
     }
   }
