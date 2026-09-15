@@ -2,6 +2,7 @@ import Foundation
 import Lexicons
 import SearchLogic
 import SwiftAtproto
+import UIComponentsCore
 
 /// Bridges the search field's text into the logic layer's state machine, and
 /// calls the two fetches the screens need.
@@ -16,23 +17,23 @@ public protocol SearchServicing: Sendable {
   /// The raw response is filtered through
   /// ``SearchLogic/ActorAutocomplete/suggestions(prefix:searched:verdict:)``
   /// first, so dedupe and the inclusion rule belong to the logic layer.
-  func suggestions(for prefix: String) async throws -> [App.Bsky.ActorDefs_ProfileViewBasic]
+  func suggestions(for prefix: String) async throws -> [Lexicons.App.Bsky.ActorDefs_ProfileViewBasic]
 
   /// Post results for a committed query, sorted for the active tab.
   func posts(
     query: String, sort: SearchQueryKeys.SearchPostsSort, filters: SearchFilters
-  ) async throws -> [App.Bsky.FeedDefs_PostView]
+  ) async throws -> [Lexicons.App.Bsky.FeedDefs_PostView]
 
   /// Actor results for the People tab.
   func actors(
     query: String, filters: SearchFilters
-  ) async throws -> [App.Bsky.ActorDefs_ProfileView]
+  ) async throws -> [Lexicons.App.Bsky.ActorDefs_ProfileView]
 
   /// Feed-generator results for the Feeds tab.
-  func feeds(query: String) async throws -> [App.Bsky.FeedDefs_GeneratorView]
+  func feeds(query: String) async throws -> [Lexicons.App.Bsky.FeedDefs_GeneratorView]
 
   /// Starter-pack results.
-  func starterPacks(query: String) async throws -> [App.Bsky.GraphDefs_StarterPackView]
+  func starterPacks(query: String) async throws -> [Lexicons.App.Bsky.GraphDefs_StarterPackView]
 }
 
 /// The live ``SearchServicing`` over ``SearchLogic/SearchFetchers``.
@@ -45,7 +46,7 @@ public struct LiveSearchService: SearchServicing {
   }
 
   public func suggestions(for prefix: String) async throws
-    -> [App.Bsky.ActorDefs_ProfileViewBasic] {
+    -> [Lexicons.App.Bsky.ActorDefs_ProfileViewBasic] {
     // The RN hook short-circuits an empty prefix; ActorAutocomplete owns that
     // rule, so it is applied here rather than in the view.
     guard ActorAutocomplete.shouldFetch(prefix: ActorAutocomplete.normalizePrefix(prefix)) else {
@@ -58,17 +59,17 @@ public struct LiveSearchService: SearchServicing {
 
   public func posts(
     query: String, sort: SearchQueryKeys.SearchPostsSort, filters: SearchFilters
-  ) async throws -> [App.Bsky.FeedDefs_PostView] {
+  ) async throws -> [Lexicons.App.Bsky.FeedDefs_PostView] {
     try await fetchers.searchPostsV2(query: query, sort: sort, filters: filters).posts
   }
 
   public func actors(
     query: String, filters: SearchFilters
-  ) async throws -> [App.Bsky.ActorDefs_ProfileView] {
+  ) async throws -> [Lexicons.App.Bsky.ActorDefs_ProfileView] {
     try await fetchers.searchActors(query: query).actors
   }
 
-  public func feeds(query: String) async throws -> [App.Bsky.FeedDefs_GeneratorView] {
+  public func feeds(query: String) async throws -> [Lexicons.App.Bsky.FeedDefs_GeneratorView] {
     // The Feeds tab has no dedicated search endpoint in the pinned lexicon
     // snapshot, so it lists popular feed generators, as the RN screen's Feeds
     // tab does when the search-backed endpoint is unavailable. The query is
@@ -83,7 +84,7 @@ public struct LiveSearchService: SearchServicing {
   }
 
   public func starterPacks(query: String) async throws
-    -> [App.Bsky.GraphDefs_StarterPackView] {
+    -> [Lexicons.App.Bsky.GraphDefs_StarterPackView] {
     try await fetchers.searchStarterPacks(query: query).starterPacks
   }
 }
@@ -110,13 +111,13 @@ public final class SearchViewModel {
   /// The commit history, newest first.
   public private(set) var recentSearches: [SearchHistoryEntry] = []
   /// The post rows for the active query and tab.
-  public private(set) var posts: [App.Bsky.FeedDefs_PostView] = []
+  public private(set) var posts: [Lexicons.App.Bsky.FeedDefs_PostView] = []
   /// The actor rows for the People tab.
-  public private(set) var actors: [App.Bsky.ActorDefs_ProfileView] = []
+  public private(set) var actors: [Lexicons.App.Bsky.ActorDefs_ProfileView] = []
   /// The feed rows for the Feeds tab.
-  public private(set) var feeds: [App.Bsky.FeedDefs_GeneratorView] = []
+  public private(set) var feeds: [Lexicons.App.Bsky.FeedDefs_GeneratorView] = []
   /// The starter-pack rows.
-  public private(set) var starterPacks: [App.Bsky.GraphDefs_StarterPackView] = []
+  public private(set) var starterPacks: [Lexicons.App.Bsky.GraphDefs_StarterPackView] = []
   /// The full-surface state of the results lists.
   public private(set) var listState: ListState = .content
   /// True while a results fetch is in flight.
@@ -294,14 +295,14 @@ public struct EmptySearchService: SearchServicing {
   public init() {}
 
   public func suggestions(for prefix: String) async throws
-    -> [App.Bsky.ActorDefs_ProfileViewBasic] { [] }
+    -> [Lexicons.App.Bsky.ActorDefs_ProfileViewBasic] { [] }
   public func posts(
     query: String, sort: SearchQueryKeys.SearchPostsSort, filters: SearchFilters
-  ) async throws -> [App.Bsky.FeedDefs_PostView] { [] }
+  ) async throws -> [Lexicons.App.Bsky.FeedDefs_PostView] { [] }
   public func actors(
     query: String, filters: SearchFilters
-  ) async throws -> [App.Bsky.ActorDefs_ProfileView] { [] }
-  public func feeds(query: String) async throws -> [App.Bsky.FeedDefs_GeneratorView] { [] }
+  ) async throws -> [Lexicons.App.Bsky.ActorDefs_ProfileView] { [] }
+  public func feeds(query: String) async throws -> [Lexicons.App.Bsky.FeedDefs_GeneratorView] { [] }
   public func starterPacks(query: String) async throws
-    -> [App.Bsky.GraphDefs_StarterPackView] { [] }
+    -> [Lexicons.App.Bsky.GraphDefs_StarterPackView] { [] }
 }

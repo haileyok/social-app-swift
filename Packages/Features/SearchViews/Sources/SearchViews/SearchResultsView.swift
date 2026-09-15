@@ -1,5 +1,7 @@
 import DesignSystem
+import DesignTokens
 import Foundation
+import Lexicons
 import SearchLogic
 import SwiftUI
 import UIComponents
@@ -12,33 +14,39 @@ import UIComponentsCore
 /// Feeds tabs disappear exactly when `SearchLogic` says they should (a post-only
 /// filter is active). Selection is reported through `onSelect`; this view owns no
 /// state of its own beyond what it is handed.
+///
+/// Every lexicon type is qualified `Lexicons.App.…`: inside a SwiftUI file the
+/// bare `App` resolves to `SwiftUI.App` (the `@main` protocol), so the module
+/// name has to be spelled out or the lookup is ambiguous.
 public struct SearchResultsView: View {
   private let model: SearchStateModel
-  private let posts: [App.Bsky.FeedDefs_PostView]
-  private let actors: [App.Bsky.ActorDefs_ProfileView]
-  private let feeds: [App.Bsky.FeedDefs_GeneratorView]
-  private let starterPacks: [App.Bsky.GraphDefs_StarterPackView]
+  private let posts: [Lexicons.App.Bsky.FeedDefs_PostView]
+  private let actors: [Lexicons.App.Bsky.ActorDefs_ProfileView]
+  private let feeds: [Lexicons.App.Bsky.FeedDefs_GeneratorView]
+  private let starterPacks: [Lexicons.App.Bsky.GraphDefs_StarterPackView]
   private let listState: ListState
   private let onSelectTab: (SearchTab) -> Void
   private let onRetry: () -> Void
-  private let onSelectProfile: (App.Bsky.ActorDefs_ProfileView) -> Void
-  private let onSelectFeed: (App.Bsky.FeedDefs_GeneratorView) -> Void
-  private let onSelectStarterPack: (App.Bsky.GraphDefs_StarterPackView) -> Void
+  private let onSelectProfile: (Lexicons.App.Bsky.ActorDefs_ProfileView) -> Void
+  private let onSelectFeed: (Lexicons.App.Bsky.FeedDefs_GeneratorView) -> Void
+  private let onSelectStarterPack: (Lexicons.App.Bsky.GraphDefs_StarterPackView) -> Void
 
   @Environment(\.alfTheme) private var theme
 
   public init(
     model: SearchStateModel,
-    posts: [App.Bsky.FeedDefs_PostView] = [],
-    actors: [App.Bsky.ActorDefs_ProfileView] = [],
-    feeds: [App.Bsky.FeedDefs_GeneratorView] = [],
-    starterPacks: [App.Bsky.GraphDefs_StarterPackView] = [],
+    posts: [Lexicons.App.Bsky.FeedDefs_PostView] = [],
+    actors: [Lexicons.App.Bsky.ActorDefs_ProfileView] = [],
+    feeds: [Lexicons.App.Bsky.FeedDefs_GeneratorView] = [],
+    starterPacks: [Lexicons.App.Bsky.GraphDefs_StarterPackView] = [],
     listState: ListState = .content,
     onSelectTab: @escaping (SearchTab) -> Void = { _ in },
     onRetry: @escaping () -> Void = {},
-    onSelectProfile: @escaping (App.Bsky.ActorDefs_ProfileView) -> Void = { _ in },
-    onSelectFeed: @escaping (App.Bsky.FeedDefs_GeneratorView) -> Void = { _ in },
-    onSelectStarterPack: @escaping (App.Bsky.GraphDefs_StarterPackView) -> Void = { _ in }
+    onSelectProfile: @escaping (Lexicons.App.Bsky.ActorDefs_ProfileView) -> Void = { _ in },
+    onSelectFeed: @escaping (Lexicons.App.Bsky.FeedDefs_GeneratorView) -> Void = { _ in },
+    onSelectStarterPack: @escaping (Lexicons.App.Bsky.GraphDefs_StarterPackView) -> Void = {
+      _ in
+    }
   ) {
     self.model = model
     self.posts = posts

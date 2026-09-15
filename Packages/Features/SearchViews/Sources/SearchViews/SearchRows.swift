@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignTokens
 import Lexicons
 import SwiftUI
 import UIComponents
@@ -45,7 +46,7 @@ public struct SearchProfileRow: View {
 
   /// Builds a row from a full profile view.
   public init(
-    profile: App.Bsky.ActorDefs_ProfileView,
+    profile: Lexicons.App.Bsky.ActorDefs_ProfileView,
     onSelect: @escaping () -> Void = {},
     onRemove: (() -> Void)? = nil
   ) {
@@ -60,7 +61,7 @@ public struct SearchProfileRow: View {
 
   /// Builds a row from a basic profile view, which carries no bio.
   public init(
-    profile: App.Bsky.ActorDefs_ProfileViewBasic,
+    profile: Lexicons.App.Bsky.ActorDefs_ProfileViewBasic,
     onSelect: @escaping () -> Void = {},
     onRemove: (() -> Void)? = nil
   ) {
@@ -120,7 +121,7 @@ public struct SearchFeedRow: View {
   }
 
   /// Builds a row from a feed generator view.
-  public init(feed: App.Bsky.FeedDefs_GeneratorView, onSelect: @escaping () -> Void = {}) {
+  public init(feed: Lexicons.App.Bsky.FeedDefs_GeneratorView, onSelect: @escaping () -> Void = {}) {
     self.init(
       title: SearchRowData.title(feed),
       byline: SearchRowData.byline(feed),
@@ -171,7 +172,7 @@ public struct SearchStarterPackRow: View {
 
   /// Builds a row from a starter pack view.
   public init(
-    pack: App.Bsky.GraphDefs_StarterPackView, onSelect: @escaping () -> Void = {}
+    pack: Lexicons.App.Bsky.GraphDefs_StarterPackView, onSelect: @escaping () -> Void = {}
   ) {
     self.init(
       title: SearchRowData.title(pack),
@@ -217,7 +218,7 @@ public struct SearchTrendingRow: View {
 
   /// Builds a row from a trending topic.
   public init(
-    topic: App.Bsky.UnspeccedDefs_TrendingTopic, onSelect: @escaping () -> Void = {}
+    topic: Lexicons.App.Bsky.UnspeccedDefs_TrendingTopic, onSelect: @escaping () -> Void = {}
   ) {
     self.init(
       title: SearchRowData.title(topic),
@@ -227,7 +228,7 @@ public struct SearchTrendingRow: View {
 
   /// Builds a row from a trending video.
   public init(
-    trend: App.Bsky.UnspeccedDefs_TrendView, onSelect: @escaping () -> Void = {}
+    trend: Lexicons.App.Bsky.UnspeccedDefs_TrendView, onSelect: @escaping () -> Void = {}
   ) {
     self.init(
       title: SearchRowData.title(trend),
@@ -263,7 +264,7 @@ public struct SearchTrendingRow: View {
 struct RowContainer<Content: View>: View {
   let onSelect: () -> Void
   var onRemove: (() -> Void)?
-  @ViewBuilder var content: Content
+  let content: Content
 
   @Environment(\.alfTheme) private var theme
 
