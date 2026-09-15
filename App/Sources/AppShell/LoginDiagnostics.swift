@@ -25,8 +25,8 @@ extension LoginError {
       return detail(underlying, label: "rate limited (retry \(retryAfter.map(String.init) ?? "?")s)")
     case .networkOffline(let underlying):
       return detail(underlying, label: "network offline")
-    case .appPasswordNotAllowed(let underlying):
-      return detail(underlying, label: "app password not allowed")
+    case .appPasswordNotAllowed(let value):
+      return detail(value.underlying, label: "app password not allowed (\(value.message))")
     case .unexpected(let underlying):
       return detail(underlying, label: "unexpected")
     }
