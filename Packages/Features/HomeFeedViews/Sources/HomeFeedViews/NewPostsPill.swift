@@ -31,7 +31,7 @@ public struct NewPostsPill: View {
       .foregroundStyle(theme.atomColors.textInverted)
       .padding(.horizontal, Spacing.lg)
       .padding(.vertical, Spacing.sm)
-      .background(theme.palette.primary_500)
+      .background(theme.palette.primary500)
       .clipShape(Capsule(style: .continuous))
     }
     .buttonStyle(.plain)

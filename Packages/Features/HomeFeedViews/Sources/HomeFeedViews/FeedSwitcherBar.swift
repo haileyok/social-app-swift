@@ -60,7 +60,7 @@ public struct FeedSwitcherBar: View {
             isSelected ? theme.atomColors.text : theme.atomColors.textContrastMedium)
           .lineLimit(1)
         Rectangle()
-          .fill(isSelected ? theme.palette.primary_500 : .clear)
+          .fill(isSelected ? theme.palette.primary500 : .clear)
           .frame(height: 2)
           .clipShape(.rect(cornerRadius: Radius.full, style: .continuous))
       }
