@@ -54,9 +54,26 @@ public struct ShellLaunch: Sendable, Equatable {
    fixture run can pass `-uiTestDemo`. What they have in common is that the
    process was launched to exercise the shell, so the session gate steps aside
    rather than showing a sign-in form the run has no credentials for.
+
+   A launch under XCUITest counts too (``isUITestLaunch``), which is what keeps
+   a UI test that passes *no* arguments - the tab smoke test - deterministic
+   instead of dependent on whatever session the simulator happens to hold.
    */
   public var isDemoLaunch: Bool {
-    isDemoArgument || hasTabArgument || screen != nil
+    isDemoArgument || hasTabArgument || screen != nil || isUITestLaunch
+  }
+
+  /**
+   Whether this process was launched by XCUITest.
+
+   The runner sets `XCTestConfigurationFilePath` in the app-under-test's
+   environment. Reading it is the difference between "a test launched me and
+   cannot sign in" and "a person launched me"; the app treats the former as a
+   demo launch so a test never lands on a root it has no credentials to leave.
+   */
+  public static var isUITestLaunch: Bool {
+    ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+      || ProcessInfo.processInfo.environment["XCTestSessionIdentifier"] != nil
   }
 
   /// The launch state of the process, read from `UserDefaults.standard`.
