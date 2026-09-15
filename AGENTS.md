@@ -64,14 +64,15 @@ instead of writing there. If a task genuinely needs to build in the RN repo
 (e.g. `pnpm web` for the parity audit), unlock temporarily with
 `chmod -R u+w ~/bluesky/social-app` and re-lock after.
 
-**Never run CI workloads or repo-wide heavy tools on this workstation.** Two
-crashes happened here: self-hosted CI runners, and a repo-root `swiftlint`
-sweep that walked vendored checkouts under `Packages/*/.build` and pegged the
-CPU until the box died. Linux checks stay on GitHub-hosted runners; iOS checks
-on the rented Mac (macrent-1/2). Locally: lint ONLY the package you touched
-(`swiftlint lint --strict --quiet Packages/<Yours>/{Sources,Tests}`), build
-only your own package, one heavy tool at a time. `.swiftlint.yml` excludes
-`**/.build` — treat that as a seatbelt, not a license.
+**The workstation NEVER runs the Swift toolchain. Not `swift build`, not
+`swift test`, not `swiftlint`, not `swift-format`, not `xcodebuild` — not by
+the orchestrator, not by agents, not "just one package".** Three crashes were
+caused by local toolchain runs (self-hosted runners; repo-root and package
+lint sweeps spawning sourcekitd over thousands of files). ALL verification
+happens on CI: hosted runners for Linux build/test/lint, the rented Mac for
+iOS. Locally, agents and the orchestrator may only read/write files and run
+`git`, `gh`, `grep`/`rg`, and `ssh mac`. If you think you need a local build,
+you are wrong — push and read the CI log.
 
 - `linux.yml` (required): pinned `swift:6.3` container — per-🌐-package build+test, swiftlint, swift-format lint, jq validation of `.xcstrings`, boundary-lint (no SwiftUI/UIKit imports under 🌐 paths), lexicon codegen idempotency (`git diff --exit-code Packages/Lexicons` after regeneration).
 - `ios.yml` (non-blocking): `macos-26`, pinned `DEVELOPER_DIR`, single pinned iPhone simulator, `CODE_SIGNING_ALLOWED=NO`, path-filtered to `App/`, `DesignSystem/`, `UIComponents/`, `Features/**/Views`, `.xcodeproj`, and the workflow itself. Uploads `.xcresult` + screenshots.
