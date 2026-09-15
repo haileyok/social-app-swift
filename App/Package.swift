@@ -18,6 +18,9 @@ let package = Package(
     // UI packages (macOS-CI-built). Added as they land:
     .package(path: "../Packages/DesignSystem"),
     .package(path: "../Packages/UIComponents"),
+    .package(path: "../Packages/Features/LoginViews"),
+    .package(path: "../Packages/Features/Login"),
+    .package(path: "../Packages/ATProtoClient"),
   ],
   targets: [
     .target(
@@ -26,6 +29,9 @@ let package = Package(
         .product(name: "DesignSystem", package: "DesignSystem"),
         .product(name: "DesignSystemCore", package: "DesignSystem"),
         .product(name: "UIComponents", package: "UIComponents"),
+        .product(name: "LoginViews", package: "LoginViews"),
+        .product(name: "LoginLogic", package: "Login"),
+        .product(name: "ATProtoClient", package: "ATProtoClient"),
       ],
       path: "Sources/AppShell"
     )
