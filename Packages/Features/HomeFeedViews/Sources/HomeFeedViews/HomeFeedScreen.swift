@@ -199,7 +199,7 @@ public struct HomeFeedRowView: View {
       }
       ForEach(row.items) { item in
         PostFeedItem(data: item.data, onOpen: onOpenRichText)
-          .contentShape(.rectangle)
+          .contentShape(.rect)
           .onTapGesture { onOpenPost(item.id) }
           .overlay(alignment: .leading) {
             if item.showsReplyLine {
