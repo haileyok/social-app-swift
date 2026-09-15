@@ -216,7 +216,7 @@ public final class AppSession {
    */
   func makeClients() async -> AppSessionClients? {
     guard let session = await sessionStore.currentSession() else { return nil }
-    return try? AppSessionClients(session: session, transport: transport)
+    return try? await AppSessionClients(session: session, transport: transport)
   }
 
   /**

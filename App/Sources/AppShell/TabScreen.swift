@@ -217,7 +217,7 @@ private struct HomeTabScreen: View {
           store: clients.store, xrpc: xrpc, scope: clients.did, isAuthenticated: true)
         pinned.append(
           contentsOf: (try? await resolver.resolve(
-            savedItems: SavedFeedsReader.entries(from: preferences))) ?? [])
+            savedItems: SavedFeedReader.entries(from: preferences))) ?? [])
       }
 
       var fetchers: [String: any FeedPageFetcher] = [:]
