@@ -33,7 +33,7 @@ let package = Package(
         .product(name: "ProfileViews", package: "ProfileViews"),
         .product(name: "LoginViews", package: "LoginViews"),
         .product(name: "LoginLogic", package: "Login"),
-        .product(name: "ATProtoClient", package: "ATProtoClient"), 1fd95c5dac75428d2229c2e51c5c52a3fa010b58
+        .product(name: "ATProtoClient", package: "ATProtoClient"),
       ],
       path: "Sources/AppShell"
     )
