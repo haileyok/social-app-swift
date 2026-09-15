@@ -36,10 +36,10 @@ public enum HomeFeedFixtures {
     avatar: String? = nil
   ) -> App.Bsky.ActorDefs_ProfileViewBasic {
     App.Bsky.ActorDefs_ProfileViewBasic(
-      did: FormatString<SwiftAtproto.DID>(rawValue: did ?? "did:plc:\(handle)"),
-      handle: FormatString<SwiftAtproto.Handle>(rawValue: handle),
       avatar: avatar.map { FormatString<URI>(rawValue: $0) },
-      displayName: displayName)
+      did: FormatString<SwiftAtproto.DID>(rawValue: did ?? "did:plc:\(handle)"),
+      displayName: displayName,
+      handle: FormatString<SwiftAtproto.Handle>(rawValue: handle))
   }
 
   // MARK: - Posts
