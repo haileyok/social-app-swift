@@ -1,5 +1,6 @@
 import ComposerViews
 import DesignSystem
+import DesignSystemCore
 import SwiftUI
 
 // Re-exported so the app and its test targets reach `ComposerAccessibility` (and
