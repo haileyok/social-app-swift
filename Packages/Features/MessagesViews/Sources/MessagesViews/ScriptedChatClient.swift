@@ -1,6 +1,7 @@
 import Foundation
 import Lexicons
 import MessagesLogic
+import SwiftAtproto
 
 /// A `ChatXrpc` that answers from a fixed script, for the fixture surfaces.
 ///

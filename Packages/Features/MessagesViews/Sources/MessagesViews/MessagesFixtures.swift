@@ -1,5 +1,6 @@
 import Foundation
 import Lexicons
+import SwiftAtproto
 
 /// The fixture surfaces' scripted conversation.
 ///
