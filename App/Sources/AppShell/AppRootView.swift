@@ -50,6 +50,8 @@ public struct AppRootView: View {
         TokenGallery(theme: resolvedTheme)
       case "components":
         ComponentGallery(theme: captureTheme ?? activePreference)
+      case "composer":
+        ComposerSurfaces.composerScreen(theme: captureTheme ?? activePreference)
       default:
         tabView
       }
