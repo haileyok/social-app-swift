@@ -17,10 +17,10 @@ import LoginLogic
  */
 enum HandleResolver {
 
-  /** Resolves `handle`, or nil when the handle does not resolve. */
+  /** Resolves `handle`; the endpoint is nil when the DID document hides it. */
   static func resolve(
     _ handle: String, transport: HTTPTransport
-  ) async throws -> ResolvedPDSEndpoint? {
+  ) async throws -> ResolvedPDSEndpoint {
     // 1. Handle -> DID through the public appview.
     let did: String
     do {
@@ -31,7 +31,11 @@ enum HandleResolver {
       guard response.status == 200,
         let json = try? JSONDecoder().decode(ResolveHandleBody.self, from: response.body),
         !json.did.isEmpty
-      else { return nil }
+      else {
+        // Unresolvable handle: no DID, no endpoint; the flow falls back to
+        // the default service for the createSession attempt.
+        return ResolvedPDSEndpoint(did: "", pdsUrl: nil)
+      }
       did = json.did
     } catch {
       throw error
