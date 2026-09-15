@@ -31,7 +31,7 @@ public struct NewPostsPill: View {
       .foregroundStyle(theme.atomColors.textInverted)
       .padding(.horizontal, Spacing.lg)
       .padding(.vertical, Spacing.sm)
-      .background(theme.palette.primary500)
+      .background(theme.colors.primary500)
       .clipShape(Capsule(style: .continuous))
     }
     .buttonStyle(.plain)
@@ -44,8 +44,9 @@ public struct NewPostsPill: View {
   /// it is shown, otherwise the plain label is used.
   private var label: String {
     // Named `total`, not `count`: swiftlint's `empty_count` rule reads any
-    // `count > 0` comparison as a collection check.
-    guard let total, total > 0 else { return HomeFeedStrings.newPosts }
+    // `count > 0` comparison as a collection check. `count` on the view is
+    // optional, hence the shadowing bind here.
+    guard let total = count, total > 0 else { return HomeFeedStrings.newPosts }
     return "\(total) \(HomeFeedStrings.newPosts.lowercased())"
   }
 }
