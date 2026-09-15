@@ -101,10 +101,10 @@ public struct SearchScreen: View {
         feeds: viewModel.feeds,
         starterPacks: viewModel.starterPacks,
         listState: viewModel.listState,
+        onSelectTab: { viewModel.select(tab: $0) },
         onSelectProfile: onSelectProfile,
         onSelectFeed: onSelectFeed,
         onSelectStarterPack: onSelectStarterPack,
-        onSelectTab: { viewModel.select(tab: $0) },
         onRetry: { Task { await viewModel.loadResultsIfNeeded() } })
         .id(results.tab.rawValue)
     }
