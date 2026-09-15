@@ -39,6 +39,16 @@ let package = Package(
     .package(path: "../Packages/Features/VideoFeed"),
     .package(path: "../Packages/Features/VideoFeedViews"),
     .package(path: "../Packages/ATProtoClient"),
+    // Tab wiring: the live tab screens import the Logic products their Views
+    // sit on, plus the query/store/lexicon/preference/richtext modules the
+    // shell itself touches.
+    .package(path: "../Packages/Lexicons"),
+    .package(path: "../Packages/QueryStore"),
+    .package(path: "../Packages/RichText"),
+    .package(path: "../Packages/Preferences"),
+    .package(path: "../Packages/Features/Messages"),
+    .package(path: "../Packages/Features/Notifications"),
+    .package(path: "../Packages/Features/Profile"),
   ],
   targets: [
     .target(
@@ -75,6 +85,16 @@ let package = Package(
         .product(name: "VideoFeedViews", package: "VideoFeedViews"),
         .product(name: "VideoFeedLogic", package: "VideoFeed"),
         .product(name: "ATProtoClient", package: "ATProtoClient"),
+        // Live tab screens (TabScreen) import these directly; the iOS
+        // product-framework link closure needs a direct dep per module.
+        .product(name: "Lexicons", package: "Lexicons"),
+        .product(name: "QueryStore", package: "QueryStore"),
+        .product(name: "RichText", package: "RichText"),
+        .product(name: "Preferences", package: "Preferences"),
+        .product(name: "MessagesLogic", package: "Messages"),
+        .product(name: "NotificationsLogic", package: "Notifications"),
+        .product(name: "ProfileLogic", package: "Profile"),
+        .product(name: "UIComponentsCore", package: "UIComponents"),
       ],
       path: "Sources/AppShell"
     )

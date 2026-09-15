@@ -86,11 +86,16 @@ public struct AppRootView: View {
 
   // MARK: - Roots
 
-  /** The normal five-tab shell. */
+  /**
+   The normal five-tab shell.
+
+   A demo launch renders it with no session: every tab falls to its fixture
+   surface, which is exactly what the screenshot loop and the UI tests capture.
+   */
   private func tabView(session: AppSession?) -> some View {
     TabView(selection: $selection) {
       ForEach(AppTab.allCases) { tab in
-        TabPlaceholderScreen(tab: tab, session: session)
+        TabScreen(tab: tab, session: session)
           .tabItem {
             Label(tab.title, systemImage: tab.systemImage)
               .accessibilityIdentifier(tab.accessibilityIdentifier)
@@ -146,6 +151,16 @@ private struct SessionGateView: View {
   @State private var sessionState: AppSession.State = .loading
   @State private var selection: AppTab
 
+  /**
+   The query plumbing for the signed-in shell, built once per session.
+
+   Nil until the session settles (and forever on a signed-out root, which does
+   not render the shell at all). A new session identity - sign-out then
+   sign-in, or an account switch - builds a fresh bundle, which is the cache
+   teardown the RN app performs by rebuilding its client bundle too.
+   */
+  @State private var clients: AppSessionClients?
+
   @Environment(\.colorScheme) private var colorScheme
 
   init(launch: ShellLaunch, surface: Surface) {
@@ -183,7 +198,7 @@ private struct SessionGateView: View {
   private var shell: some View {
     TabView(selection: $selection) {
       ForEach(AppTab.allCases) { tab in
-        TabPlaceholderScreen(tab: tab, session: session)
+        TabScreen(tab: tab, session: session, clients: clients)
           .tabItem {
             Label(tab.title, systemImage: tab.systemImage)
               .accessibilityIdentifier(tab.accessibilityIdentifier)
@@ -218,7 +233,30 @@ private struct SessionGateView: View {
   private func bootstrap() async {
     session.addListener { state in
       sessionState = state
+      rebuildClients(for: state)
     }
     await session.start()
+  }
+
+  /**
+   Builds the query bundle when a session appears, drops it when one does not.
+
+   The bundle is rebuilt only when the session transitions, not per state
+   notification: `addListener` delivers the current value immediately, and
+   `State` is `Equatable`, so a redundant delivery leaves the bundle alone.
+   */
+  private func rebuildClients(for state: AppSession.State) {
+    switch state {
+    case .signedIn:
+      guard clients == nil else { return }
+      // The store is an actor, so reading its live session is async; hop from
+      // the listener callback rather than making the callback async (every
+      // listener is sync by contract).
+      Task { @MainActor in
+        clients = await session.makeClients()
+      }
+    case .signedOut, .loading:
+      clients = nil
+    }
   }
 }
