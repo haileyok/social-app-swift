@@ -15,6 +15,7 @@ import UIComponents
 /// ```swift
 /// NavigationLink("Thread") { PostThreadSurfaces.threadScreen() }
 /// ```
+@MainActor
 public enum PostThreadSurfaces {
   /// The thread screen over the sample fixture: two ancestors, a highlighted
   /// anchor, a nested conversation, a deleted reply, an OP-liked reply and a
