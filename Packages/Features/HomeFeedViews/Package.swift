@@ -25,6 +25,8 @@ let package = Package(
     .package(path: "../../Moderation"),
     .package(path: "../../Lexicons"),
     .package(path: "../../Domain"),
+    .package(path: "../../QueryStore"),
+    .package(path: "../../../tools/lexicon-codegen/swift-atproto"),
   ],
   targets: [
     .target(
@@ -39,6 +41,8 @@ let package = Package(
         .product(name: "Moderation", package: "Moderation"),
         .product(name: "Lexicons", package: "Lexicons"),
         .product(name: "Domain", package: "Domain"),
+        .product(name: "QueryStore", package: "QueryStore"),
+        .product(name: "SwiftAtproto", package: "swift-atproto"),
       ],
       path: "Sources/HomeFeedViews"
     )
