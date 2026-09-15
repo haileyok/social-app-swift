@@ -15,7 +15,7 @@ let package = Package(
     .library(name: "AppShell", targets: ["AppShell"])
   ],
   dependencies: [
-    // UI packages (macOS-CI-built). Added as they land:
+    // Views packages are macOS-CI-built. Added as they land:
     .package(path: "../Packages/DesignSystem"),
     .package(path: "../Packages/Features/OnboardingViews"),
     .package(path: "../Packages/UIComponents"),
@@ -31,6 +31,7 @@ let package = Package(
     .package(path: "../Packages/Features/ComposerViews"),
     .package(path: "../Packages/Features/StarterPacksViews"),
     .package(path: "../Packages/Features/NotificationsViews"),
+    .package(path: "../Packages/Features/ModerationUIViews"),
     .package(path: "../Packages/ATProtoClient"),
   ],
   targets: [
@@ -56,6 +57,7 @@ let package = Package(
         .product(name: "ComposerViews", package: "ComposerViews"),
         .product(name: "StarterPacksViews", package: "StarterPacksViews"),
         .product(name: "NotificationsViews", package: "NotificationsViews"),
+        .product(name: "ModerationUIViews", package: "ModerationUIViews"),
         .product(name: "ATProtoClient", package: "ATProtoClient"),
       ],
       path: "Sources/AppShell"
