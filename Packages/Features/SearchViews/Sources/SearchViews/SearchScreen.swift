@@ -1,5 +1,6 @@
 import DesignSystem
 import Foundation
+import Lexicons
 import SearchLogic
 import SwiftUI
 import UIComponents
