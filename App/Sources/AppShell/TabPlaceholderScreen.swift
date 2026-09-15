@@ -7,17 +7,20 @@ import SwiftUI
 
  Every tab is a `NavigationStack` with a themed placeholder body, so the shell
  exercises navigation, theming and typography without depending on feature
- packages that have not landed. Each host tab's toolbar carries a debug button
- that pushes the DesignSystem token gallery, which keeps AC.7's screenshot
- surface reachable before there is a Settings screen.
+ packages that have not landed. Each host tab's toolbar carries the account
+ control (the signed-in account menu, or the debug login entry) and a debug
+ button that pushes the DesignSystem token gallery, which keeps AC.7's
+ screenshot surface reachable before there is a Settings screen.
  */
 public struct TabPlaceholderScreen: View {
   private let tab: AppTab
+  private let session: AppSession
 
   @Environment(\.alfTheme) private var theme
 
-  public init(tab: AppTab) {
+  public init(tab: AppTab, session: AppSession) {
     self.tab = tab
+    self.session = session
   }
 
   public var body: some View {
@@ -38,7 +41,7 @@ public struct TabPlaceholderScreen: View {
             .accessibilityIdentifier(ShellAccessibility.tokenGalleryButton)
           }
           ToolbarItem(placement: .topBarLeading) {
-            LoginDebugButton()
+            ShellAccountControl(session: session)
           }
         }
     }

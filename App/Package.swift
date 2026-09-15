@@ -17,6 +17,8 @@ let package = Package(
   dependencies: [
     // UI packages (macOS-CI-built). Added as they land:
     .package(path: "../Packages/DesignSystem"),
+    .package(path: "../Packages/DesignTokens"),
+    .package(path: "../Packages/Persistence"),
     .package(path: "../Packages/UIComponents"),
     .package(path: "../Packages/Features/LoginViews"),
     .package(path: "../Packages/Features/Login"),
@@ -28,6 +30,12 @@ let package = Package(
       dependencies: [
         .product(name: "DesignSystem", package: "DesignSystem"),
         .product(name: "DesignSystemCore", package: "DesignSystem"),
+        // DesignTokens is imported directly (the resolved theme type) and
+        // Persistence is imported directly (PersistedAccount), so both are
+        // declared: the iOS product-framework link closure needs a direct dep
+        // for every imported module.
+        .product(name: "DesignTokens", package: "DesignTokens"),
+        .product(name: "Persistence", package: "Persistence"),
         .product(name: "UIComponents", package: "UIComponents"),
         .product(name: "LoginViews", package: "LoginViews"),
         .product(name: "LoginLogic", package: "Login"),
