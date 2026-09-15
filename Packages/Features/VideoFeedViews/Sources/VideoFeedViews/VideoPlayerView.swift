@@ -279,7 +279,7 @@ final class VideoPlayerSlot {
   }
 
   private func bufferChanged(likelyToKeepUp: Bool, isEmpty: Bool) {
-    guard player.currentItem != nil, phase != .failed else { return }
+    guard player.currentItem != nil, !phase.isFailed else { return }
     if isEmpty, !likelyToKeepUp, phase == .playing || phase == .ready {
       setPhase(.buffering)
     } else if likelyToKeepUp, phase == .buffering {
