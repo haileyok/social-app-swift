@@ -4,6 +4,7 @@ import PackageDescription
 let package = Package(
   name: "Notifications",
   defaultLocalization: "en",
+  platforms: [.iOS(.v18), .macOS(.v14)],
   products: [
     .library(name: "NotificationsLogic", targets: ["NotificationsLogic"])
   ],
