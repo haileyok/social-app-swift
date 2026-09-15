@@ -19,6 +19,7 @@ let package = Package(
     .package(path: "../Packages/DesignSystem"),
     .package(path: "../Packages/UIComponents"),
     .package(path: "../Packages/Features/PostThreadViews"),
+    .package(path: "../Packages/Features/PostThread"),
     .package(path: "../Packages/Features/LoginViews"),
     .package(path: "../Packages/Features/Login"),
     .package(path: "../Packages/ATProtoClient"),
@@ -30,6 +31,10 @@ let package = Package(
         .product(name: "DesignSystem", package: "DesignSystem"),
         .product(name: "DesignSystemCore", package: "DesignSystem"),
         .product(name: "PostThreadViews", package: "PostThreadViews"),
+        // `PostThreadScreen.init` reaches `PostThreadLogic` through its
+        // `showMore: ThreadShowMore = .initial()` default argument, so the
+        // logic product has to be linked here directly.
+        .product(name: "PostThreadLogic", package: "PostThread"),
         .product(name: "UIComponents", package: "UIComponents"),
         .product(name: "LoginViews", package: "LoginViews"),
         .product(name: "LoginLogic", package: "Login"),
