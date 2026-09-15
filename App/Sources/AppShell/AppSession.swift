@@ -206,6 +206,20 @@ public final class AppSession {
   }
 
   /**
+   The query plumbing for the signed-in shell, built from the store's live
+   session.
+
+   Nil when nobody is signed in or the store has not hydrated the session yet.
+   The store keeps one live `PasswordSession` per resumed/signed-in account
+   (its `resume` and the login flow both record it), so this is a read, not a
+   network round trip. Async only because the store is an actor.
+   */
+  public func makeClients() async -> AppSessionClients? {
+    guard let session = await sessionStore.currentSession() else { return nil }
+    return try? AppSessionClients(session: session, transport: transport)
+  }
+
+  /**
    Signs out the current account and returns to the login root.
 
    This is `SessionStore.logoutCurrentAccount`: the tokens are cleared but the
