@@ -64,10 +64,14 @@ instead of writing there. If a task genuinely needs to build in the RN repo
 (e.g. `pnpm web` for the parity audit), unlock temporarily with
 `chmod -R u+w ~/bluesky/social-app` and re-lock after.
 
-**Never run CI workloads on this workstation.** Self-hosted runners here once
-overloaded the box and crashed it mid-session. Linux checks stay on
-GitHub-hosted runners; iOS checks on the rented Mac (macrent-1/2). The
-workstation is for development, tests-on-demand, and orchestration only.
+**Never run CI workloads or repo-wide heavy tools on this workstation.** Two
+crashes happened here: self-hosted CI runners, and a repo-root `swiftlint`
+sweep that walked vendored checkouts under `Packages/*/.build` and pegged the
+CPU until the box died. Linux checks stay on GitHub-hosted runners; iOS checks
+on the rented Mac (macrent-1/2). Locally: lint ONLY the package you touched
+(`swiftlint lint --strict --quiet Packages/<Yours>/{Sources,Tests}`), build
+only your own package, one heavy tool at a time. `.swiftlint.yml` excludes
+`**/.build` — treat that as a seatbelt, not a license.
 
 - `linux.yml` (required): pinned `swift:6.3` container — per-🌐-package build+test, swiftlint, swift-format lint, jq validation of `.xcstrings`, boundary-lint (no SwiftUI/UIKit imports under 🌐 paths), lexicon codegen idempotency (`git diff --exit-code Packages/Lexicons` after regeneration).
 - `ios.yml` (non-blocking): `macos-26`, pinned `DEVELOPER_DIR`, single pinned iPhone simulator, `CODE_SIGNING_ALLOWED=NO`, path-filtered to `App/`, `DesignSystem/`, `UIComponents/`, `Features/**/Views`, `.xcodeproj`, and the workflow itself. Uploads `.xcresult` + screenshots.
