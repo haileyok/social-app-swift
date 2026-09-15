@@ -64,6 +64,9 @@ enum VideoPlayerPhase: Equatable {
   var isPlaying: Bool { self == .playing }
 
   /// True when the slot cannot play without a reload.
+  ///
+  /// The `failed` case carries a message, so it cannot be compared with `==` in
+  /// an expression; every call site uses this instead.
   var isFailed: Bool {
     if case .failed = self { return true }
     return false
@@ -75,6 +78,35 @@ enum VideoPlayerPhase: Equatable {
     case .paused, .ended, .empty, .failed: return true
     case .loading, .ready, .buffering, .playing: return false
     }
+  }
+}
+
+/// Owns the `AVPlayer` and the observer registrations that must be removed when
+/// the slot goes away.
+///
+/// The removal cannot happen in the slot's own `deinit`: the slot is main-actor
+/// isolated, and a `deinit` is not, so it may not touch isolated state. Giving
+/// the player and the registration tokens to a small nonisolated box means the
+/// cleanup runs when the slot releases the box, without the slot needing a
+/// `deinit` at all.
+private final class VideoPlayerObserverCleanup: @unchecked Sendable {
+  /// The player every observer is registered against.
+  let player = AVPlayer()
+  /// The periodic time-observer token, removed on release.
+  var timeObserver: Any?
+  /// The notification tokens, removed on release.
+  var notificationTokens: [NSObjectProtocol] = []
+
+  deinit {
+    if let timeObserver { player.removeTimeObserver(timeObserver) }
+    for token in notificationTokens {
+      NotificationCenter.default.removeObserver(token)
+    }
+  }
+
+  /// Stores a notification token for removal on release.
+  func add(_ token: NSObjectProtocol) {
+    notificationTokens.append(token)
   }
 }
 
@@ -90,6 +122,7 @@ enum VideoPlayerPhase: Equatable {
 /// The slot never decides *whether* to play: `play()` and `pause()` are issued
 /// from the autoplay decision, which is what keeps the moderation gate and the
 /// autoplay preference in one place.
+@MainActor
 @Observable
 final class VideoPlayerSlot {
   /// The item's HLS playlist URL, or `nil` when the slot is empty.
@@ -107,51 +140,48 @@ final class VideoPlayerSlot {
   /// swipe land on a ready frame; the pool size bounds the cost at three.
   static let forwardBufferDuration: TimeInterval = 2
 
-  @ObservationIgnored private let player = AVPlayer()
+  @ObservationIgnored private let cleanup = VideoPlayerObserverCleanup()
   @ObservationIgnored private let playerLayer = AVPlayerLayer()
-  @ObservationIgnored private var timeObserver: Any?
   @ObservationIgnored private var statusObservation: NSKeyValueObservation?
   @ObservationIgnored private var bufferObservation: NSKeyValueObservation?
   @ObservationIgnored private var rateObservation: NSKeyValueObservation?
-  @ObservationIgnored private var endObserver: NSObjectProtocol?
 
   /// Reports the phase so the owner can drive the shared playback store.
   var onPhaseChange: ((VideoPlayerPhase) -> Void)?
   /// Reports a time update, so the store can drive its progress-based report.
   var onTimeUpdate: ((VideoPlayerTiming) -> Void)?
 
+  private var player: AVPlayer { cleanup.player }
+
   init() {
     playerLayer.player = player
     playerLayer.videoGravity = .resizeAspect
-    // The pool is built once and lives as long as the screen, so the observers
-    // are installed here rather than per item; the item-scoped ones are in
-    // `attach(playlist:loops:)`.
+    // The pool is built once and lives as long as the screen, so the player-wide
+    // observers are installed here rather than per item; the item-scoped ones are
+    // installed by `attach(playlist:loops:)`.
     rateObservation = player.observe(\.rate, options: [.new]) { [weak self] player, _ in
       let rate = player.rate
       Task { @MainActor in self?.rateChanged(rate) }
     }
-    timeObserver = player.addPeriodicTimeObserver(
+    cleanup.timeObserver = player.addPeriodicTimeObserver(
       forInterval: CMTime(seconds: 0.25, preferredTimescale: 600),
       queue: .main
     ) { [weak self] time in
-      MainActor.assumeIsolated { self?.timeChanged(time) }
+      let seconds = time.seconds
+      Task { @MainActor in self?.timeChanged(seconds) }
     }
-    endObserver = NotificationCenter.default.addObserver(
-      forName: AVPlayerItem.didPlayToEndTimeNotification,
-      object: nil,
-      queue: .main
-    ) { [weak self] note in
-      guard let item = note.object as? AVPlayerItem else { return }
-      MainActor.assumeIsolated {
-        guard let self, item === self.player.currentItem else { return }
-        self.reachedEnd()
-      }
-    }
-  }
-
-  deinit {
-    if let timeObserver { player.removeTimeObserver(timeObserver) }
-    if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
+    cleanup.add(
+      NotificationCenter.default.addObserver(
+        forName: AVPlayerItem.didPlayToEndTimeNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] note in
+        let item = note.object as? AVPlayerItem
+        Task { @MainActor in
+          guard let self, let item, item === self.player.currentItem else { return }
+          self.reachedEnd()
+        }
+      })
   }
 
   /// The layer the SwiftUI surface hosts.
@@ -200,7 +230,7 @@ final class VideoPlayerSlot {
 
   /// Starts playback, reloading first when the previous load failed.
   func play() {
-    if case .failed = phase, let playlist {
+    if phase.isFailed, let playlist {
       self.playlist = nil
       attach(playlist: playlist, loops: loops)
     }
@@ -295,10 +325,8 @@ final class VideoPlayerSlot {
     if rate > 0, phase != .playing { setPhase(.playing) }
   }
 
-  private func timeChanged(_ time: CMTime) {
-    guard let item = player.currentItem else { return }
-    let seconds = time.seconds
-    guard seconds.isFinite else { return }
+  private func timeChanged(_ seconds: Double) {
+    guard let item = player.currentItem, seconds.isFinite else { return }
     let duration = item.duration.seconds
     timing = VideoPlayerTiming(
       currentTime: seconds,
