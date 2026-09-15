@@ -161,6 +161,7 @@
 			name = SocialAppUITests;
 			packageProductDependencies = (
 				1A2B3C4D5E6F708090A0B02E /* AppShell */,
+				1A2B3C4D5E6F708090A0B02F /* LoginViews */,
 			);
 			productName = SocialAppUITests;
 			productReference = 1A2B3C4D5E6F708090A0B009 /* SocialAppUITests.xctest */;
@@ -487,6 +488,10 @@
 		1A2B3C4D5E6F708090A0B02E /* AppShell */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = AppShell;
+		};
+		1A2B3C4D5E6F708090A0B02F /* LoginViews */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LoginViews;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
