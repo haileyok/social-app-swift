@@ -18,6 +18,8 @@ let package = Package(
     // Views packages are macOS-CI-built. Added as they land:
     .package(path: "../Packages/DesignSystem"),
     .package(path: "../Packages/Features/OnboardingViews"),
+    .package(path: "../Packages/DesignTokens"),
+    .package(path: "../Packages/Persistence"),
     .package(path: "../Packages/UIComponents"),
     .package(path: "../Packages/Features/ProfileViews"),
     .package(path: "../Packages/Features/PostThreadViews"),
@@ -50,6 +52,12 @@ let package = Package(
         // logic product has to be linked here directly.
         .product(name: "PostThreadLogic", package: "PostThread"),
         .product(name: "OnboardingViews", package: "OnboardingViews"),
+        // DesignTokens is imported directly (the resolved theme type) and
+        // Persistence is imported directly (PersistedAccount), so both are
+        // declared: the iOS product-framework link closure needs a direct dep
+        // for every imported module.
+        .product(name: "DesignTokens", package: "DesignTokens"),
+        .product(name: "Persistence", package: "Persistence"),
         .product(name: "UIComponents", package: "UIComponents"),
         .product(name: "ProfileViews", package: "ProfileViews"),
         .product(name: "HomeFeedViews", package: "HomeFeedViews"),
