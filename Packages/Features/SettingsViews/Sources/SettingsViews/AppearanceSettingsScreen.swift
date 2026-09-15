@@ -110,8 +110,8 @@ public struct AppearanceSettingsScreen: View {
           scale: FontScale.multiplier(for: appearance.fontScale))
         .listRowInsets(
           EdgeInsets(
-            top: Spacing.md.value, leading: Spacing.md.value,
-            bottom: Spacing.md.value, trailing: Spacing.md.value))
+            top: Spacing.md, leading: Spacing.md,
+            bottom: Spacing.md, trailing: Spacing.md))
     }
   }
 
