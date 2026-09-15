@@ -4,6 +4,7 @@ import Lexicons
 import MessagesLogic
 import QueryStore
 import SwiftUI
+import UIComponents
 
 /// The fixture surfaces: a scripted 1:1 conversation rendered through the real
 /// inbox and conversation screens.
