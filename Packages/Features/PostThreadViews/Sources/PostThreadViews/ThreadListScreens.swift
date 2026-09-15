@@ -62,14 +62,14 @@ public struct ThreadLikesScreen: View {
 
 /// The reposted-by list.
 public struct ThreadRepostsScreen: View {
-  private let repostedBy: [App.Bsky.ActorDefs_ProfileView]
+  private let repostedBy: [Lexicons.App.Bsky.ActorDefs_ProfileView]
   private let strings: PostThreadStrings
   private let state: ListState
   private let onRetry: () -> Void
   private let onSelect: (String) -> Void
 
   public init(
-    repostedBy: [App.Bsky.ActorDefs_ProfileView],
+    repostedBy: [Lexicons.App.Bsky.ActorDefs_ProfileView],
     strings: PostThreadStrings = .defaults,
     state: ListState = .content,
     onRetry: @escaping () -> Void = {},
@@ -239,7 +239,7 @@ struct ActorListScaffold: View {
 struct PostListScaffold: View {
   let title: String
   let empty: String
-  let posts: [App.Bsky.FeedDefs_PostView]
+  let posts: [Lexicons.App.Bsky.FeedDefs_PostView]
   let state: ListState
   let now: Date
   let locale: Locale
@@ -278,7 +278,7 @@ struct PostListScaffold: View {
     .navigationBarTitleDisplayMode(.inline)
   }
 
-  private func postRowData(_ post: App.Bsky.FeedDefs_PostView) -> FeedItemViewData {
+  private func postRowData(_ post: Lexicons.App.Bsky.FeedDefs_PostView) -> FeedItemViewData {
     let counts = FeedItemCounts(
       replyCount: post.replyCount,
       repostCount: post.repostCount,

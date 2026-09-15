@@ -38,12 +38,12 @@ public enum ThreadFixtures {
       handle: "bob.bsky.social",
       displayName: "Bob",
       text: "Replying to close out this thought.")
-    let anchorWithParent = App.Bsky.FeedDefs_ThreadViewPost(
-      parent: .feedDefsThreadViewPost(App.Bsky.FeedDefs_ThreadViewPost(post: parent)),
+    let anchorWithParent = Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
+      parent: .feedDefsThreadViewPost(Lexicons.App.Bsky.FeedDefs_ThreadViewPost(post: parent)),
       post: anchor,
       replies: [
         .feedDefsThreadViewPost(
-          App.Bsky.FeedDefs_ThreadViewPost(
+          Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
             post: postView(
               uri: uri("reply1"),
               handle: "carol.bsky.social",
@@ -52,25 +52,25 @@ public enum ThreadFixtures {
       ])
     return ThreadFlattener.flatten(
       ThreadTreeBuilder.build(
-        output: App.Bsky.FeedGetPostThread_Output(thread: .feedDefsThreadViewPost(anchorWithParent))))
+        output: Lexicons.App.Bsky.FeedGetPostThread_Output(thread: .feedDefsThreadViewPost(anchorWithParent))))
   }
 
   /// The wire response the sample thread is built from.
-  public static func sampleResponse() -> App.Bsky.FeedGetPostThread_Output {
-    App.Bsky.FeedGetPostThread_Output(thread: .feedDefsThreadViewPost(sampleThreadView()))
+  public static func sampleResponse() -> Lexicons.App.Bsky.FeedGetPostThread_Output {
+    Lexicons.App.Bsky.FeedGetPostThread_Output(thread: .feedDefsThreadViewPost(sampleThreadView()))
   }
 
   // MARK: - Tree
 
-  static func sampleThreadView() -> App.Bsky.FeedDefs_ThreadViewPost {
+  static func sampleThreadView() -> Lexicons.App.Bsky.FeedDefs_ThreadViewPost {
     // Parents, oldest first: root <- parent1 <- anchor.
-    let root = App.Bsky.FeedDefs_ThreadViewPost(
+    let root = Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
       post: postView(
         uri: uri("root"),
         handle: "dave.bsky.social",
         displayName: "Dave",
         text: "Starting a thread about how we draw reply lines in the new SwiftUI client."))
-    let parent = App.Bsky.FeedDefs_ThreadViewPost(
+    let parent = Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
       parent: .feedDefsThreadViewPost(root),
       post: postView(
         uri: uri("parent1"),
@@ -87,7 +87,7 @@ public enum ThreadFixtures {
       likeCount: 42,
       repostCount: 7)
 
-    let anchorView = App.Bsky.FeedDefs_ThreadViewPost(
+    let anchorView = Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
       parent: .feedDefsThreadViewPost(parent),
       post: anchor,
       replies: anchorReplies())
@@ -97,18 +97,18 @@ public enum ThreadFixtures {
 
   /// The anchor's replies: a nested conversation, a tombstone, a partial
   /// branch (read-more), and a blocked one.
-  static func anchorReplies() -> [App.Bsky.FeedDefs_ThreadViewPost_Replies_Elem] {
+  static func anchorReplies() -> [Lexicons.App.Bsky.FeedDefs_ThreadViewPost_Replies_Elem] {
     // A reply that itself has two children, one of which is OP-liked.
-    let likedReply = App.Bsky.FeedDefs_ThreadViewPost(
+    let likedReply = Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
       post: postView(
         uri: uri("reply-1-1"),
         handle: "erin.bsky.social",
         displayName: "Erin",
         text: "This is the deepest useful reply in the sample."),
-      threadContext: App.Bsky.FeedDefs_ThreadContext(
+      threadContext: Lexicons.App.Bsky.FeedDefs_ThreadContext(
         rootAuthorLike: FormatString<ATURI>(rawValue: uri("like"))))
 
-    let firstReply = App.Bsky.FeedDefs_ThreadViewPost(
+    let firstReply = Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
       post: postView(
         uri: uri("reply-1"),
         handle: "frank.bsky.social",
@@ -117,7 +117,7 @@ public enum ThreadFixtures {
         replyCount: 2),
       replies: [
         .feedDefsThreadViewPost(
-          App.Bsky.FeedDefs_ThreadViewPost(
+          Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
             post: postView(
               uri: uri("reply-1-0"),
               handle: "grace.bsky.social",
@@ -128,7 +128,7 @@ public enum ThreadFixtures {
 
     // A branch the server only partly hydrated: replyCount exceeds the replies
     // sent, so the flattener appends a read-more row after it.
-    let partial = App.Bsky.FeedDefs_ThreadViewPost(
+    let partial = Lexicons.App.Bsky.FeedDefs_ThreadViewPost(
       post: postView(
         uri: uri("reply-2"),
         handle: "heidi.bsky.social",
@@ -137,15 +137,15 @@ public enum ThreadFixtures {
         replyCount: 9))
 
     // A deleted reply, which the server answers with a #notFoundPost.
-    let deleted = App.Bsky.FeedDefs_ThreadViewPost_Replies_Elem.feedDefsNotFoundPost(
-      App.Bsky.FeedDefs_NotFoundPost(notFound: true, uri: FormatString<ATURI>(rawValue: uri("reply-deleted"))))
+    let deleted = Lexicons.App.Bsky.FeedDefs_ThreadViewPost_Replies_Elem.feedDefsNotFoundPost(
+      Lexicons.App.Bsky.FeedDefs_NotFoundPost(notFound: true, uri: FormatString<ATURI>(rawValue: uri("reply-deleted"))))
 
     // A blocked reply. The logic package drops blocked replies from the inline
     // list at depth > 0, exactly as RN does, so this one is present but not
     // rendered - keeping it here proves the drop still holds.
-    let blocked = App.Bsky.FeedDefs_ThreadViewPost_Replies_Elem.feedDefsBlockedPost(
-      App.Bsky.FeedDefs_BlockedPost(
-        author: App.Bsky.FeedDefs_BlockedAuthor(did: FormatString<DID>(rawValue: "did:plc:blocked")),
+    let blocked = Lexicons.App.Bsky.FeedDefs_ThreadViewPost_Replies_Elem.feedDefsBlockedPost(
+      Lexicons.App.Bsky.FeedDefs_BlockedPost(
+        author: Lexicons.App.Bsky.FeedDefs_BlockedAuthor(did: FormatString<DID>(rawValue: "did:plc:blocked")),
         blocked: true,
         uri: FormatString<ATURI>(rawValue: uri("reply-blocked"))))
 
@@ -162,9 +162,9 @@ public enum ThreadFixtures {
   public static func deletedAnchorThread() -> FlattenedThread {
     ThreadFlattener.flatten(
       ThreadTreeBuilder.build(
-        output: App.Bsky.FeedGetPostThread_Output(
+        output: Lexicons.App.Bsky.FeedGetPostThread_Output(
           thread: .feedDefsNotFoundPost(
-            App.Bsky.FeedDefs_NotFoundPost(
+            Lexicons.App.Bsky.FeedDefs_NotFoundPost(
               notFound: true,
               uri: FormatString<ATURI>(rawValue: uri("deleted-anchor")))))))
   }
@@ -188,13 +188,13 @@ public enum ThreadFixtures {
   }
 
   /// Sample actors for the reposts list.
-  public static func sampleReposts() -> [App.Bsky.ActorDefs_ProfileView] {
+  public static func sampleReposts() -> [Lexicons.App.Bsky.ActorDefs_ProfileView] {
     [
-      App.Bsky.ActorDefs_ProfileView(
+      Lexicons.App.Bsky.ActorDefs_ProfileView(
         did: FormatString<DID>(rawValue: "did:plc:bob"),
         displayName: "Bob",
         handle: FormatString<Handle>(rawValue: "bob.bsky.social")),
-      App.Bsky.ActorDefs_ProfileView(
+      Lexicons.App.Bsky.ActorDefs_ProfileView(
         did: FormatString<DID>(rawValue: "did:plc:erin"),
         displayName: "Erin",
         handle: FormatString<Handle>(rawValue: "erin.bsky.social")),
@@ -234,9 +234,9 @@ public enum ThreadFixtures {
     replyCount: Int = 0,
     likeCount: Int = 0,
     repostCount: Int = 0
-  ) -> App.Bsky.FeedDefs_PostView {
-    App.Bsky.FeedDefs_PostView(
-      author: App.Bsky.ActorDefs_ProfileViewBasic(
+  ) -> Lexicons.App.Bsky.FeedDefs_PostView {
+    Lexicons.App.Bsky.FeedDefs_PostView(
+      author: Lexicons.App.Bsky.ActorDefs_ProfileViewBasic(
         did: FormatString<DID>(rawValue: did(for: handle)),
         displayName: displayName,
         handle: FormatString<Handle>(rawValue: handle)),
@@ -244,17 +244,17 @@ public enum ThreadFixtures {
       indexedAt: FormatString<Date>(rawValue: "2026-01-01T12:00:00.000Z"),
       likeCount: likeCount,
       record: .record(
-        App.Bsky.FeedPost(
+        Lexicons.App.Bsky.FeedPost(
           createdAt: FormatString<Date>(rawValue: "2026-01-01T12:00:00.000Z"),
           text: text)),
       replyCount: replyCount,
       repostCount: repostCount,
       uri: FormatString<ATURI>(rawValue: uri),
-      viewer: App.Bsky.FeedDefs_ViewerState())
+      viewer: Lexicons.App.Bsky.FeedDefs_ViewerState())
   }
 
-  static func profileView(handle: String, displayName: String?) -> App.Bsky.ActorDefs_ProfileView {
-    App.Bsky.ActorDefs_ProfileView(
+  static func profileView(handle: String, displayName: String?) -> Lexicons.App.Bsky.ActorDefs_ProfileView {
+    Lexicons.App.Bsky.ActorDefs_ProfileView(
       did: FormatString<DID>(rawValue: did(for: handle)),
       displayName: displayName,
       handle: FormatString<Handle>(rawValue: handle))
