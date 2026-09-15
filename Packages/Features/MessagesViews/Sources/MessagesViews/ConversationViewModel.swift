@@ -112,7 +112,11 @@ public final class ConversationViewModel {
     let text = draft
     guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
     draft = ""
-    if model.sendMessage(Chat.Bsky.ConvoDefs_MessageInput(text: text)) != nil {
+    let tempId = await model.sendMessage(Chat.Bsky.ConvoDefs_MessageInput(text: text))
+    if tempId != nil {
+      // `sendMessage` queues and starts the drain itself; awaiting the drain
+      // again is a no-op when it is already in flight, and guarantees the
+      // optimistic echo is reconciled before the rows are republished.
       await model.processPendingMessages()
     }
     await refresh()
