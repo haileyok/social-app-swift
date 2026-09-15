@@ -19,6 +19,7 @@ let package = Package(
     .package(path: "../Packages/DesignSystem"),
     .package(path: "../Packages/UIComponents"),
     .package(path: "../Packages/Features/LoginViews"),
+    .package(path: "../Packages/Features/Login"),
   ],
   targets: [
     .target(
@@ -28,6 +29,7 @@ let package = Package(
         .product(name: "DesignSystemCore", package: "DesignSystem"),
         .product(name: "UIComponents", package: "UIComponents"),
         .product(name: "LoginViews", package: "LoginViews"),
+        .product(name: "LoginLogic", package: "Login"),
       ],
       path: "Sources/AppShell"
     )
