@@ -14,6 +14,10 @@ let package = Package(
     .package(path: "../../Lexicons"),
     .package(path: "../../Preferences"),
     .package(path: "../../QueryStore"),
+    // Vendored generator runtime, for the `FormatString`/`ATURI`/`Handle`
+    // types the generated lexicon fields (and the Lexicons default arguments
+    // OnboardingLogic passes) are expressed in.
+    .package(path: "../../../tools/lexicon-codegen/swift-atproto"),
   ],
   targets: [
     .target(
@@ -24,6 +28,7 @@ let package = Package(
         .product(name: "Lexicons", package: "Lexicons"),
         .product(name: "Preferences", package: "Preferences"),
         .product(name: "QueryStore", package: "QueryStore"),
+        .product(name: "SwiftAtproto", package: "swift-atproto"),
       ],
       path: "Sources/OnboardingLogic"
     ),
