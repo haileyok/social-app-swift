@@ -214,7 +214,7 @@ public final class AppSession {
    (its `resume` and the login flow both record it), so this is a read, not a
    network round trip. Async only because the store is an actor.
    */
-  public func makeClients() async -> AppSessionClients? {
+  func makeClients() async -> AppSessionClients? {
     guard let session = await sessionStore.currentSession() else { return nil }
     return try? AppSessionClients(session: session, transport: transport)
   }

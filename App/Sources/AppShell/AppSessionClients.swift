@@ -54,15 +54,17 @@ final class AppSessionClients {
   /**
    Builds the bundle from the session's live `PasswordSession`.
 
-   The session client already carries the bearer token and points at the
+   Async because `PasswordSession` is an actor: the client and identity reads
+   are actor-isolated, so the bundle awaits them once at construction. The
+   session client already carries the bearer token and points at the
    account's PDS; the routed clients are copies of it with the proxy header the
    RN app's `clients.ts` sets (`SessionClients` builds the same shape, but
-   awaits identity resolution at init, which the shell does not need on the
-   render path - the session has already resolved it).
+   awaits identity resolution at init too - the shell does the same here
+   rather than on the render path, since the session has already resolved it).
    */
-  init(session: PasswordSession, transport: HTTPTransport) throws {
-    let base = try session.client()
-    let did = try session.sessionData().did
+  init(session: PasswordSession, transport: HTTPTransport) async throws {
+    let base = try await session.client()
+    let did = try await session.sessionData().did
 
     self.did = did
     self.store = QueryStore()
