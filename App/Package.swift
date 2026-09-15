@@ -32,6 +32,7 @@ let package = Package(
     .package(path: "../Packages/Features/StarterPacksViews"),
     .package(path: "../Packages/Features/NotificationsViews"),
     .package(path: "../Packages/Features/ModerationUIViews"),
+    .package(path: "../Packages/Features/MessagesViews"),
     .package(path: "../Packages/ATProtoClient"),
   ],
   targets: [
@@ -58,6 +59,7 @@ let package = Package(
         .product(name: "StarterPacksViews", package: "StarterPacksViews"),
         .product(name: "NotificationsViews", package: "NotificationsViews"),
         .product(name: "ModerationUIViews", package: "ModerationUIViews"),
+        .product(name: "MessagesViews", package: "MessagesViews"),
         .product(name: "ATProtoClient", package: "ATProtoClient"),
       ],
       path: "Sources/AppShell"
