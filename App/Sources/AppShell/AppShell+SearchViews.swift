@@ -1,6 +1,5 @@
 import DesignSystem
 import DesignSystemCore
-import SearchViews
 import SwiftUI
 
 // Re-exported so the app and its test targets reach `SearchAccessibility` (and

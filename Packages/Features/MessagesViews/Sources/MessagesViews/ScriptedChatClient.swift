@@ -151,9 +151,7 @@ public actor ScriptedChatClient: ChatXrpc {
   }
 
   /// The message view for an id, when the script holds one.
-  private func message(convoId: String, messageId: String) throws
-    -> Chat.Bsky.ConvoDefs_MessageView?
-  {
+  private func message(convoId: String, messageId: String) throws -> Chat.Bsky.ConvoDefs_MessageView? {
     let element = (history[convoId] ?? []).first { $0.id == messageId }
     return element?.messageView
   }

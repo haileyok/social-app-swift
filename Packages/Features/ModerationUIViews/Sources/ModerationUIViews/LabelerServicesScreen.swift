@@ -169,8 +169,7 @@ public struct LabelerServicesScreen: View {
   private func labelerRow(_ row: LabelerRowModel) -> some View {
     ModerationRow(title: row.title, subtitle: "@\(row.handle)") {
       if row.isConfigurable {
-        Button(row.isSubscribed ? ModerationCopy.unsubscribeAction : ModerationCopy.subscribeAction)
-        {
+        Button(row.isSubscribed ? ModerationCopy.unsubscribeAction : ModerationCopy.subscribeAction) {
           onToggleSubscription(row)
         }
         .buttonStyle(

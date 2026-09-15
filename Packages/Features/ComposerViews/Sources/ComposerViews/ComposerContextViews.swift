@@ -194,9 +194,9 @@ struct ComposerThreadPosts: View {
             scale: .xs,
             color: theme.atomColors.textContrastMedium)
           Spacer(minLength: Spacing.sm)
-          Button(action: { onRemove(post.id) }) {
+          Button(action: { onRemove(post.id) }, label: {
             Image(systemName: "minus.circle")
-          }
+          })
           .foregroundStyle(theme.atomColors.textContrastMedium)
           .accessibilityLabel(ComposerCopy.removePostAction)
           .accessibilityIdentifier("\(ComposerAccessibility.addPostButton).remove.\(post.id)")

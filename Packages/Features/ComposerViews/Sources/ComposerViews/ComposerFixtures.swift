@@ -49,6 +49,7 @@ public enum ComposerFixtures {
   ///
   /// Every case starts from ``ComposerReducer/createState(_:)`` and applies
   /// ordinary actions, so the fixtures exercise the real reducer paths.
+  // swiftlint:disable:next function_body_length
   public static func state(for surface: ComposerSurface) -> ComposerState {
     switch surface {
     case .empty:

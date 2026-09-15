@@ -82,7 +82,7 @@ public struct SearchSuggestionsList: View {
 
   /// The row that commits the typed text as a full search.
   private func searchForRow(_ query: String) -> some View {
-    RowContainer(onSelect: { onSearchFor(query) }) {
+    RowContainer(onSelect: { onSearchFor(query) }, content: {
       HStack(spacing: Spacing.sm) {
         Image(systemName: "magnifyingglass")
           .font(.system(size: 15))
@@ -91,7 +91,7 @@ public struct SearchSuggestionsList: View {
           .lineLimit(1)
         Spacer(minLength: 0)
       }
-    }
+    })
     .accessibilityIdentifier(SearchAccessibility.searchForRow)
   }
 
@@ -102,17 +102,18 @@ public struct SearchSuggestionsList: View {
       ForEach(history, id: \.serialized) { entry in
         RowContainer(
           onSelect: { onSelectHistory(entry) },
-          onRemove: { onRemoveHistory(entry) }
-        ) {
-          HStack(spacing: Spacing.sm) {
-            Image(systemName: "clock")
-              .font(.system(size: 15))
-              .foregroundStyle(theme.atomColors.textContrastMedium)
-            AlfText(entry.q, scale: .md)
-              .lineLimit(1)
-            Spacer(minLength: 0)
+          onRemove: { onRemoveHistory(entry) },
+          content: {
+            HStack(spacing: Spacing.sm) {
+              Image(systemName: "clock")
+                .font(.system(size: 15))
+                .foregroundStyle(theme.atomColors.textContrastMedium)
+              AlfText(entry.q, scale: .md)
+                .lineLimit(1)
+              Spacer(minLength: 0)
+            }
           }
-        }
+        )
       }
     }
   }

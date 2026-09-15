@@ -213,10 +213,6 @@ final class SessionGateUITests: XCTestCase {
     continueAfterFailure = false
   }
 
-  override func tearDown() {
-    super.tearDown()
-  }
-
   /// A demo launch lands on the tab shell with no account.
   func testDemoLaunchStaysOnTheTabShell() {
     let app = launch(with: demoArguments)

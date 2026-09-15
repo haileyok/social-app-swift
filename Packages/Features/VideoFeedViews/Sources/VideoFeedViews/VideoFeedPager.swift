@@ -88,7 +88,7 @@ struct VideoFeedPager: UIViewRepresentable {
         host.view.removeFromSuperview()
         host.removeFromParent()
       }
-      hosts = items.enumerated().map { offset, _ in
+      hosts = items.indices.map { offset in
         let host = UIHostingController(rootView: page(offset))
         host.view.backgroundColor = .black
         return host

@@ -22,6 +22,7 @@ public enum NotificationsFixtures {
   public static var rows: [FeedNotification] { rows(now: referenceDate) }
 
   /// The default fixture: one row per reason the list renders.
+  // swiftlint:disable:next function_body_length
   public static func rows(now: Date = referenceDate) -> [FeedNotification] {
     [
       // A single like: sentence row, heart glyph, unread.
