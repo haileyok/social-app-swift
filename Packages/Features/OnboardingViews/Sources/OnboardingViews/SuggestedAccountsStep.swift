@@ -2,6 +2,7 @@ import DesignSystem
 import OnboardingLogic
 import SwiftUI
 import UIComponents
+import UIComponentsCore
 
 /// The suggested-accounts step: a selectable list of accounts to follow.
 ///

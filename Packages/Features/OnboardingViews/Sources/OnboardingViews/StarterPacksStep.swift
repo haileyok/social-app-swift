@@ -2,6 +2,7 @@ import DesignSystem
 import OnboardingLogic
 import SwiftUI
 import UIComponents
+import UIComponentsCore
 
 /// The suggested-starter-packs step: pick one pack to join.
 ///
