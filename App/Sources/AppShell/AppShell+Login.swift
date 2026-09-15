@@ -34,13 +34,27 @@ public struct LoginRootView: View {
   }
 
   public var body: some View {
-    LoginScreen(
-      viewModel: viewModel,
-      onSignedIn: { account in
-        Task { await session.adoptSignedInAccount(account) }
-      },
-      onForgotPassword: { _ in }
-    )
+    VStack(spacing: 0) {
+      if let diagnosis = session.startDiagnosis {
+        // Restart diagnostics: why the last launch landed on this screen.
+        // Temporary scaffolding while the restart path is being hardened;
+        // remove once resume is provably stable.
+        Text(diagnosis)
+          .font(.caption2)
+          .foregroundStyle(.red)
+          .padding(.horizontal, Spacing.md)
+          .padding(.top, Spacing.xs)
+          .lineLimit(4)
+          .accessibilityIdentifier("start-diagnosis")
+      }
+      LoginScreen(
+        viewModel: viewModel,
+        onSignedIn: { account in
+          Task { await session.adoptSignedInAccount(account) }
+        },
+        onForgotPassword: { _ in }
+      )
+    }
     // A container identifier for the signed-out root. It is a marker for
     // screenshots and accessibility review rather than an assertion target: the
     // UI test identifies the root by what it does not have (the shell's tab bar,
