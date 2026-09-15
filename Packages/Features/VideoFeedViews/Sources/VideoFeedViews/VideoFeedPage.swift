@@ -138,6 +138,9 @@ struct VideoFeedPage: View {
         isExpanded: $isCaptionExpanded,
         isMuted: controller?.isMuted(at: index) ?? true,
         onToggleMuted: { toggleMuted() },
+        captionOptions: controller?.captionOptions(at: index) ?? [],
+        selectedCaptionID: controller?.selectedCaptionID(at: index),
+        onSelectCaption: { id in controller?.selectCaption(id: id, at: index) },
         onOpen: onOpen,
         onOpenAuthor: {},
         onLike: like)

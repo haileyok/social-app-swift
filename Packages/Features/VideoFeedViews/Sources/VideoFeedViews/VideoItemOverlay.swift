@@ -32,6 +32,12 @@ struct VideoItemOverlay: View {
   let isMuted: Bool
   /// Toggles the mute state.
   let onToggleMuted: () -> Void
+  /// The caption tracks this item's stream offers. Empty hides the control.
+  var captionOptions: [VideoCaptionOption] = []
+  /// The selected caption track's id, or `nil` when captions are off.
+  var selectedCaptionID: String?
+  /// Selects a caption track, or turns captions off when passed `nil`.
+  var onSelectCaption: (String?) -> Void = { _ in }
   /// Opens a rich-text link in the caption.
   let onOpen: (RichTextTarget) -> Void
   /// Opens the author's profile.
@@ -55,11 +61,14 @@ struct VideoItemOverlay: View {
     .accessibilityElement(children: .contain)
   }
 
-  /// The mute toggle, right-aligned above the author row, where RN places its
-  /// volume `ControlButton`.
+  /// The mute and caption toggles, right-aligned above the author row, where RN
+  /// places its volume `ControlButton`.
   private var muteControl: some View {
-    HStack {
+    HStack(spacing: Spacing.sm) {
       Spacer(minLength: 0)
+      if !captionOptions.isEmpty {
+        captionControl
+      }
       if !item.isGif {
         Button(action: onToggleMuted) {
           Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
@@ -72,6 +81,23 @@ struct VideoItemOverlay: View {
         .accessibilityLabel(isMuted ? VideoFeedStrings.unmute : VideoFeedStrings.mute)
       }
     }
+  }
+
+  /// The caption track picker, shown only when the stream offers captions.
+  private var captionControl: some View {
+    Menu {
+      Button(VideoFeedStrings.captionsOff) { onSelectCaption(nil) }
+      ForEach(captionOptions) { option in
+        Button(option.name) { onSelectCaption(option.id) }
+      }
+    } label: {
+      Image(systemName: selectedCaptionID == nil ? "captions.bubble" : "captions.bubble.fill")
+        .font(.system(size: 16, weight: .semibold))
+        .foregroundStyle(theme.atomColors.textInverted)
+        .padding(Spacing.sm)
+        .background(theme.atomColors.bgContrast975.opacity(0.35), in: Circle())
+    }
+    .accessibilityLabel(VideoFeedStrings.captions)
   }
 
   /// The author line: avatar, display name and handle.

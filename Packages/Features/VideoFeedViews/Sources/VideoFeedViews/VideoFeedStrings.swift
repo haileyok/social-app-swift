@@ -27,6 +27,10 @@ public enum VideoFeedStrings {
   public static let unmute = "Unmute"
   /// The mute affordance.
   public static let mute = "Mute"
+  /// The caption track picker's label.
+  public static let captions = "Captions"
+  /// The caption picker's "no captions" option.
+  public static let captionsOff = "Off"
   /// The hint on the video surface explaining the tap gestures.
   public static let videoHint = "Tap to play or pause the video"
   /// The hint that a double tap likes the post.

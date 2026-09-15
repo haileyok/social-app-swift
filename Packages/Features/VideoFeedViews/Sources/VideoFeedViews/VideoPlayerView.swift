@@ -3,6 +3,23 @@ import CoreMedia
 import Observation
 import VideoFeedLogic
 
+/// One selectable caption track the player offers for an item.
+///
+/// These come from the player's legible media selection group rather than from
+/// the record: `app.bsky.embed.video#main` declares caption blobs by CID
+/// (``VideoCaptionTrack`` in `VideoFeedLogic`), and dereferencing one to a
+/// playable URL needs the account's authenticated blob endpoint, which this
+/// package does not own. A stream with embedded captions therefore offers its
+/// tracks here, and a stream whose captions live only on the record offers none.
+struct VideoCaptionOption: Identifiable, Equatable {
+  /// A stable identity for selection, derived from the track's identifier.
+  let id: String
+  /// The track's display name, e.g. `English`.
+  let name: String
+  /// The track's BCP-47 language tag, when the track carries one.
+  let language: String?
+}
+
 /// The current and total time of a playing item, as the overlay reads it.
 struct VideoPlayerTiming: Equatable {
   /// The playhead position in seconds.
@@ -135,6 +152,10 @@ final class VideoPlayerSlot {
   private(set) var timing: VideoPlayerTiming = .zero
   /// The mute state. A slot starts muted, matching the RN volume context.
   private(set) var isMuted = true
+  /// The caption tracks the current item offers, empty when it has none.
+  private(set) var legibleOptions: [VideoCaptionOption] = []
+  /// The selected caption track's id, or `nil` when captions are off.
+  private(set) var selectedCaptionID: String?
 
   /// How far ahead the player buffers. One item of lookahead is what makes a
   /// swipe land on a ready frame; the pool size bounds the cost at three.
@@ -267,6 +288,52 @@ final class VideoPlayerSlot {
       toleranceAfter: .zero)
   }
 
+  // MARK: - Captions
+
+  /// Selects a caption track, or turns captions off when `id` is `nil`.
+  ///
+  /// Selection goes through the item's legible media selection group, which is
+  /// what `AVPlayer` uses for both embedded and sidecar captions on an HLS
+  /// stream.
+  func selectCaption(id: String?) {
+    guard let item = player.currentItem,
+      let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible)
+    else { return }
+    let option = id.flatMap { wanted in
+      group.options.first { captionID(for: $0) == wanted }
+    }
+    item.select(option, in: group)
+    selectedCaptionID = option.map(captionID(for:))
+  }
+
+  /// Refreshes the offered caption tracks from the current item.
+  ///
+  /// Called when the item reaches `.readyToPlay`: before the asset is loaded the
+  /// selection group is not populated, so an item that carries captions reports
+  /// none until it is ready.
+  private func refreshLegibleOptions() {
+    guard let item = player.currentItem,
+      let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible)
+    else {
+      legibleOptions = []
+      selectedCaptionID = nil
+      return
+    }
+    legibleOptions = group.options.map { option in
+      VideoCaptionOption(
+        id: captionID(for: option),
+        name: option.displayName,
+        language: option.locale?.identifier)
+    }
+    selectedCaptionID = item.selectedMediaSelectionOption(in: group).map(captionID(for:))
+  }
+
+  /// A track's stable identity. A media selection option may have no
+  /// `identifier`, so the display name is the fallback.
+  private func captionID(for option: AVMediaSelectionOption) -> String {
+    option.identifier ?? option.displayName
+  }
+
   // MARK: - Observation
 
   /// Moves the KVO observations from the previous item to `item`.
@@ -299,6 +366,9 @@ final class VideoPlayerSlot {
     switch status {
     case .readyToPlay:
       if phase == .loading { setPhase(.ready) }
+      // The legible selection group is only populated once the asset has loaded,
+      // so an item that carries captions reports none before this point.
+      refreshLegibleOptions()
     case .failed:
       setPhase(.failed(message))
     case .unknown:

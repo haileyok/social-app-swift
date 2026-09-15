@@ -207,6 +207,25 @@ final class VideoFeedController {
     slot(for: index)?.phase ?? .empty
   }
 
+  /// The caption tracks the item at `index` offers, empty when it has none.
+  ///
+  /// These come from the player's legible media selection group; an item whose
+  /// stream carries no captions reports none.
+  func captionOptions(at index: Int) -> [VideoCaptionOption] {
+    slot(for: index)?.legibleOptions ?? []
+  }
+
+  /// The selected caption track's id for the item at `index`, or `nil` when
+  /// captions are off.
+  func selectedCaptionID(at index: Int) -> String? {
+    slot(for: index)?.selectedCaptionID
+  }
+
+  /// Selects a caption track for the item at `index`, or turns captions off.
+  func selectCaption(id: String?, at index: Int) {
+    slot(for: index)?.selectCaption(id: id)
+  }
+
   /// The playback state the store holds for the item at `index`.
   func playbackState(at index: Int) -> VideoPlaybackState? {
     guard items.indices.contains(index) else { return nil }
