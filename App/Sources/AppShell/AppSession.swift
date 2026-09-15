@@ -69,6 +69,12 @@ public final class AppSession {
     return nil
   }
 
+  /// Whether an account is signed in.
+  ///
+  /// A `Bool` rather than the account itself, so a caller that only needs the
+  /// yes/no answer does not have to handle a `PersistedAccount` to ask.
+  public var isSignedIn: Bool { currentAccount != nil }
+
   /// The handle to show in the account menu, preferring the recorded one.
   public var currentHandle: String? {
     guard let account = currentAccount else { return nil }
@@ -257,12 +263,14 @@ public final class AppSession {
    be driven over a scratch directory - by a test, a preview, or a future
    "reset local data" affordance - without the caller having to know how the
    Persistence stores are wired together.
+
+   The transport is not a parameter: a `HTTPTransport` default argument would
+   make every caller's object file reference the transport type, which the app's
+   unit-test target deliberately does not link (it links `AppShell` alone).
    */
-  public static func withStorage(
-    directory: URL,
-    transport: HTTPTransport = URLSessionTransport()
-  ) -> AppSession {
-    AppSession(
+  public static func withStorage(directory: URL) -> AppSession {
+    let transport = URLSessionTransport()
+    return AppSession(
       sessionStore: SessionStore(
         persisted: PersistedStore(directory: directory),
         tokenStore: makeTokenStore(at: directory),

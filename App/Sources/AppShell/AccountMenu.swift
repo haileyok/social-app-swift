@@ -58,7 +58,7 @@ public struct ShellAccountControl: View {
   }
 
   public var body: some View {
-    if session.currentAccount != nil {
+    if session.isSignedIn {
       AccountMenuButton(session: session)
     } else {
       LoginDebugButton(session: session)

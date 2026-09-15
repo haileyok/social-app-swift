@@ -127,7 +127,9 @@ final class ShellLaunchTests: XCTestCase {
     let launch = ShellLaunch.read(from: defaults)
 
     XCTAssertEqual(launch.screen, ShellLaunchArgument.loginSurface)
-    XCTAssertEqual(launch.theme, .dim)
+    // Read through `rawValue`, not by binding the `ThemePreference` value
+    // itself: this bundle links only `AppShell` (see `AppSessionTests`).
+    XCTAssertEqual(launch.theme?.rawValue, "dim")
   }
 
   func testEmptyScreenArgumentIsTreatedAsUnset() {
@@ -171,14 +173,22 @@ final class ShellLaunchTests: XCTestCase {
  */
 @MainActor
 final class AppSessionTests: XCTestCase {
+  /**
+   Bootstrap with no stored account.
+
+   The assertions deliberately stay on `AppShell`'s own surface (`isSignedIn`,
+   `currentHandle`, and the state's `String(describing:)`) rather than reading
+   the associated `PersistedAccount`: this test bundle links only the `AppShell`
+   product, so binding a `Persistence` type here would not resolve at link time.
+   */
   func testASessionWithNoStoredAccountSettlesSignedOut() async {
     let session = AppSession.withStorage(directory: temporaryDirectory())
 
     await session.start()
 
-    XCTAssertEqual(session.state, .signedOut)
-    XCTAssertNil(session.currentAccount)
+    XCTAssertFalse(session.isSignedIn)
     XCTAssertNil(session.currentHandle)
+    XCTAssertEqual(String(describing: session.state), "signedOut")
   }
 
   /// Bootstrap is idempotent: a view that re-runs its task must not start a
@@ -189,7 +199,7 @@ final class AppSessionTests: XCTestCase {
     await session.start()
     await session.start()
 
-    XCTAssertEqual(session.state, .signedOut)
+    XCTAssertFalse(session.isSignedIn)
   }
 
   /// A listener registered after bootstrap receives the settled state
@@ -198,10 +208,10 @@ final class AppSessionTests: XCTestCase {
     let session = AppSession.withStorage(directory: temporaryDirectory())
     await session.start()
 
-    var received: [AppSession.State] = []
-    session.addListener { received.append($0) }
+    var received: [String] = []
+    session.addListener { received.append(String(describing: $0)) }
 
-    XCTAssertEqual(received, [.signedOut])
+    XCTAssertEqual(received, ["signedOut"])
   }
 
   /// Signing out with nothing signed in is a no-op that leaves the root where
@@ -212,7 +222,7 @@ final class AppSessionTests: XCTestCase {
 
     await session.signOut()
 
-    XCTAssertEqual(session.state, .signedOut)
+    XCTAssertFalse(session.isSignedIn)
     XCTAssertFalse(session.loginIsStale)
   }
 
