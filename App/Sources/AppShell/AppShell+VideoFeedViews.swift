@@ -28,13 +28,13 @@ public enum VideoFeedSurfaces {
   /// Read from `UserDefaults` rather than `@AppStorage` so the entry point stays a
   /// plain static function with a default argument, matching
   /// `AppShell+Components.swift`. This is the same `alfTheme` key the shell writes.
-  static var storedThemePreference: ThemePreference {
+  public static var storedThemePreference: ThemePreference {
     ThemePreference(rawValue: UserDefaults.standard.string(forKey: themeStorageKey) ?? "")
       ?? .system
   }
 
   /// The `@AppStorage` key the shell persists its theme preference under.
-  static let themeStorageKey = "alfTheme"
+  public static let themeStorageKey = "alfTheme"
 
   /// The immersive video feed, built from fixture items.
   ///
