@@ -68,11 +68,44 @@ public enum SearchSurfaces {
    */
   @MainActor
   public static func searchSuggestionsScreen(theme: ThemePreference = .system) -> some View {
-    SearchSuggestionsList(
-      suggestions: SearchFixtures.suggestions,
-      history: SearchFixtures.history)
+    ThemedScreen(theme: theme) {
+      SearchSuggestionsList(
+        suggestions: SearchFixtures.suggestions,
+        history: SearchFixtures.history)
+    }
+  }
+}
+
+/// Applies a theme preference and a themed page background.
+///
+/// `.theme(_:)` is applied outermost so the injected environment reaches the
+/// background as well as the content: a `.background(_:)` written after the
+/// injection would sit outside it and read the default theme.
+@MainActor
+private struct ThemedScreen<Content: View>: View {
+  let theme: ThemePreference
+  let content: Content
+
+  init(theme: ThemePreference, @ViewBuilder content: () -> Content) {
+    self.theme = theme
+    self.content = content()
+  }
+
+  var body: some View {
+    content
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+      .background(SurfaceBackground())
       .theme(theme)
-      .background(ThemeResolver.theme(for: theme).atomColors.bg)
+  }
+}
+
+/// The active theme's page background.
+@MainActor
+private struct SurfaceBackground: View {
+  @Environment(\.alfTheme) private var theme
+
+  var body: some View {
+    theme.atomColors.bg.ignoresSafeArea()
   }
 }
 
