@@ -1,3 +1,4 @@
+import Foundation
 import Lexicons
 import StarterPacksLogic
 import SwiftAtproto
