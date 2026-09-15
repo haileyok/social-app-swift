@@ -7,7 +7,7 @@ import Foundation
  view carries a scattered literal, so replacing the statics with
  `String(localized:)` and adding a String Catalog is a one-file change.
 
- The English here is the RN copy from `src/screens/Messages/*` (the inbox empty
+ The English here is the RN copy from `src/screens/Messages` (the inbox empty
  state, the composer placeholder, the failed-send copy) where an equivalent
  exists; where the RN app has no string (the fixture surfaces, the load-older
  row) the wording is native.

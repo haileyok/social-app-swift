@@ -189,7 +189,9 @@ struct MessagesStateGallery: View {
     .background(theme.atomColors.bg)
   }
 
-  private func section(_ title: String, @ViewBuilder content: () -> some View) -> some View {
+  private func section<Content: View>(
+    _ title: String, @ViewBuilder content: () -> Content
+  ) -> some View {
     VStack(alignment: .leading, spacing: Spacing.xs) {
       AlfText(title, scale: .sm, weight: Scales.FontWeight.semiBold)
         .padding(.horizontal, Spacing.md)
