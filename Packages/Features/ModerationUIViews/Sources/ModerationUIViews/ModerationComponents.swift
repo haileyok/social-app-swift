@@ -45,7 +45,16 @@ struct ModerationNotice: View {
   }
 
   let message: String
-  var kind: Kind = .info
+  let kind: Kind
+
+  /// The `kind` argument is declared explicitly rather than left to the
+  /// synthesized memberwise initializer: the default is inferred from a nested
+  /// enum, which is exactly the shape the type checker struggles to solve when
+  /// the initializer appears in a view-building expression.
+  init(message: String, kind: Kind = .info) {
+    self.message = message
+    self.kind = kind
+  }
 
   @Environment(\.alfTheme) private var theme
 
@@ -216,7 +225,12 @@ struct ModerationRadioGroup<Value: Hashable>: View {
 /// The inline error line the moderation forms use.
 struct ModerationErrorLine: View {
   let message: String
-  var identifier: String?
+  let identifier: String?
+
+  init(message: String, identifier: String? = nil) {
+    self.message = message
+    self.identifier = identifier
+  }
 
   @Environment(\.alfTheme) private var theme
 
@@ -246,8 +260,22 @@ struct ModerationTextField: View {
   let label: String
   let placeholder: String
   @Binding var text: String
-  var identifier: String?
-  var isMultiline = false
+  let identifier: String?
+  let isMultiline: Bool
+
+  init(
+    label: String,
+    placeholder: String,
+    text: Binding<String>,
+    identifier: String? = nil,
+    isMultiline: Bool = false
+  ) {
+    self.label = label
+    self.placeholder = placeholder
+    self._text = text
+    self.identifier = identifier
+    self.isMultiline = isMultiline
+  }
 
   @Environment(\.alfTheme) private var theme
 

@@ -228,17 +228,23 @@ public struct ContentLabelsScreen: View {
   }
 
   /// The explanation under a row that cannot be changed, when there is one.
+  ///
+  /// The text is computed first and the notice rendered from the result, so the
+  /// view body holds one conditional instead of a `@ViewBuilder` pair.
   @ViewBuilder
   private func labelNotice(_ row: ContentLabelRow) -> some View {
-    if row.adultDisabled {
-      ModerationNotice(message: ModerationCopy.adultDisabledNotice)
-        .padding(.horizontal, .md)
-        .padding(.bottom, Spacing.xs)
-    } else if row.showsStaticValue {
-      ModerationNotice(message: ModerationCopy.staticValueNotice)
+    if let notice = noticeText(row) {
+      ModerationNotice(message: notice)
         .padding(.horizontal, .md)
         .padding(.bottom, Spacing.xs)
     }
+  }
+
+  /// The notice copy for a row, or nil when the row needs none.
+  private func noticeText(_ row: ContentLabelRow) -> String? {
+    if row.adultDisabled { return ModerationCopy.adultDisabledNotice }
+    if row.showsStaticValue { return ModerationCopy.staticValueNotice }
+    return nil
   }
 }
 
