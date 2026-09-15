@@ -51,17 +51,21 @@ public struct AccountMenuButton: View {
  session state.
  */
 public struct ShellAccountControl: View {
-  private let session: AppSession
+  private let session: AppSession?
 
-  public init(session: AppSession) {
+  public init(session: AppSession?) {
     self.session = session
   }
 
   public var body: some View {
-    if session.isSignedIn {
+    // No session means the demo/screenshot shell: the debug login entry is the
+    // only account affordance that does not need one.
+    if let session, session.isSignedIn {
       AccountMenuButton(session: session)
-    } else {
+    } else if let session {
       LoginDebugButton(session: session)
+    } else {
+      LoginDebugButton()
     }
   }
 }

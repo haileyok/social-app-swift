@@ -44,17 +44,22 @@ final class LoginSmokeUITests: XCTestCase {
     super.tearDown()
   }
 
-  /// The login root is on screen with the form inside it.
+  /// The login root is on screen: the credential form, with no tab bar behind
+  /// it.
+  ///
+  /// The form is the assertion target rather than the root's container
+  /// identifier, which a `ScrollView`-backed screen does not reliably expose to
+  /// XCUITest.
   func testLoginRootPresentsTheCredentialForm() {
     XCTAssertTrue(
-      loginRootElement.waitForExistence(timeout: 30),
+      identifierField.waitForExistence(timeout: 30),
       "the login root did not appear on the \(ShellLaunchArgument.loginSurface) surface")
 
     XCTAssertTrue(
       app.descendants(matching: .any)
         .matching(identifier: LoginAccessibility.screen)
         .firstMatch.exists,
-      "the login root does not contain the credential form")
+      "the credential form did not expose \(LoginAccessibility.screen)")
   }
 
   /**
@@ -64,7 +69,7 @@ final class LoginSmokeUITests: XCTestCase {
    not offer to dismiss the only screen it has.
    */
   func testLoginRootIsNotDismissible() {
-    XCTAssertTrue(loginRootElement.waitForExistence(timeout: 30))
+    XCTAssertTrue(identifierField.waitForExistence(timeout: 30))
 
     XCTAssertFalse(
       app.tabBars.firstMatch.exists,
@@ -161,12 +166,6 @@ final class LoginSmokeUITests: XCTestCase {
 
   // MARK: - Helpers
 
-  private var loginRootElement: XCUIElement {
-    app.descendants(matching: .any)
-      .matching(identifier: ShellAccessibility.loginRoot)
-      .firstMatch
-  }
-
   private var identifierField: XCUIElement {
     app.descendants(matching: .any)
       .matching(identifier: LoginAccessibility.identifierField)
@@ -227,8 +226,10 @@ final class SessionGateUITests: XCTestCase {
       "a demo launch did not reach the tab shell")
 
     XCTAssertFalse(
-      loginRoot(in: app).exists,
-      "a demo launch gated the shell behind the login root")
+      app.descendants(matching: .any)
+        .matching(identifier: LoginAccessibility.identifierField)
+        .firstMatch.exists,
+      "a demo launch gated the shell behind the login form")
   }
 
   /// The shell's debug login entry still opens the login sheet over the tabs.
@@ -259,18 +260,22 @@ final class SessionGateUITests: XCTestCase {
   /**
    A launch with no arguments reaches a decided root.
 
-   The simulator is either clean (no account: the login root) or holds a session
+   The simulator is either clean (no account: the login form) or holds a session
    from a manual run (the tab shell). Both are correct; a launch that never
-   leaves the bootstrap placeholder is not.
+   leaves the bootstrap placeholder is not. The login form is probed at the
+   *field*, because a `ScrollView`-backed screen's container identifier is not
+   reliably exposed to XCUITest.
    */
   func testBareLaunchReachesADecidedRoot() {
     let app = launch(with: [])
 
-    let decided = loginRoot(in: app).waitForExistence(timeout: 30)
-      || app.tabBars.firstMatch.exists
+    let loginForm = app.descendants(matching: .any)
+      .matching(identifier: LoginAccessibility.identifierField)
+      .firstMatch
+    let decided = loginForm.waitForExistence(timeout: 30) || app.tabBars.firstMatch.exists
     XCTAssertTrue(
       decided,
-      "a launch with no arguments reached neither the login root nor the tab shell")
+      "a launch with no arguments reached neither the login form nor the tab shell")
 
     XCTAssertFalse(
       app.descendants(matching: .any)
@@ -294,11 +299,5 @@ final class SessionGateUITests: XCTestCase {
     app.launchArguments = arguments
     app.launch()
     return app
-  }
-
-  private func loginRoot(in app: XCUIApplication) -> XCUIElement {
-    app.descendants(matching: .any)
-      .matching(identifier: ShellAccessibility.loginRoot)
-      .firstMatch
   }
 }

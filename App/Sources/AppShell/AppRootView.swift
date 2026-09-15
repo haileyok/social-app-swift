@@ -22,35 +22,32 @@ import UIComponents
  (see ``ShellLaunch/isDemoLaunch``): the CI screenshot loop and the UI tests run
  with no account, and a demo launch deliberately keeps the tab shell they have
  always captured instead of gating it behind a sign-in form no run can pass.
+
+ ## Where the session is actually consulted
+
+ Only ``SessionGateView``. A demo launch renders the shell directly and never
+ constructs a session, so no screenshot or fixture run can fail because a
+ device secret is unreadable in a fresh simulator, and the captured shell is
+ exactly the one the app rendered before the gate existed. The `login` capture
+ surface behaves the same way: it is the signed-out root, not a bootstrap.
  */
 public struct AppRootView: View {
   @AppStorage("alfTheme") private var themePreference = ThemePreference.system.rawValue
 
   private let launch: ShellLaunch
 
-  /// The session owner: created here, so it lives exactly as long as the root.
-  @State private var session: AppSession
-
-  /// The session state, mirrored so SwiftUI re-reads the root on a transition.
-  @State private var sessionState: AppSession.State = .loading
-
-  @State private var selection: AppTab
-
   /** Capturable full-screen surface requested via `-uiTestScreen` ("" = root). */
   private let captureScreen: String
 
+  @State private var selection: AppTab
+
   @Environment(\.colorScheme) private var colorScheme
 
-  /**
-   Reads the launch arguments (the CI screenshot loop passes them to capture a
-   specific surface or tab) and builds the session owner over them.
-   */
+  /** Reads the launch arguments the CI screenshot loop and the UI tests pass. */
   public init() {
     let launch = ShellLaunch.current
-    let session = AppSession(launch: launch)
     self.launch = launch
     self.captureScreen = launch.screen ?? ""
-    _session = State(initialValue: session)
     _selection = State(initialValue: launch.initialTab)
   }
 
@@ -62,61 +59,25 @@ public struct AppRootView: View {
       case "components":
         ComponentGallery(theme: launch.theme ?? activePreference)
       case ShellLaunchArgument.loginSurface:
-        LoginRootView(session: session)
+        SessionGateView(launch: launch, surface: .loginOnly)
       default:
-        root
+        // A demo launch is the shell as it was before the session gate: no
+        // session is constructed, so nothing here can fail on a fixture run.
+        if launch.isDemoLaunch {
+          tabView(session: nil)
+        } else {
+          SessionGateView(launch: launch, surface: .session)
+        }
       }
     }
     .accessibilityIdentifier(ShellAccessibility.root)
     .theme(resolvedTheme)
-    .task { await bootstrap() }
-  }
-
-  /**
-   Registers the state listener and starts the session.
-
-   A named method rather than a closure body so the listener is created on the
-   main actor regardless of how the `task` modifier's closure is isolated, and so
-   the listener is in place *before* bootstrap can change the state.
-   */
-  @MainActor
-  private func bootstrap() async {
-    session.addListener { state in
-      sessionState = state
-    }
-    await session.start()
   }
 
   // MARK: - Roots
 
-  /** The root the session state selected. */
-  @ViewBuilder
-  private var root: some View {
-    switch sessionState {
-    case .signedIn:
-      tabView
-    case .signedOut:
-      // A demo launch has no account to show and no credentials to sign in
-      // with, so the session gate steps aside and the shell stays reachable.
-      if launch.isDemoLaunch {
-        tabView
-      } else {
-        LoginRootView(session: session)
-      }
-    case .loading:
-      // Bootstrap is a local read plus (at most) one network refresh, so this
-      // is visible only on a cold start. A demo launch skips it entirely: the
-      // screenshot loop must never capture a spinner.
-      if launch.isDemoLaunch {
-        tabView
-      } else {
-        launchPlaceholder
-      }
-    }
-  }
-
   /** The normal five-tab shell. */
-  private var tabView: some View {
+  private func tabView(session: AppSession?) -> some View {
     TabView(selection: $selection) {
       ForEach(AppTab.allCases) { tab in
         TabPlaceholderScreen(tab: tab, session: session)
@@ -127,15 +88,6 @@ public struct AppRootView: View {
           .tag(tab)
       }
     }
-  }
-
-  /** Shown while the session bootstrap is in flight. */
-  private var launchPlaceholder: some View {
-    ProgressView()
-      .controlSize(.large)
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
-      .background(resolvedTheme.atomColors.bg)
-      .accessibilityIdentifier(ShellAccessibility.rootLoading)
   }
 
   // MARK: - Theme
@@ -152,5 +104,111 @@ public struct AppRootView: View {
     ThemeResolver.resolve(
       preference: launch.theme ?? activePreference,
       systemScheme: colorScheme == .dark ? .dark : .light)
+  }
+}
+
+/**
+ The session gate: bootstrap, then whatever root the session settled on.
+
+ This is the only place a normal launch consults the session, and the only place
+ a `.task` runs. It owns the session owner for as long as it is mounted, so the
+ same store survives the signed-in/signed-out transitions and a sign-out lands
+ on the login form without rebuilding anything.
+
+ `surface` exists so the `login` capture surface can render the very same
+ ``LoginRootView`` without booting a session at all: the login smoke test then
+ touches no stored secret, which is what makes it deterministic on a fresh
+ simulator.
+ */
+private struct SessionGateView: View {
+  /** Which root this mount is responsible for. */
+  enum Surface {
+    /** Bootstrap, then the session's root. */
+    case session
+    /** The signed-out root, with no bootstrap. */
+    case loginOnly
+  }
+
+  private let launch: ShellLaunch
+  private let surface: Surface
+
+  @State private var session: AppSession
+  @State private var sessionState: AppSession.State = .loading
+  @State private var selection: AppTab
+
+  @Environment(\.colorScheme) private var colorScheme
+
+  init(launch: ShellLaunch, surface: Surface) {
+    self.launch = launch
+    self.surface = surface
+    _session = State(initialValue: AppSession(launch: launch))
+    _selection = State(initialValue: launch.initialTab)
+  }
+
+  @ViewBuilder
+  var body: some View {
+    switch surface {
+    case .loginOnly:
+      LoginRootView(session: session)
+    case .session:
+      gate.task { await bootstrap() }
+    }
+  }
+
+  private var gate: some View {
+    Group {
+      switch sessionState {
+      case .signedIn:
+        shell
+      case .signedOut:
+        LoginRootView(session: session)
+      case .loading:
+        // Bootstrap is a local read plus (at most) one network refresh, so this
+        // is visible only on a cold start.
+        launchPlaceholder
+      }
+    }
+  }
+
+  private var shell: some View {
+    TabView(selection: $selection) {
+      ForEach(AppTab.allCases) { tab in
+        TabPlaceholderScreen(tab: tab, session: session)
+          .tabItem {
+            Label(tab.title, systemImage: tab.systemImage)
+              .accessibilityIdentifier(tab.accessibilityIdentifier)
+          }
+          .tag(tab)
+      }
+    }
+  }
+
+  private var launchPlaceholder: some View {
+    ProgressView()
+      .controlSize(.large)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(resolvedTheme.atomColors.bg)
+      .accessibilityIdentifier(ShellAccessibility.rootLoading)
+  }
+
+  private var resolvedTheme: DesignTokens.Theme {
+    ThemeResolver.resolve(
+      preference: launch.theme ?? .system,
+      systemScheme: colorScheme == .dark ? .dark : .light)
+  }
+
+  /**
+   Registers the state listener and starts the session.
+
+   A named method rather than a closure body so the listener is created on the
+   main actor regardless of how the `task` modifier's closure is isolated, and so
+   the listener is in place *before* bootstrap can change the state.
+   */
+  @MainActor
+  private func bootstrap() async {
+    session.addListener { state in
+      sessionState = state
+    }
+    await session.start()
   }
 }

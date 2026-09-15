@@ -41,9 +41,12 @@ public struct LoginRootView: View {
       },
       onForgotPassword: { _ in }
     )
-    // A container identifier rather than one layered onto the screen itself, so
-    // `LoginAccessibility.screen` keeps applying to the form.
-    .accessibilityElement(children: .contain)
+    // A container identifier for the signed-out root. It is a marker for
+    // screenshots and accessibility review rather than an assertion target: the
+    // UI test identifies the root by what it does not have (the shell's tab bar,
+    // the sheet's close control) plus the credential form it does, because a
+    // container identifier on a ScrollView-backed screen is not reliably
+    // exposed to XCUITest.
     .accessibilityIdentifier(ShellAccessibility.loginRoot)
   }
 }

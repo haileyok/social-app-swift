@@ -14,11 +14,19 @@ import SwiftUI
  */
 public struct TabPlaceholderScreen: View {
   private let tab: AppTab
-  private let session: AppSession
+
+  /**
+   The session the account control reports, when the shell has one.
+
+   The demo/screenshot path passes nil: it renders the shell exactly as the app
+   did before the session gate, so its toolbar carries the debug login entry and
+   nothing on that path consults a session store.
+   */
+  private let session: AppSession?
 
   @Environment(\.alfTheme) private var theme
 
-  public init(tab: AppTab, session: AppSession) {
+  public init(tab: AppTab, session: AppSession?) {
     self.tab = tab
     self.session = session
   }
