@@ -58,7 +58,7 @@ public final class InboxViewModel {
       hasMore = await inbox.paginationState().hasNextPage
     } catch {
       state = .error(
-        ListErrorState(
+        ListState.ListErrorState(
           title: MessagesCopy.inboxErrorTitle,
           message: MessagesCopy.inboxErrorMessage,
           hasContent: !convos.isEmpty))
@@ -74,7 +74,7 @@ public final class InboxViewModel {
     } catch {
       if convos.isEmpty {
         state = .error(
-          ListErrorState(
+          ListState.ListErrorState(
             title: MessagesCopy.inboxErrorTitle,
             message: MessagesCopy.inboxErrorMessage))
       }
@@ -93,7 +93,7 @@ public final class InboxViewModel {
       hasMore = await inbox.paginationState().hasNextPage
     } catch {
       state = .error(
-        ListErrorState(
+        ListState.ListErrorState(
           title: MessagesCopy.inboxErrorTitle,
           message: MessagesCopy.inboxErrorMessage,
           hasContent: true))
@@ -157,10 +157,10 @@ public struct InboxRow: Sendable, Identifiable, Equatable {
         ? MessagesCopy.conversationFallbackTitle : (name?.isEmpty == false ? name! : handle),
       handle: handle,
       avatarURL: partner?.avatar?.rawValue,
-      preview: preview(of: convo.lastMessage, currentAccountDid: currentAccountDid),
+      preview: preview(convo.lastMessage, currentAccountDid: currentAccountDid),
       unreadCount: convo.unreadCount,
       muted: convo.muted,
-      timestamp: timestamp(of: convo.lastMessage))
+      timestamp: timestamp(convo.lastMessage))
   }
 
   /// The preview line for a last-message union.
