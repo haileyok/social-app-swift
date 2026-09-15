@@ -84,8 +84,8 @@ public struct SearchScreen: View {
         data: exploreData,
         isLoading: isLoadingExplore,
         onRetry: { Task { await viewModel.loadResultsIfNeeded() } },
-        onLoadMoreFeeds: { Task { await viewModel.loadResultsIfNeeded() } },
-        onSelectTrendingTopic: { onSelectTrendingTopic($0.topic) })
+        onSelectTrendingTopic: { onSelectTrendingTopic($0.topic) },
+        onLoadMoreFeeds: { Task { await viewModel.loadResultsIfNeeded() } })
     case .suggesting(let suggestions):
       SearchSuggestionsList(
         suggestions: suggestions,
