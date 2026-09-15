@@ -17,7 +17,7 @@ let package = Package(
     // Vendored generator runtime, for the `FormatString`/`ATURI`/`Handle`
     // types the generated lexicon fields (and the Lexicons default arguments
     // OnboardingLogic passes) are expressed in.
-    .package(path: "../../tools/lexicon-codegen/swift-atproto"),
+    .package(path: "../../../tools/lexicon-codegen/swift-atproto"),
   ],
   targets: [
     .target(
