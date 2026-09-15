@@ -17,8 +17,21 @@ public struct ShellLaunch: Sendable, Equatable {
   /// The full-screen surface requested for capture, when any.
   public let screen: String?
 
-  /// The theme override requested for capture, when any.
-  public let theme: ThemePreference?
+  /**
+   The capture theme's name (`light|dark|dim`), or nil for the stored
+   preference.
+
+   Stored as its raw name rather than as a `ThemePreference` value so this type
+   - and therefore the shell's unit tests, which link only the `AppShell`
+   product - does not reference a `DesignSystemCore` symbol. `theme` resolves it
+   for callers that want the enum.
+   */
+  public let themeName: String?
+
+  /// The capture theme, resolved from ``themeName``.
+  public var theme: ThemePreference? {
+    themeName.flatMap(ThemePreference.init(rawValue:))
+  }
 
   /** Whether `-uiTestInitialTab` was passed (as opposed to falling back to Home). */
   public let hasTabArgument: Bool
@@ -63,8 +76,7 @@ public struct ShellLaunch: Sendable, Equatable {
     return ShellLaunch(
       initialTab: tabs.indices.contains(index) ? tabs[index] : .home,
       screen: screen,
-      theme: defaults.string(forKey: ShellLaunchArgument.theme)
-        .flatMap(ThemePreference.init(rawValue:)),
+      themeName: defaults.string(forKey: ShellLaunchArgument.theme),
       hasTabArgument: defaults.object(forKey: ShellLaunchArgument.initialTab) != nil,
       isDemoArgument: Self.hasDemoFlag(in: defaults))
   }

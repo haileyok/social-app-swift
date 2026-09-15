@@ -99,7 +99,7 @@ final class ShellLaunchTests: XCTestCase {
 
     XCTAssertEqual(launch.initialTab, .home)
     XCTAssertNil(launch.screen)
-    XCTAssertNil(launch.theme)
+    XCTAssertNil(launch.themeName)
     XCTAssertFalse(launch.hasTabArgument)
     XCTAssertFalse(launch.isDemoArgument)
     XCTAssertFalse(launch.isDemoLaunch)
@@ -127,9 +127,10 @@ final class ShellLaunchTests: XCTestCase {
     let launch = ShellLaunch.read(from: defaults)
 
     XCTAssertEqual(launch.screen, ShellLaunchArgument.loginSurface)
-    // Read through `rawValue`, not by binding the `ThemePreference` value
-    // itself: this bundle links only `AppShell` (see `AppSessionTests`).
-    XCTAssertEqual(launch.theme?.rawValue, "dim")
+    // Asserted through the raw name: this bundle links only `AppShell`, so
+    // binding the `ThemePreference` value itself would not resolve (see
+    // `AppSessionTests`).
+    XCTAssertEqual(launch.themeName, "dim")
   }
 
   func testEmptyScreenArgumentIsTreatedAsUnset() {
