@@ -68,12 +68,16 @@ final class VideoFeedController {
     self.items = items
     self.settings = settings
     self.pool = (0..<max(1, poolSize)).map { _ in VideoPlayerSlot() }
-    self.machine = VideoPagerStateMachine(itemIDs: items.map(\.id))
     let start = items.indices.contains(initialIndex) ? initialIndex : 0
     self.currentIndex = start
+    // The machine is built and advanced locally: touching `self.machine` here
+    // would read the observation registrar before every stored property is
+    // initialized.
+    var machine = VideoPagerStateMachine(itemIDs: items.map(\.id))
     if !items.isEmpty {
-      self.machine.moveTo(start)
+      machine.moveTo(start)
     }
+    self.machine = machine
     self.state = machine.state()
     registerSlotCallbacks()
     synchronize()
