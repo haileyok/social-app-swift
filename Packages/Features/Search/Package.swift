@@ -13,6 +13,10 @@ let package = Package(
     .package(path: "../../Lexicons"),
     .package(path: "../../Persistence"),
     .package(path: "../../QueryStore"),
+    // The generated lexicon types expose formats (FormatString, ATURI, TID)
+    // from the vendored runtime; depend on it directly rather than relying on a
+    // transitive import.
+    .package(path: "../../../tools/lexicon-codegen/swift-atproto"),
   ],
   targets: [
     .target(
@@ -22,6 +26,7 @@ let package = Package(
         .product(name: "Lexicons", package: "Lexicons"),
         .product(name: "Persistence", package: "Persistence"),
         .product(name: "QueryStore", package: "QueryStore"),
+        .product(name: "SwiftAtproto", package: "swift-atproto"),
       ],
       path: "Sources/SearchLogic"
     ),
@@ -32,6 +37,7 @@ let package = Package(
         .product(name: "Lexicons", package: "Lexicons"),
         .product(name: "Persistence", package: "Persistence"),
         .product(name: "QueryStore", package: "QueryStore"),
+        .product(name: "SwiftAtproto", package: "swift-atproto"),
       ],
       path: "Tests/SearchLogicTests"
     ),
