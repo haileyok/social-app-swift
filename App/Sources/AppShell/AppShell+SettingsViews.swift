@@ -25,6 +25,7 @@ public enum SettingsSurfaces {
 
    - Parameter theme: the ALF theme preference to render with, e.g. `.light`.
    */
+  @MainActor
   public static func settingsScreen(theme: ThemePreference) -> some View {
     NavigationStack {
       SettingsRootScreen(viewModel: SettingsViewModel.fixture())
