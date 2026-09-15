@@ -1,3 +1,4 @@
+import Foundation
 import Lexicons
 import Moderation
 import SwiftAtproto
