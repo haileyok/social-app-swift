@@ -1,6 +1,7 @@
 import AVFoundation
 import CoreMedia
 import Observation
+import VideoFeedLogic
 
 /// The current and total time of a playing item, as the overlay reads it.
 struct VideoPlayerTiming: Equatable {
