@@ -16,7 +16,7 @@ import UIComponentsCore
 /// The sheet owns only its draft text; the caller supplies the starting profile
 /// and receives the finished ``ProfileEdit``.
 public struct EditProfileSheet: View {
-  private let profile: App.Bsky.ActorDefs_ProfileViewDetailed
+  private let profile: Lexicons.App.Bsky.ActorDefs_ProfileViewDetailed
   private let strings: any ProfileStrings
   private let onCancel: () -> Void
   private let onSave: (ProfileEdit) -> Void
@@ -27,7 +27,7 @@ public struct EditProfileSheet: View {
   @State private var validationMessage: String?
 
   public init(
-    profile: App.Bsky.ActorDefs_ProfileViewDetailed,
+    profile: Lexicons.App.Bsky.ActorDefs_ProfileViewDetailed,
     strings: any ProfileStrings = defaultProfileStrings,
     onCancel: @escaping () -> Void = {},
     onSave: @escaping (ProfileEdit) -> Void = { _ in }

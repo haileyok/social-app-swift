@@ -11,14 +11,14 @@ import UIComponents
 /// renders the stacked avatars and the sentence, and reports a tap so the caller
 /// can push the known-followers list.
 public struct KnownFollowersLine: View {
-  private let knownFollowers: App.Bsky.ActorDefs_KnownFollowers
+  private let knownFollowers: Lexicons.App.Bsky.ActorDefs_KnownFollowers
   private let strings: any ProfileStrings
   private let onSelect: () -> Void
 
   @Environment(\.alfTheme) private var theme
 
   public init(
-    knownFollowers: App.Bsky.ActorDefs_KnownFollowers,
+    knownFollowers: Lexicons.App.Bsky.ActorDefs_KnownFollowers,
     strings: any ProfileStrings = defaultProfileStrings,
     onSelect: @escaping () -> Void = {}
   ) {
@@ -48,7 +48,7 @@ public struct KnownFollowersLine: View {
     return strings.knownFollowers(Array(names), total: KnownFollowersLogic.count(knownFollowers))
   }
 
-  private var previews: [App.Bsky.ActorDefs_ProfileViewBasic] {
+  private var previews: [Lexicons.App.Bsky.ActorDefs_ProfileViewBasic] {
     KnownFollowersLogic.previews(knownFollowers)
   }
 
