@@ -160,10 +160,11 @@ public struct ComposerScreen: View {
         threadgate: state.thread.threadgate,
         allowQuotes: allowQuotes,
         onChange: { onReduce(.updateThreadgate($0)) },
-        onQuotesChange: onAllowQuotesChange
-      ) {
-        isThreadgatePresented = false
-      }
+        onQuotesChange: onAllowQuotesChange,
+        onDone: {
+          isThreadgatePresented = false
+        }
+      )
       .presentationDetents([.medium])
     }
     .sheet(isPresented: $isDraftsPresented) {

@@ -157,7 +157,7 @@ public struct SettingsRootScreen: View {
 /// One menu row's label: title, optional badge, optional disclosure chevron.
 struct SettingsRowLabel: View {
   let title: String
-  var badge: String? = nil
+  var badge: String?
   var isDestructive: Bool = false
   var showsChevron: Bool = false
 

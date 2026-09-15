@@ -229,8 +229,7 @@ public enum ModerationCopy {
     "This content cannot be reported right now."
 
   /// The dialog's title and subtitle for a subject, port of `useCopyForSubject`.
-  public static func reportCopy(for subject: ParsedReportSubject) -> (title: String, subtitle: String)
-  {
+  public static func reportCopy(for subject: ParsedReportSubject) -> (title: String, subtitle: String) {
     switch ReportFlow.subjectTypeName(subject) {
     case "account":
       return ("Report this user", "Why should this user be reviewed?")

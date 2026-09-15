@@ -296,8 +296,7 @@ public final class SettingsViewModel {
   ) async -> Result<SettingsAppPassword, SettingsError> {
     guard let store else {
       switch validateAppPasswordForm(
-        typedName: typedName, generatedName: generatedName)
-      {
+        typedName: typedName, generatedName: generatedName) {
       case .invalid(let message):
         return .failure(.appPassword(message: message))
       case .valid(let name):

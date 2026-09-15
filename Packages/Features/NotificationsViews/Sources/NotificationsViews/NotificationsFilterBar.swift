@@ -50,7 +50,7 @@ public struct NotificationsFilterBar: View {
       HStack(spacing: Spacing.xs) {
         Text(tab.title)
           .font(TypeScale.md.font(weight: isSelected ? Scales.FontWeight.semiBold : Scales.FontWeight.normal))
-        if tab == .all, unread.count > 0 {
+        if tab == .all, unread != .none {
           unreadBadge
         }
       }

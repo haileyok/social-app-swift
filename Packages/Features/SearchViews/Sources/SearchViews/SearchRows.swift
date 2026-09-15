@@ -5,15 +5,17 @@ import SwiftUI
 import UIComponents
 import UIComponentsCore
 
-/// The row components the search and Explore screens share.
-///
-/// Each is a pure render of presentation data: the name/handle/byline strings
-/// are computed by ``SearchRowData`` (or come from `SearchLogic`'s models), so a
-/// row never inspects a lexicon type or decides whether it should exist.
-///
-/// Rows take an optional `onSelect` rather than a navigation type, so the same
-/// component serves the suggestions list, the results tabs and Explore without
-/// the view layer importing a router.
+/*
+ * The row components the search and Explore screens share.
+ *
+ * Each is a pure render of presentation data: the name/handle/byline strings
+ * are computed by `SearchRowData` (or come from `SearchLogic`'s models), so a
+ * row never inspects a lexicon type or decides whether it should exist.
+ *
+ * Rows take an optional `onSelect` rather than a navigation type, so the same
+ * component serves the suggestions list, the results tabs and Explore without
+ * the view layer importing a router.
+ */
 
 // MARK: - Profile row
 

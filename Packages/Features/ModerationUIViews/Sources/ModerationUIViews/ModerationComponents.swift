@@ -10,7 +10,7 @@ import UIComponents
 /// screen, target/duration groups on the muted-word sheet), so the heading
 /// treatment lives in one place rather than being restated per screen.
 struct ModerationSection<Content: View>: View {
-  var title: String? = nil
+  var title: String?
   var description: String?
   @ViewBuilder var content: () -> Content
 
@@ -163,7 +163,7 @@ struct ModerationToggleRow: View {
   var subtitle: String?
   @Binding var isOn: Bool
 
-  var identifier: String? = nil
+  var identifier: String?
 
   @Environment(\.alfTheme) private var theme
 
@@ -191,7 +191,7 @@ struct ModerationRadioGroup<Value: Hashable>: View {
   let label: (Value) -> String
   @Binding var selection: Value
   /// The accessibility identifier for each option, given its value's label.
-  var identifier: ((Value) -> String)? = nil
+  var identifier: ((Value) -> String)?
 
   @Environment(\.alfTheme) private var theme
 

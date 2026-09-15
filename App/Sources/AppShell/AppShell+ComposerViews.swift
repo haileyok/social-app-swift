@@ -1,4 +1,3 @@
-import ComposerViews
 import DesignSystem
 import DesignSystemCore
 import SwiftUI

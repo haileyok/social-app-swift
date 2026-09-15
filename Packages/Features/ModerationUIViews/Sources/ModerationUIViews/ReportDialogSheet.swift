@@ -133,12 +133,13 @@ public struct ReportDialogSheet: View {
       ForEach(ReportReasonCatalog.categories, id: \.key) { category in
         ModerationRow(
           title: category.title, subtitle: category.description,
-          action: { dispatch(.selectCategory(category: category, otherReason: otherReason(for: category))) }
-        ) {
-          Image(systemName: "chevron.right")
-            .foregroundStyle(theme.atomColors.textContrastLow)
-            .accessibilityHidden(true)
-        }
+          action: { dispatch(.selectCategory(category: category, otherReason: otherReason(for: category))) },
+          trailing: {
+            Image(systemName: "chevron.right")
+              .foregroundStyle(theme.atomColors.textContrastLow)
+              .accessibilityHidden(true)
+          }
+        )
         ModerationDivider()
       }
     }
@@ -150,12 +151,13 @@ public struct ReportDialogSheet: View {
       ForEach(state.selectedCategory?.options ?? [], id: \.reason) { reason in
         ModerationRow(
           title: reason.title,
-          action: { dispatch(.selectReason(reason)) }
-        ) {
-          Image(systemName: "chevron.right")
-            .foregroundStyle(theme.atomColors.textContrastLow)
-            .accessibilityHidden(true)
-        }
+          action: { dispatch(.selectReason(reason)) },
+          trailing: {
+            Image(systemName: "chevron.right")
+              .foregroundStyle(theme.atomColors.textContrastLow)
+              .accessibilityHidden(true)
+          }
+        )
         ModerationDivider()
       }
     }
@@ -201,14 +203,15 @@ public struct ReportDialogSheet: View {
       ForEach(eligibleLabelers, id: \.did) { labeler in
         ModerationRow(
           title: labeler.title, subtitle: "@\(labeler.handle)",
-          action: { dispatch(.selectLabeler(did: labeler.did)) }
-        ) {
-          if state.selectedLabelerDid == labeler.did {
-            Image(systemName: "checkmark")
-              .foregroundStyle(theme.colors.primary500)
-              .accessibilityHidden(true)
+          action: { dispatch(.selectLabeler(did: labeler.did)) },
+          trailing: {
+            if state.selectedLabelerDid == labeler.did {
+              Image(systemName: "checkmark")
+                .foregroundStyle(theme.colors.primary500)
+                .accessibilityHidden(true)
+            }
           }
-        }
+        )
         ModerationDivider()
       }
     }

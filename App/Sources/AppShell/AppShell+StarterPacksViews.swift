@@ -1,6 +1,5 @@
 import DesignSystemCore
 import StarterPacksLogic
-import StarterPacksViews
 import SwiftUI
 
 // Re-exported so the app and its test targets reach `StarterPackAccessibility`

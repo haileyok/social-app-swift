@@ -73,6 +73,7 @@ public enum VideoFeedFixtures {
     ]
   }
 
+  // swiftlint:disable:next function_parameter_count
   /// Builds one fixture item.
   static func item(
     id: String,

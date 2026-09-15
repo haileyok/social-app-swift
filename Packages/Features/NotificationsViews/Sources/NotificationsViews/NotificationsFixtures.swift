@@ -21,6 +21,7 @@ public enum NotificationsFixtures {
   /// The fixture rows, newest first.
   public static var rows: [FeedNotification] { rows(now: referenceDate) }
 
+  // swiftlint:disable:next function_body_length
   /// The default fixture: one row per reason the list renders.
   public static func rows(now: Date = referenceDate) -> [FeedNotification] {
     [

@@ -354,8 +354,7 @@ final class VideoPlayerSlot {
       let message = item.error?.localizedDescription
       Task { @MainActor in self?.statusChanged(status, message: message) }
     }
-    bufferObservation = item.observe(\.isPlaybackLikelyToKeepUp, options: [.new, .initial]) {
-      [weak self] item, _ in
+    bufferObservation = item.observe(\.isPlaybackLikelyToKeepUp, options: [.new, .initial]) { [weak self] item, _ in
       let likely = item.isPlaybackLikelyToKeepUp
       let empty = item.isPlaybackBufferEmpty
       Task { @MainActor in self?.bufferChanged(likelyToKeepUp: likely, isEmpty: empty) }

@@ -53,9 +53,7 @@ public enum ModerationAccessibility {
   }
 
   /// The identifier for one label preference option button.
-  public static func contentLabelOption(_ labelerDid: String, _ identifier: String, _ value: String)
-    -> String
-  {
+  public static func contentLabelOption(_ labelerDid: String, _ identifier: String, _ value: String) -> String {
     "app.moderation.label.\(labelerDid).\(identifier).\(value)"
   }
 
