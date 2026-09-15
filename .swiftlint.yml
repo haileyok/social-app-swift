@@ -16,6 +16,9 @@ opt_in_rules:
   - operator_usage_whitespace
 
 excluded:
+  - "**/.build"                    # ALL build dirs incl. Packages/Features/*/.build (vendored
+                                   # checkouts there once sent a repo-root lint sweep into a
+                                   # CPU death spiral that crashed the workstation - keep this)
   - .build
   - "Packages/*/.build"
   - Packages/Lexicons/Sources          # generated — never lint

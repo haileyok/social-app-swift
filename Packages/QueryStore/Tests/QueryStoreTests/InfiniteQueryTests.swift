@@ -10,6 +10,48 @@ import Testing
 /// `src/state/queries/feed.ts`).
 @Suite("Infinite queries")
 struct InfiniteQueryTests {
+
+  // ---------------------------------------------------------------- regression
+  // loadMore once stalled every walk at two pages: its guard consulted
+  // PaginationState.repeatsCursor, which compares nextCursor to itself
+  // (always true past page one). Found empirically by the StarterPacks port.
+
+  @Test("loadMore walks past page two")
+  func loadMoreWalksPastPageTwo() async throws {
+    let store = QueryStore(clock: ManualQueryClock())
+    let key = feedKey(limit: 30)
+    let query = makeFeedQuery(
+      store: store, key: key,
+      pages: [["a"], ["b"], ["c"]],
+      cursors: [nil, "cursor-1", "cursor-2"])
+
+    _ = try await query.loadFirstPage()
+    _ = try await query.loadMore()
+    _ = try await query.loadMore()
+    let data = try await query.data()
+
+    #expect(data.pages.count == 3, "the walk must reach page three")
+    #expect(data.items == ["a", "b", "c"])
+  }
+
+  @Test("loadMore refuses a cursor the walk already consumed")
+  func loadMoreRefusesRepeatedCursor() async throws {
+    let store = QueryStore(clock: ManualQueryClock())
+    let key = feedKey(limit: 30)
+    // Page two reports `cursor-1` AGAIN as its next cursor (terminal loop).
+    let query = makeFeedQuery(
+      store: store, key: key,
+      pages: [["a"], ["b"], ["c"]],
+      cursors: [nil, "cursor-1", "cursor-1"])
+
+    _ = try await query.loadFirstPage()
+    _ = try await query.loadMore()
+    let data = try await query.loadMore()
+
+    #expect(data.pages.count == 2, "the repeated cursor must not fetch again")
+    #expect(data.items == ["a", "b"])
+  }
+
   /// A feed that serves a scripted list of pages, keyed by request cursor.
   private func makeFeedQuery(
     store: QueryStore,

@@ -46,7 +46,7 @@ suite, `lib/strings/__tests__/errors.test.ts`, whose subject
 | `lib/strings/url-helpers.ts` (`toNiceHostingUrl`) | `*.host.bsky.network` renders as "Bluesky" | `ServiceSelectionTests.niceHostRendering` |
 | `state/session` (`login`) | a successful sign-in records the account and makes it current | `LoginFlowStateTests.successfulSignInRecordsTheAccountAndCountsNoFailure`, `StoredAccountTests.aSuccessfulSignInIsRecordedInTheStore` |
 | `state/session` (account list) | most-recently-used first; forget removes the entry | `StoredAccountTests.accountsAreListedMostRecentlyUsedFirst`, `.forgettingAnAccountRemovesItEntirely`, `.forgettingAnUnknownAccountThrows` |
-| `lib/strings/__tests__/errors.test.ts` | `cleanError` suite (10 cases) | Ported in `Packages/Domain` (`ErrorStringsTests`); reused here through `LoginErrorMapper` |
+| `lib/strings/__tests__/errors.test.ts` | `cleanError` suite (10 cases) | Ported in Packages/Domain (its ErrorStringsTests manifest rows cover the 10 cases); reused here through the error-mapper type |
 
 ## Deviations from the RN flow
 

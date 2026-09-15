@@ -130,8 +130,16 @@ public struct InfiniteQuery<Item: Sendable>: Sendable {
   @discardableResult
   public func loadMore() async throws -> InfiniteQueryData<Item> {
     let state = await store.paginationState(for: key)
-    guard state.hasNextPage, let cursor = state.nextCursor, !state.repeatsCursor(cursor) else {
+    guard state.hasNextPage, let cursor = state.nextCursor else {
       return await data()
+    }
+    // Refuse a cursor this walk has already consumed. The full page history is
+    // authoritative; PaginationState.repeatsCursor only sees the last page and
+    // compares nextCursor to itself (always true past page one), which stalled
+    // every walk at two pages. Regression-tested in InfiniteQueryTests.
+    let current = await data()
+    if current.repeatsCursor(cursor) {
+      return current
     }
     return try await fetchPage(at: cursor, isAppending: true)
   }

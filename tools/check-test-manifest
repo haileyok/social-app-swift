@@ -112,7 +112,9 @@ manifest_paths() {
 
   # Every Packages/<Pkg>/tests-ported.md, in a stable order, optionally
   # restricted to the requested package names.
-  find "$REPO_ROOT/Packages" -mindepth 2 -maxdepth 2 -name 'tests-ported.md' -print |
+  # Flat packages (depth 2) AND feature packages (Packages/Features/<Name>,
+  # depth 3) — but never anything inside a .build checkout.
+  find "$REPO_ROOT/Packages" -mindepth 2 -maxdepth 3 -name 'tests-ported.md' -not -path '*/.build/*' -print |
     sort |
     while IFS= read -r path; do
       if [ "${#PACKAGE_FILTERS[@]}" -eq 0 ]; then
@@ -159,20 +161,25 @@ build_index() {
     # Emits one row per `func`: <owner>\t<name>\t<kind>\t<file:line>
     awk -v file="$rel" '
       function ltrim(s) { sub(/^[ \t]+/, "", s); return s }
-      BEGIN { owner = ""; isTest = 0 }
+      BEGIN { owner = ""; isTest = 0; depth = 0 }
       {
         cur = ltrim($0)
 
-        # `@Suite struct Foo {` -> inspect only the declaration part.
-        if (cur ~ /^@Suite/) {
-          sub(/^@Suite[ \t]*\([^)]*\)[ \t]*/, "", cur)
-          sub(/^@Suite[ \t]+/, "", cur)
-        }
-        if (cur ~ /^(struct|final class|class|enum)[ \t]+[A-Za-z_][A-Za-z0-9_]*/) {
-          t = cur
-          sub(/^(struct|final class|class|enum)[ \t]+/, "", t)
-          sub(/[^A-Za-z0-9_].*$/, "", t)
-          owner = t
+        # Type declarations only take ownership at FILE scope (depth 0).
+        # Nested fixture structs (e.g. `struct Received` inside a suite) must
+        # not steal ownership of the @Test funcs that follow them.
+        if (depth == 0) {
+          # `@Suite struct Foo {` -> inspect only the declaration part.
+          if (cur ~ /^@Suite/) {
+            sub(/^@Suite[ \t]*\([^)]*\)[ \t]*/, "", cur)
+            sub(/^@Suite[ \t]+/, "", cur)
+          }
+          if (cur ~ /^(struct|final class|class|enum)[ \t]+[A-Za-z_][A-Za-z0-9_]*/) {
+            t = cur
+            sub(/^(struct|final class|class|enum)[ \t]+/, "", t)
+            sub(/[^A-Za-z0-9_].*$/, "", t)
+            owner = t
+          }
         }
 
         # `@Test`, `@Test func f`, `@Test("name") func f` and multi-line
@@ -187,6 +194,11 @@ build_index() {
           printf "%s\t%s\t%s\t%s:%d\n", owner, m, (isTest ? "test" : "helper"), file, FNR
           isTest = 0
         }
+
+        # Track brace depth (balanced literals only; adequate for test sources).
+        depth += gsub(/{/, "{")
+        depth -= gsub(/}/, "}")
+        if (depth < 0) depth = 0
       }
     ' "$rel" >"$WORK_DIR/raw.tsv"
 

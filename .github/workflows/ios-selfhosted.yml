@@ -31,6 +31,8 @@ jobs:
     name: iOS build (self-hosted)
     runs-on: [self-hosted, macos-selfhosted]
     timeout-minutes: 25
+    env:
+      DD: /Users/m1/dd-run-${{ github.run_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,10 +44,11 @@ jobs:
 
       - name: Build AppShell for iOS Simulator
         run: |
+          export DD=~/dd-run-$GITHUB_RUN_ID
           cd App
           if xcodebuild -scheme AppShell \
             -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath ~/dd-appshell \
+            -derivedDataPath "$DD" \
             CODE_SIGNING_ALLOWED=NO build > /tmp/ios-build.log 2>&1; then
             tail -3 /tmp/ios-build.log
           else
@@ -113,7 +116,7 @@ jobs:
             -project SocialApp.xcodeproj \
             -scheme SocialApp \
             -destination "id=$UDID" \
-            -derivedDataPath ~/dd-socialapp \
+            -derivedDataPath "$DD" \
             CODE_SIGNING_ALLOWED=NO > /tmp/ios-buildtests.log 2>&1; then
             tail -3 /tmp/ios-buildtests.log
           else
@@ -135,7 +138,7 @@ jobs:
             -project SocialApp.xcodeproj \
             -scheme SocialApp \
             -destination "id=$UDID" \
-            -derivedDataPath ~/dd-socialapp \
+            -derivedDataPath "$DD" \
             -resultBundlePath /tmp/ios-socialapp.xcresult \
             -only-testing:SocialAppUITests \
             CODE_SIGNING_ALLOWED=NO > /tmp/ios-tests.log 2>&1; then
@@ -172,7 +175,7 @@ jobs:
             echo "no simulator; skipping screenshots"
             exit 0
           fi
-          APP_PATH=$(find ~/dd-socialapp/Build/Products -name 'SocialApp.app' -maxdepth 3 | head -1)
+          APP_PATH=$(find "$DD/Build/Products" -name 'SocialApp.app' -maxdepth 3 | head -1)
           if [ -z "$APP_PATH" ]; then
             echo "SocialApp.app not built; skipping screenshots"
             exit 0
@@ -186,10 +189,25 @@ jobs:
             xcrun simctl io "$UDID" screenshot "artifacts/screenshots/${i}-${TAB}.png" || true
             i=$((i + 1))
           done
-          # The token gallery (AC.7's visual-review surface) lives on every tab's
-          # toolbar; the XCUITest taps it and its frames land in the .xcresult.
+          # Gallery screens x all three ALF themes (AC.7 visual evidence).
+          # `-uiTestScreen`/`-uiTestTheme` are read by AppRootView; new
+          # capturable screens register there.
+          for SCREEN in tokens components; do
+            for THEME in light dark dim; do
+              xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
+              xcrun simctl launch "$UDID" dev.hailey.socialapp \
+                -uiTestScreen "$SCREEN" -uiTestTheme "$THEME" || true
+              sleep 4
+              xcrun simctl io "$UDID" screenshot \
+                "artifacts/screenshots/screen-${SCREEN}-${THEME}.png" || true
+            done
+          done
           xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
           ls -la artifacts/screenshots
+
+      - name: Clean derived data
+        if: always()
+        run: rm -rf "$DD"
 
       - name: Upload screenshots
         if: always()

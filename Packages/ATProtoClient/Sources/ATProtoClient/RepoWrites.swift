@@ -38,6 +38,14 @@ extension XrpcClient {
 
   public struct BlobRefLink: Decodable, Sendable {
     public let link: String?
+
+    /// The wire member is `$link` (atproto prefixes metadata keys with `$`);
+    /// without this mapping the decoded `link` is always nil and the uploaded
+    /// CID is silently dropped.
+    // swiftlint:disable:next nesting
+    enum CodingKeys: String, CodingKey {
+      case link = "$link"
+    }
   }
 
   public struct CreateRecordBody<Input: Encodable & Sendable>: Encodable, Sendable {
