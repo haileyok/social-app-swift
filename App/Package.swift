@@ -19,6 +19,9 @@ let package = Package(
     .package(path: "../Packages/DesignSystem"),
     .package(path: "../Packages/UIComponents"),
     .package(path: "../Packages/Features/ProfileViews"),
+    .package(path: "../Packages/Features/LoginViews"),
+    .package(path: "../Packages/Features/Login"),
+    .package(path: "../Packages/ATProtoClient"),
   ],
   targets: [
     .target(
@@ -28,6 +31,9 @@ let package = Package(
         .product(name: "DesignSystemCore", package: "DesignSystem"),
         .product(name: "UIComponents", package: "UIComponents"),
         .product(name: "ProfileViews", package: "ProfileViews"),
+        .product(name: "LoginViews", package: "LoginViews"),
+        .product(name: "LoginLogic", package: "Login"),
+        .product(name: "ATProtoClient", package: "ATProtoClient"), 1fd95c5dac75428d2229c2e51c5c52a3fa010b58
       ],
       path: "Sources/AppShell"
     )

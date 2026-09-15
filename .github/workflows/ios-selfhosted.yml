@@ -19,6 +19,7 @@ on:
       - 'Packages/UIComponents/**'
       - 'Packages/DesignTokens/**'
       - 'Packages/Features/**'
+      - 'tools/lexicon-codegen/**'
       - '.github/workflows/ios-selfhosted.yml'
   workflow_dispatch:
 

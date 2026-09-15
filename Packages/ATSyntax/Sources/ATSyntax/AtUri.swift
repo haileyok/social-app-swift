@@ -1,4 +1,11 @@
-import FoundationEssentials
+/* FoundationEssentials is the Linux module; Darwin only has Foundation.
+ * Same guard the vendored swift-atproto runtime uses (ATProtoCrypto/Did.swift).
+ */
+#if !canImport(Darwin)
+  import FoundationEssentials
+#else
+  import Foundation
+#endif
 
 /// at:// URI (e.g. `at://did:plc:abc/app.bsky.feed.post/3jz7e4l`).
 ///
