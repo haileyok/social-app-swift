@@ -104,9 +104,9 @@ public enum NotificationsFixtures {
       sentence(
         reason: .starterpackJoined,
         author: profile(handle: "mallory.bsky.social", displayName: "Mallory", did: "did:plc:mallory"),
-        starterPack: starterPack(name: "Design Tools"),
         isRead: true,
-        indexedAt: isoString(now, hoursAgo: 16)),
+        indexedAt: isoString(now, hoursAgo: 16),
+        starterPack: starterPack(name: "Design Tools")),
 
       // A contact match: the contacts glyph.
       sentence(
