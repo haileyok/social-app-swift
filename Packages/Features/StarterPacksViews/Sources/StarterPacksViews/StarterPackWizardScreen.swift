@@ -2,6 +2,7 @@ import DesignSystem
 import DesignTokens
 import StarterPacksLogic
 import SwiftUI
+import UIComponents
 
 /**
  The wizard: details, then people, then feeds.
