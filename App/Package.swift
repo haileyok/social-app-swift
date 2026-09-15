@@ -23,7 +23,11 @@ let package = Package(
     .package(path: "../Packages/Features/PostThread"),
     .package(path: "../Packages/Features/LoginViews"),
     .package(path: "../Packages/Features/Login"),
+<<<<<<< HEAD
     .package(path: "../Packages/Features/ComposerViews"),
+=======
+    .package(path: "../Packages/Features/StarterPacksViews"),
+>>>>>>> 614cc33da0070066d2bcef5b8033420708c8a0f1
     .package(path: "../Packages/ATProtoClient"),
   ],
   targets: [
@@ -41,7 +45,11 @@ let package = Package(
         .product(name: "ProfileViews", package: "ProfileViews"),
         .product(name: "LoginViews", package: "LoginViews"),
         .product(name: "LoginLogic", package: "Login"),
+<<<<<<< HEAD
         .product(name: "ComposerViews", package: "ComposerViews"),
+=======
+        .product(name: "StarterPacksViews", package: "StarterPacksViews"),
+>>>>>>> 614cc33da0070066d2bcef5b8033420708c8a0f1
         .product(name: "ATProtoClient", package: "ATProtoClient"),
       ],
       path: "Sources/AppShell"

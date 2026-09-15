@@ -193,7 +193,7 @@ jobs:
           # Gallery screens x all three ALF themes (AC.7 visual evidence).
           # `-uiTestScreen`/`-uiTestTheme` are read by AppRootView; new
           # capturable screens register there.
-          for SCREEN in tokens components composer thread; do
+          for SCREEN in tokens components composer thread starterpacks; do
             for THEME in light dark dim; do
               xcrun simctl terminate "$UDID" dev.hailey.socialapp || true
               xcrun simctl launch "$UDID" dev.hailey.socialapp \

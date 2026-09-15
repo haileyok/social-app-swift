@@ -54,6 +54,8 @@ public struct AppRootView: View {
         ComposerSurfaces.composerScreen(theme: captureTheme ?? activePreference)
       case "thread":
         PostThreadSurfaces.threadScreen(theme: captureTheme ?? activePreference)
+      case "starterpacks":
+        StarterPacksSurfaces.starterPackScreen(theme: captureTheme ?? activePreference)
       default:
         tabView
       }
