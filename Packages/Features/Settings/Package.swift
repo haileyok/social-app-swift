@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
   name: "Settings",
+  platforms: [.iOS(.v18), .macOS(.v14)],
   defaultLocalization: "en",
   products: [
     .library(name: "SettingsLogic", targets: ["SettingsLogic"])

@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
   name: "Profile",
+  platforms: [.iOS(.v18), .macOS(.v14)],
   defaultLocalization: "en",
   products: [
     .library(name: "ProfileLogic", targets: ["ProfileLogic"])

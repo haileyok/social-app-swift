@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
   name: "ModerationUI",
+  platforms: [.iOS(.v18), .macOS(.v14)],
   defaultLocalization: "en",
   products: [
     .library(name: "ModerationUILogic", targets: ["ModerationUILogic"])
