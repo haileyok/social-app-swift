@@ -74,6 +74,8 @@ public struct PostEmbed: View {
       galleryItemsView(items)
     case .external(let external):
       ExternalCard(external: external)
+    case .video(let video):
+      VideoEmbed(view: video, onOpen: onOpen)
     case .unknown, .none:
       EmptyView()
     }
