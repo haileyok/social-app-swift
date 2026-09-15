@@ -61,7 +61,7 @@ public struct ProfileStep: View {
         .foregroundStyle(theme.atomColors.textLink)
     }
     .frame(maxWidth: .infinity)
-    .padding(.vertical, .lg)
+    .padding(.lg, .vertical)
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier(OnboardingAccessibility.profileAvatarPicker)
   }

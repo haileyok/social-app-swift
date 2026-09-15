@@ -43,8 +43,8 @@ struct OnboardingStepScaffold<Content: View, Footer: View>: View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
           content
         }
-        .padding(.horizontal, .xl)
-        .padding(.vertical, .md)
+        .padding(.xl, .horizontal)
+        .padding(.md, .vertical)
         .frame(maxWidth: OnboardingGeometry.columnWidth)
         .frame(maxWidth: .infinity)
       }
@@ -73,8 +73,8 @@ struct OnboardingStepScaffold<Content: View, Footer: View>: View {
         header
       }
     }
-    .padding(.horizontal, .xl)
-    .padding(.vertical, .sm)
+    .padding(.xl, .horizontal)
+    .padding(.sm, .vertical)
     .frame(minHeight: OnboardingGeometry.headerHeight)
     .frame(maxWidth: OnboardingGeometry.columnWidth)
     .frame(maxWidth: .infinity)
@@ -87,8 +87,8 @@ struct OnboardingStepScaffold<Content: View, Footer: View>: View {
         .fill(theme.atomColors.borderContrastLow)
         .frame(height: 1)
       footer
-        .padding(.horizontal, .xl)
-        .padding(.vertical, .md)
+        .padding(.xl, .horizontal)
+        .padding(.md, .vertical)
         .frame(maxWidth: OnboardingGeometry.columnWidth)
         .frame(maxWidth: .infinity)
         .accessibilityIdentifier(OnboardingAccessibility.footer)
@@ -177,6 +177,6 @@ struct OnboardingHeading: View {
         OnboardingDescription(description)
       }
     }
-    .padding(.bottom, .sm)
+    .padding(.sm, .bottom)
   }
 }

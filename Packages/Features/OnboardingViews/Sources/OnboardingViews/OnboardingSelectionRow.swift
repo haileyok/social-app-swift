@@ -33,8 +33,8 @@ struct InterestChip: View {
       }
       .font(TypeScale.md.font(weight: isSelected ? Scales.FontWeight.medium : Scales.FontWeight.normal))
       .foregroundStyle(isSelected ? theme.atomColors.textInverted : theme.atomColors.text)
-      .padding(.horizontal, .lg)
-      .padding(.vertical, .sm)
+      .padding(.lg, .horizontal)
+      .padding(.sm, .vertical)
       .background(isSelected ? theme.atomColors.bgContrast900 : theme.atomColors.bgContrast100)
       .clipShape(.capsule)
       .overlay {
@@ -87,7 +87,7 @@ struct SuggestedAccountRow: View {
         Spacer(minLength: Spacing.sm)
         selectionIndicator
       }
-      .padding(.vertical, .sm)
+      .padding(.sm, .vertical)
       .contentShape(.rect)
     }
     .buttonStyle(.plain)

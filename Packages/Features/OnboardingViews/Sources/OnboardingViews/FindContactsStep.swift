@@ -49,7 +49,7 @@ public struct FindContactsStep: View {
         .foregroundStyle(theme.atomColors.textContrastMedium)
     }
     .frame(maxWidth: .infinity)
-    .padding(.vertical, .xl)
+    .padding(.xl, .vertical)
   }
 
   /// The allow and skip controls.
