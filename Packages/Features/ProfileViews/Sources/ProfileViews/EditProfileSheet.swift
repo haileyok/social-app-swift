@@ -80,7 +80,7 @@ public struct EditProfileSheet: View {
     Section {
       VStack(alignment: .leading, spacing: Spacing.sm) {
         Banner(banner: profile.banner?.rawValue, height: BannerGeometry.defaultHeight)
-          .clipShape(.rect(cornerRadius: Radius.sm.value))
+          .clipShape(.rect(cornerRadius: Radius.sm))
         HStack {
           Avatar(
             avatar: profile.avatar?.rawValue,
