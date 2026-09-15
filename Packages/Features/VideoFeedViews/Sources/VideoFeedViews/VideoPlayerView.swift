@@ -12,7 +12,8 @@ import VideoFeedLogic
 /// package does not own. A stream with embedded captions therefore offers its
 /// tracks here, and a stream whose captions live only on the record offers none.
 struct VideoCaptionOption: Identifiable, Equatable {
-  /// A stable identity for selection, derived from the track's identifier.
+  /// The option's index in its media selection group, which is what selection
+  /// uses: `AVMediaSelectionOption` exposes no stable identifier.
   let id: String
   /// The track's display name, e.g. `English`.
   let name: String
@@ -294,16 +295,17 @@ final class VideoPlayerSlot {
   ///
   /// Selection goes through the item's legible media selection group, which is
   /// what `AVPlayer` uses for both embedded and sidecar captions on an HLS
-  /// stream.
+  /// stream. `id` is the option's index in the group, which
+  /// ``VideoCaptionOption/id`` carries.
   func selectCaption(id: String?) {
     guard let item = player.currentItem,
       let group = item.asset.mediaSelectionGroup(forMediaCharacteristic: .legible)
     else { return }
-    let option = id.flatMap { wanted in
-      group.options.first { captionID(for: $0) == wanted }
+    let option = id.flatMap(Int.init).flatMap { index in
+      group.options.indices.contains(index) ? group.options[index] : nil
     }
     item.select(option, in: group)
-    selectedCaptionID = option.map(captionID(for:))
+    selectedCaptionID = option == nil ? nil : id
   }
 
   /// Refreshes the offered caption tracks from the current item.
@@ -319,19 +321,18 @@ final class VideoPlayerSlot {
       selectedCaptionID = nil
       return
     }
-    legibleOptions = group.options.map { option in
+    // The selection container is the item's `currentMediaSelection`; the group
+    // itself holds no selection state.
+    let current = item.currentMediaSelection.selectedMediaOption(in: group)
+    legibleOptions = group.options.enumerated().map { index, option in
       VideoCaptionOption(
-        id: captionID(for: option),
+        id: "\(index)",
         name: option.displayName,
         language: option.locale?.identifier)
     }
-    selectedCaptionID = item.selectedMediaSelectionOption(in: group).map(captionID(for:))
-  }
-
-  /// A track's stable identity. A media selection option may have no
-  /// `identifier`, so the display name is the fallback.
-  private func captionID(for option: AVMediaSelectionOption) -> String {
-    option.identifier ?? option.displayName
+    selectedCaptionID = current.flatMap { selected in
+      group.options.firstIndex { $0 === selected }.map(String.init)
+    }
   }
 
   // MARK: - Observation
