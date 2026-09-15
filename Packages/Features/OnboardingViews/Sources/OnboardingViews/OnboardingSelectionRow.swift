@@ -1,6 +1,8 @@
 import DesignSystem
 import DesignTokens
+import OnboardingLogic
 import SwiftUI
+import UIComponents
 
 /// A selectable interest chip, port of `StepInterests/InterestButton.tsx`.
 ///
