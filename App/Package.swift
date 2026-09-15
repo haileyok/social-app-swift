@@ -18,7 +18,12 @@ let package = Package(
     // UI packages (macOS-CI-built). Added as they land:
     .package(path: "../Packages/DesignSystem"),
     .package(path: "../Packages/UIComponents"),
+<<<<<<< HEAD
     .package(path: "../Packages/Features/ProfileViews"),
+=======
+    .package(path: "../Packages/Features/PostThreadViews"),
+    .package(path: "../Packages/Features/PostThread"),
+>>>>>>> 46e56a741e2dc9dd62c6459f30bd0afdd76ea47f
     .package(path: "../Packages/Features/LoginViews"),
     .package(path: "../Packages/Features/Login"),
     .package(path: "../Packages/Features/ComposerViews"),
@@ -30,6 +35,11 @@ let package = Package(
       dependencies: [
         .product(name: "DesignSystem", package: "DesignSystem"),
         .product(name: "DesignSystemCore", package: "DesignSystem"),
+        .product(name: "PostThreadViews", package: "PostThreadViews"),
+        // `PostThreadScreen.init` reaches `PostThreadLogic` through its
+        // `showMore: ThreadShowMore = .initial()` default argument, so the
+        // logic product has to be linked here directly.
+        .product(name: "PostThreadLogic", package: "PostThread"),
         .product(name: "UIComponents", package: "UIComponents"),
         .product(name: "ProfileViews", package: "ProfileViews"),
         .product(name: "LoginViews", package: "LoginViews"),
