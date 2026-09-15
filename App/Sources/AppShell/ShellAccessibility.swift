@@ -26,6 +26,15 @@ public enum ShellAccessibility {
   /** The login sheet's dismiss control. */
   public static let loginCloseButton = "app.login.close"
 
+  /** The debug toolbar button that presents the search screen. */
+  public static let searchButton = "app.debug.search"
+
+  /** The presented search screen, wrapped in its navigation stack. */
+  public static let searchSheet = "app.search"
+
+  /** The search sheet's dismiss control. */
+  public static let searchCloseButton = "app.search.close"
+
   /** Per-screen content container, e.g. `screen.Home`. */
   public static func screen(_ routeName: String) -> String {
     "screen.\(routeName)"
