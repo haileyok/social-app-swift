@@ -25,10 +25,10 @@ public enum MessagesFixtures {
   public static let convoId = "convo-fixture-1"
 
   /// Deterministic timestamps, anchored to a fixed day so the date separators
-  /// are stable across runs and previews. Internal (not private) because they are
-  /// referenced from this type's public functions' default arguments.
-  static let day = "2026-08-30"
-  static let nextDay = "2026-08-31"
+  /// are stable across runs and previews. Public (not private) because they are
+  /// referenced from public functions' default arguments.
+  public static let day = "2026-08-30"
+  public static let nextDay = "2026-08-31"
 
   private static func did(_ value: String) -> FormatString<SwiftAtproto.DID> {
     FormatString<SwiftAtproto.DID>(rawValue: value)
