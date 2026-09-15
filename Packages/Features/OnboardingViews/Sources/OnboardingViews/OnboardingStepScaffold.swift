@@ -1,6 +1,7 @@
 import DesignSystem
 import DesignTokens
 import SwiftUI
+import UIComponents
 
 /// The per-step chrome: the header, the scrollable body, and a pinned footer.
 ///

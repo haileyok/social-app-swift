@@ -2,6 +2,7 @@ import DesignSystem
 import DesignTokens
 import OnboardingLogic
 import SwiftUI
+import UIComponents
 
 /// The interests step: the taxonomy rendered as selectable chips.
 ///
