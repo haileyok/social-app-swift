@@ -23,13 +23,16 @@ import SwiftUI
  SearchDebugButton()
  ```
 
- The fixture entry points build their state through `SearchLogic`'s own assembly
- and fixtures rather than hard-coding a page shape, so a screenshot of the
- completed state is an honest render of what the logic layer produces.
+ Every fixture surface is built and returned by `SearchViews` itself, so this
+ file never names an `ExplorePageData`, a `SearchStateModel` or a lexicon type.
+ That is deliberate: passing such a value here would emit a reference to its
+ defining module's type metadata into `AppShell.o` and force a direct dependency
+ on that module in `App/Package.swift` for the iOS link closure.
  */
 public enum SearchSurfaces {
   /**
-   The search screen, themed and ready to place above the tab bar.
+   The search screen over the Explore fixture, themed and ready to place above
+   the tab bar.
 
    - Parameter theme: the theme preference the surface renders under, so the CI
      screenshot loop can capture it in each appearance without the root view
@@ -37,27 +40,19 @@ public enum SearchSurfaces {
    */
   @MainActor
   public static func searchScreen(theme: ThemePreference = .system) -> some View {
-    NavigationStack {
-      SearchScreen(
-        viewModel: SearchViewModel(),
-        exploreData: SearchFixtures.explorePage,
-        title: SearchCopy.searchTitle)
-        .theme(theme)
-    }
+    SearchFixtureSurfaces.searchScreen(theme: theme)
   }
 
   /**
    The search screen in its results state, over fixture posts.
 
-   Used by previews and the screenshot loop: the state is driven through a
-   fixture-backed view model rather than by the state machine's debounce, so the
+   Used by previews and the screenshot loop: the state is built by `SearchViews`
+   from its fixtures rather than driven through the machine's debounce, so the
    capture is deterministic.
    */
   @MainActor
   public static func searchResultsScreen(theme: ThemePreference = .system) -> some View {
-    NavigationStack {
-      SearchResultsScreen(theme: theme)
-    }
+    SearchFixtureSurfaces.searchResultsScreen(theme: theme)
   }
 
   /**
@@ -68,71 +63,16 @@ public enum SearchSurfaces {
    */
   @MainActor
   public static func searchSuggestionsScreen(theme: ThemePreference = .system) -> some View {
-    ThemedScreen(theme: theme) {
-      SearchSuggestionsList(
-        suggestions: SearchFixtures.suggestions,
-        history: SearchFixtures.history)
-    }
-  }
-}
-
-/// Applies a theme preference and a themed page background.
-///
-/// `.theme(_:)` is applied outermost so the injected environment reaches the
-/// background as well as the content: a `.background(_:)` written after the
-/// injection would sit outside it and read the default theme.
-@MainActor
-private struct ThemedScreen<Content: View>: View {
-  let theme: ThemePreference
-  let content: Content
-
-  init(theme: ThemePreference, @ViewBuilder content: () -> Content) {
-    self.theme = theme
-    self.content = content()
-  }
-
-  var body: some View {
-    content
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .background(SurfaceBackground())
-      .theme(theme)
-  }
-}
-
-/// The active theme's page background.
-@MainActor
-private struct SurfaceBackground: View {
-  @Environment(\.alfTheme) private var theme
-
-  var body: some View {
-    theme.atomColors.bg.ignoresSafeArea()
-  }
-}
-
-/**
- The results surface over fixture data, wrapped in the screen chrome the search
- flow would otherwise provide.
- */
-@MainActor
-private struct SearchResultsScreen: View {
-  let theme: ThemePreference
-
-  var body: some View {
-    SearchResultsView(
-      model: SearchFixtures.resultsModel,
-      posts: SearchFixtures.posts,
-      starterPacks: [SearchFixtures.starterPack(name: "Bluesky Swift devs")],
-      listState: .content)
-      .theme(theme)
+    SearchFixtureSurfaces.searchSuggestionsScreen(theme: theme)
   }
 }
 
 /**
  The debug toolbar button that presents the search screen.
 
- `showsExplore` is on so the debug entry point always lands on the Explore
- fixture: the idle branch is the one the smoke test asserts, and whatever the
- machine happens to hold must not change that.
+ The debug entry point always lands on the Explore fixture: the idle branch is
+ the one a smoke test asserts, and whatever the machine happens to hold must not
+ change that.
  */
 public struct SearchDebugButton: View {
   @State private var isPresented = false
@@ -166,8 +106,8 @@ public struct SearchDebugSheet: View {
 
   public var body: some View {
     NavigationStack {
-      SearchScreen(exploreData: SearchFixtures.explorePage)
-        .theme(ThemePreference(rawValue: themePreference) ?? .system)
+      SearchFixtureSurfaces.searchContent(
+        theme: ThemePreference(rawValue: themePreference) ?? .system)
         .toolbar {
           ToolbarItem(placement: .topBarLeading) {
             Button("Close") { dismiss() }
