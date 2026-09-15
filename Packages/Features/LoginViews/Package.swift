@@ -20,6 +20,7 @@ let package = Package(
   ],
   dependencies: [
     .package(path: "../Login"),
+    .package(path: "../../ATProtoClient"),
     .package(path: "../../DesignSystem"),
     .package(path: "../../DesignTokens"),
     .package(path: "../../Persistence"),
@@ -30,6 +31,9 @@ let package = Package(
       name: "LoginViews",
       dependencies: [
         .product(name: "LoginLogic", package: "Login"),
+        // LoginLogic default arguments reference ATProtoClient types; the iOS
+        // product-framework link closure needs the direct dependency.
+        .product(name: "ATProtoClient", package: "ATProtoClient"),
         .product(name: "DesignSystem", package: "DesignSystem"),
         .product(name: "DesignSystemCore", package: "DesignSystem"),
         .product(name: "DesignTokens", package: "DesignTokens"),
