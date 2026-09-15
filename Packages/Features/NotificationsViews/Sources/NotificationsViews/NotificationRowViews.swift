@@ -1,4 +1,5 @@
 import DesignSystem
+import Lexicons
 import DesignTokens
 import Moderation
 import SwiftUI
@@ -118,7 +119,7 @@ public struct NotificationSentenceRow: View {
   /// The inline preview of the notification's subject post: the RN item renders
   /// the subject text under the sentence for likes, reposts and subscriptions.
   @ViewBuilder
-  private func subjectPreview(_ post: App.Bsky.FeedDefs_PostView) -> some View {
+  private func subjectPreview(_ post: Lexicons.App.Bsky.FeedDefs_PostView) -> some View {
     NotificationSubjectPreview(post: post, now: now)
   }
 
@@ -141,12 +142,12 @@ public struct NotificationSentenceRow: View {
  or engagement rows a full ``UIComponents/PostFeedItem`` would draw.
  */
 public struct NotificationSubjectPreview: View {
-  private let post: App.Bsky.FeedDefs_PostView
+  private let post: Lexicons.App.Bsky.FeedDefs_PostView
   private let now: Date
 
   @Environment(\.alfTheme) private var theme
 
-  public init(post: App.Bsky.FeedDefs_PostView, now: Date = Date()) {
+  public init(post: Lexicons.App.Bsky.FeedDefs_PostView, now: Date = Date()) {
     self.post = post
     self.now = now
   }
@@ -239,7 +240,7 @@ public struct NotificationPostRow: View {
 /// The engagement-count helper the post row needs, re-exported so callers of
 /// this package do not have to import `UIComponentsCore` for one function.
 public func notificationPostData(
-  _ post: App.Bsky.FeedDefs_PostView,
+  _ post: Lexicons.App.Bsky.FeedDefs_PostView,
   now: Date = Date()
 ) -> FeedItemViewData {
   feedItemViewData(
