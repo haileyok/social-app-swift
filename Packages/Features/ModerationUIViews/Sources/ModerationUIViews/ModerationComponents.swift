@@ -67,10 +67,13 @@ struct ModerationNotice: View {
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(.md)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(theme.atomColors.bgContrast25)
-    .cornerRadius(.md)
+    .padding(.md)
+    // The `background(_:in:)` overload names the shape, which keeps the style
+    // argument a `ShapeStyle` rather than a `Color` that also satisfies the
+    // `background(_ view:)` overload. That ambiguity is what broke the type
+    // checker in the row expressions that build this view.
+    .background(theme.atomColors.bgContrast25, in: .rect(cornerRadius: Radius.md))
     .accessibilityElement(children: .combine)
   }
 
@@ -243,10 +246,9 @@ struct ModerationErrorLine: View {
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .padding(.md)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(theme.colors.negative50)
-    .cornerRadius(.md)
+    .padding(.md)
+    .background(theme.colors.negative50, in: .rect(cornerRadius: Radius.md))
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier(identifier ?? "")
   }
@@ -290,12 +292,11 @@ struct ModerationTextField: View {
         .foregroundStyle(theme.atomColors.text)
         .padding(.md, .horizontal)
         .padding(.sm, .vertical)
-        .background(theme.atomColors.bgContrast25)
+        .background(theme.atomColors.bgContrast25, in: .rect(cornerRadius: Radius.md))
         .overlay {
           RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
             .strokeBorder(theme.atomColors.borderContrastLow, lineWidth: 1)
         }
-        .cornerRadius(.md)
         .accessibilityLabel(label)
         .accessibilityIdentifier(identifier ?? "")
     }

@@ -229,15 +229,16 @@ public struct ContentLabelsScreen: View {
 
   /// The explanation under a row that cannot be changed, when there is one.
   ///
-  /// The type is erased rather than left as `some View`: multiple restructurings
-  /// of this expression each failed to type-check, so the inference is removed
-  /// entirely. It is a leaf row, so the erasure costs nothing measurable.
-  private func labelNotice(_ row: ContentLabelRow) -> AnyView {
-    guard let notice = noticeText(row) else { return AnyView(EmptyView()) }
-    return AnyView(
+  /// The concrete type is returned rather than `some View`: the expression at the
+  /// call site failed to type-check when this was opaque, and naming the type
+  /// removes the inference entirely.
+  @ViewBuilder
+  private func labelNotice(_ row: ContentLabelRow) -> some View {
+    if let notice = noticeText(row) {
       ModerationNotice(message: notice)
         .padding(.horizontal, .md)
-        .padding(.bottom, Spacing.xs))
+        .padding(.bottom, Spacing.xs)
+    }
   }
 
   /// The notice copy for a row, or nil when the row needs none.
