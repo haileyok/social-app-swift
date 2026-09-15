@@ -96,9 +96,6 @@ public final class AppSession {
   ) {
     self.sessionStore = sessionStore
     self.transport = transport
-    sessionStore.addListener { [weak self] _, event in
-      Task { @MainActor in self?.handle(event) }
-    }
   }
 
   /**
@@ -143,6 +140,14 @@ public final class AppSession {
   public func start() async {
     guard !hasStarted else { return }
     hasStarted = true
+
+    // `SessionStore` is an actor, so the subscription has to be awaited: this
+    // can only happen from an async context, which is why it lives here rather
+    // than in `init`. Registering before the first hydrate means no event is
+    // dropped between the read and the subscription.
+    await sessionStore.addListener { [weak self] _, event in
+      Task { @MainActor in self?.handle(event) }
+    }
 
     let snapshot = await sessionStore.hydrate()
     guard let account = snapshot.currentAccount else {
