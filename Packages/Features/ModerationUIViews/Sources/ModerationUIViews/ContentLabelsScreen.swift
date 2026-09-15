@@ -181,42 +181,64 @@ public struct ContentLabelsScreen: View {
           weight: Scales.FontWeight.semiBold)
           .frame(maxWidth: .infinity, alignment: .leading)
 
-        if row.showsStaticValue {
-          // A row that cannot be configured still shows its current value, the
-          // way the RN component renders a static label instead of the group.
-          AlfText(
-            ModerationCopy.optionLabel(row.preference.rawValue), scale: .xs,
-            color: theme.atomColors.textContrastMedium)
-        } else {
-          ModerationRadioGroup(
-            options: row.options,
-            label: { ModerationCopy.optionLabel($0.rawValue) },
-            selection: Binding(
-              get: { row.preference },
-              set: { onSetPreference(row, $0) }),
-            identifier: { value in
-              ModerationAccessibility.contentLabelOption(
-                labelerDid, row.identifier, value.rawValue)
-            })
-            .frame(maxWidth: 240)
-        }
+        labelControl(row, labelerDid: labelerDid)
       }
       .padding(.md, .horizontal)
       .padding(.sm, .vertical)
 
-      if row.adultDisabled {
-        ModerationNotice(message: ModerationCopy.adultDisabledNotice)
-          .padding(.horizontal, .md)
-          .padding(.bottom, Spacing.xs)
-      } else if row.showsStaticValue && !row.adultDisabled {
-        ModerationNotice(message: ModerationCopy.staticValueNotice)
-          .padding(.horizontal, .md)
-          .padding(.bottom, Spacing.xs)
-      }
+      labelNotice(row)
     }
     .accessibilityElement(children: .contain)
     .accessibilityIdentifier(
       ModerationAccessibility.contentLabelRow(labelerDid, row.identifier))
+  }
+
+  /// The row's trailing control: the toggle group, or the static value when the
+  /// row cannot be configured.
+  ///
+  /// Kept out of ``labelRow(_:labelerDid:)`` because the generic radio group plus
+  /// the enclosing conditional is more than the type checker will solve in one
+  /// expression.
+  @ViewBuilder
+  private func labelControl(_ row: ContentLabelRow, labelerDid: String) -> some View {
+    if row.showsStaticValue {
+      // A row that cannot be configured still shows its current value, the way
+      // the RN component renders a static label instead of the group.
+      AlfText(
+        ModerationCopy.optionLabel(row.preference.rawValue), scale: .xs,
+        color: theme.atomColors.textContrastMedium)
+    } else {
+      ModerationRadioGroup(
+        options: row.options,
+        label: { option in ModerationCopy.optionLabel(option.rawValue) },
+        selection: preferenceBinding(row),
+        identifier: { option in
+          ModerationAccessibility.contentLabelOption(
+            labelerDid, row.identifier, option.rawValue)
+        }
+      )
+      .frame(maxWidth: 240)
+    }
+  }
+
+  private func preferenceBinding(_ row: ContentLabelRow) -> Binding<LabelPreference> {
+    Binding(
+      get: { row.preference },
+      set: { onSetPreference(row, $0) })
+  }
+
+  /// The explanation under a row that cannot be changed, when there is one.
+  @ViewBuilder
+  private func labelNotice(_ row: ContentLabelRow) -> some View {
+    if row.adultDisabled {
+      ModerationNotice(message: ModerationCopy.adultDisabledNotice)
+        .padding(.horizontal, .md)
+        .padding(.bottom, Spacing.xs)
+    } else if row.showsStaticValue {
+      ModerationNotice(message: ModerationCopy.staticValueNotice)
+        .padding(.horizontal, .md)
+        .padding(.bottom, Spacing.xs)
+    }
   }
 }
 

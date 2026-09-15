@@ -113,14 +113,12 @@ public struct ReportDialogSheet: View {
   @ViewBuilder
   private var stepContent: some View {
     switch state.activeStepIndex1 {
+    case 2 where state.ncii != nil:
+      nciiStep
     case 1:
       categoryStep
     case 2:
-      if state.ncii != nil {
-        nciiStep
-      } else {
-        reasonStep
-      }
+      reasonStep
     case 3:
       labelerStep
     default:

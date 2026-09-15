@@ -124,23 +124,7 @@ public struct MutedWordsScreen: View {
           row.word.value, scale: .md, weight: Scales.FontWeight.semiBold)
         .frame(maxWidth: .infinity, alignment: .leading)
 
-        HStack(spacing: Spacing.xs) {
-          if row.appliesToContent {
-            ModerationBadge(text: ModerationCopy.appliesToContentBadge)
-          }
-          if row.excludesFollowing {
-            ModerationBadge(text: ModerationCopy.excludesFollowingBadge)
-          }
-          if let expiry = row.expiryDate {
-            if row.isExpired {
-              ModerationBadge(text: ModerationCopy.expiredBadge, isWarning: true)
-            } else {
-              AlfText(
-                ModerationCopy.expiryLine(expiry), scale: .xs,
-                color: theme.atomColors.textContrastLow)
-            }
-          }
-        }
+        mutedWordBadges(row)
       }
 
       Menu {
@@ -160,6 +144,36 @@ public struct MutedWordsScreen: View {
     }
     .padding(.md, .horizontal)
     .padding(.sm, .vertical)
+  }
+
+  /// The badges and expiry line under a row's value.
+  ///
+  /// Its own builder because the stack carries four independent conditions, which
+  /// is more than the type checker will solve inside the row's own expression.
+  @ViewBuilder
+  private func mutedWordBadges(_ row: MutedWordRowModel) -> some View {
+    HStack(spacing: Spacing.xs) {
+      if row.appliesToContent {
+        ModerationBadge(text: ModerationCopy.appliesToContentBadge)
+      }
+      if row.excludesFollowing {
+        ModerationBadge(text: ModerationCopy.excludesFollowingBadge)
+      }
+      expiryIndicator(row)
+    }
+  }
+
+  @ViewBuilder
+  private func expiryIndicator(_ row: MutedWordRowModel) -> some View {
+    if let expiry = row.expiryDate {
+      if row.isExpired {
+        ModerationBadge(text: ModerationCopy.expiredBadge, isWarning: true)
+      } else {
+        AlfText(
+          ModerationCopy.expiryLine(expiry), scale: .xs,
+          color: theme.atomColors.textContrastLow)
+      }
+    }
   }
 }
 
