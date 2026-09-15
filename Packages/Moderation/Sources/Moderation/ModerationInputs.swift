@@ -190,6 +190,29 @@ public struct EmbedImage: Sendable, Codable, Hashable {
   }
 }
 
+/// `app.bsky.embed.video#view`: the thumbnail/aspect the feed renders.
+public struct EmbedVideoView: Sendable, Codable, Hashable {
+  public var thumbnail: String?
+  public var alt: String?
+  public var aspectRatio: Aspect?
+
+  public init(thumbnail: String? = nil, alt: String? = nil, aspectRatio: Aspect? = nil) {
+    self.thumbnail = thumbnail
+    self.alt = alt
+    self.aspectRatio = aspectRatio
+  }
+
+  public struct Aspect: Sendable, Codable, Hashable {
+    public var width: Int?
+    public var height: Int?
+
+    public init(width: Int? = nil, height: Int? = nil) {
+      self.width = width
+      self.height = height
+    }
+  }
+}
+
 /// `app.bsky.embed.gallery` item union, restricted to the image variant.
 public enum EmbedGalleryItem: Sendable, Codable, Hashable {
   case image(EmbedImage)
@@ -428,6 +451,7 @@ public enum PostViewEmbed: Sendable, Codable, Hashable {
   case external(EmbedExternal)
   case images([EmbedImage])
   case gallery([EmbedGalleryItem])
+  case video(EmbedVideoView)
   case unknown(type: String)
 
   private enum CodingKeys: String, CodingKey {
@@ -451,6 +475,8 @@ public enum PostViewEmbed: Sendable, Codable, Hashable {
     case "app.bsky.embed.gallery#view":
       struct Wrapper: Codable { var items: [EmbedGalleryItem] }
       self = .gallery(try Wrapper(from: decoder).items)
+    case "app.bsky.embed.video#view":
+      self = .video(try EmbedVideoView(from: decoder))
     default:
       self = .unknown(type: type)
     }
@@ -477,6 +503,9 @@ public enum PostViewEmbed: Sendable, Codable, Hashable {
       try container.encode("app.bsky.embed.gallery#view", forKey: .type)
       struct Wrapper: Encodable { var items: [EmbedGalleryItem] }
       try Wrapper(items: items).encode(to: encoder)
+    case .video(let video):
+      try container.encode("app.bsky.embed.video#view", forKey: .type)
+      try video.encode(to: encoder)
     case .unknown(let type):
       try container.encode(type, forKey: .type)
     }
@@ -498,6 +527,7 @@ public enum RecordWithMediaViewMedia: Sendable, Codable, Hashable {
   case images([EmbedImage])
   case gallery([EmbedGalleryItem])
   case external(EmbedExternal)
+  case video(EmbedVideoView)
   case unknown(type: String)
 
   private enum CodingKeys: String, CodingKey {
@@ -517,6 +547,8 @@ public enum RecordWithMediaViewMedia: Sendable, Codable, Hashable {
     case "app.bsky.embed.external#view":
       struct Wrapper: Codable { var external: EmbedExternal }
       self = .external(try Wrapper(from: decoder).external)
+    case "app.bsky.embed.video#view":
+      self = .video(try EmbedVideoView(from: decoder))
     default:
       self = .unknown(type: type)
     }
@@ -537,6 +569,9 @@ public enum RecordWithMediaViewMedia: Sendable, Codable, Hashable {
       try container.encode("app.bsky.embed.external#view", forKey: .type)
       struct Wrapper: Encodable { var external: EmbedExternal }
       try Wrapper(external: external).encode(to: encoder)
+    case .video(let video):
+      try container.encode("app.bsky.embed.video#view", forKey: .type)
+      try video.encode(to: encoder)
     case .unknown(let type):
       try container.encode(type, forKey: .type)
     }

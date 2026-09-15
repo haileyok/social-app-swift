@@ -34,13 +34,29 @@ public struct LoginRootView: View {
   }
 
   public var body: some View {
-    LoginScreen(
-      viewModel: viewModel,
-      onSignedIn: { account in
-        Task { await session.adoptSignedInAccount(account) }
-      },
-      onForgotPassword: { _ in }
-    )
+    VStack(spacing: 0) {
+      // Restart + login diagnostics: why this screen is showing and, after a
+      // failed attempt, the raw server answer. Temporary scaffolding while
+      // the auth paths are being hardened; remove once both are stable.
+      if let diagnosis = session.startDiagnosis
+        ?? combinedLoginDiagnosis
+      {
+        Text(diagnosis)
+          .font(.caption2)
+          .foregroundStyle(.red)
+          .padding(.horizontal, Spacing.md)
+          .padding(.top, Spacing.xs)
+          .lineLimit(6)
+          .accessibilityIdentifier("start-diagnosis")
+      }
+      LoginScreen(
+        viewModel: viewModel,
+        onSignedIn: { account in
+          Task { await session.adoptSignedInAccount(account) }
+        },
+        onForgotPassword: { _ in }
+      )
+    }
     // A container identifier for the signed-out root. It is a marker for
     // screenshots and accessibility review rather than an assertion target: the
     // UI test identifies the root by what it does not have (the shell's tab bar,
@@ -48,6 +64,15 @@ public struct LoginRootView: View {
     // container identifier on a ScrollView-backed screen is not reliably
     // exposed to XCUITest.
     .accessibilityIdentifier(ShellAccessibility.loginRoot)
+  }
+
+  /// The attempt + server answer after a failed sign-in, on one line.
+  private var combinedLoginDiagnosis: String? {
+    guard viewModel.state.error != nil else { return nil }
+    var parts = [viewModel.flow.lastAttempt]
+    parts.append(viewModel.state.error?.appDebugDetail)
+    let joined = parts.compactMap { $0 }.joined(separator: " | ")
+    return joined.isEmpty ? nil : joined
   }
 }
 

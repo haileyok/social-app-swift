@@ -58,6 +58,8 @@ public struct PostEmbed: View {
         mediaView(value.media)
         QuotedPost(record: value.record)
       }
+    case .video(let video):
+      VideoEmbed(view: video, onOpen: onOpen)
     case .unknown(let type):
       UnsupportedEmbed(type: type)
     }
@@ -72,6 +74,8 @@ public struct PostEmbed: View {
       galleryItemsView(items)
     case .external(let external):
       ExternalCard(external: external)
+    case .video(let video):
+      VideoEmbed(view: video, onOpen: onOpen)
     case .unknown, .none:
       EmptyView()
     }
@@ -301,6 +305,54 @@ public struct VideoPlaceholder: View {
     .clipped()
     .clipShape(.rect(cornerRadius: Radius.md, style: .continuous))
     .accessibilityLabel(label)
+  }
+}
+
+/// A video embed: the poster frame with a play affordance, filling the card's
+/// width at the declared aspect (16:9 when undeclared).
+struct VideoEmbed: View {
+  let view: EmbedVideoView
+  let onOpen: (RichTextTarget) -> Void
+
+  @Environment(\.alfTheme) private var theme
+
+  var body: some View {
+    ZStack {
+      RemoteImage(
+        url: URL(string: view.thumbnail ?? ""),
+        contentMode: .fill,
+        placeholder: {
+          Rectangle()
+            .fill(theme.atomColors.bgContrast100)
+            .overlay {
+              Image(systemName: "video")
+                .foregroundStyle(theme.atomColors.textContrastMedium)
+            }
+        },
+        failure: {
+          Rectangle()
+            .fill(theme.atomColors.bgContrast100)
+            .overlay {
+              Image(systemName: "play.slash")
+                .foregroundStyle(theme.atomColors.textContrastMedium)
+            }
+        })
+      Image(systemName: "play.circle.fill")
+        .font(.system(size: 44))
+        .foregroundStyle(.white, .black.opacity(0.35))
+        .shadow(radius: 4)
+    }
+    .aspectRatio(aspect, contentMode: .fit)
+    .clipShape(.rect(cornerRadius: Radius.md, style: .continuous))
+    .accessibilityLabel(view.alt ?? "Video")
+  }
+
+  private var aspect: Double {
+    guard let aspect = view.aspectRatio,
+      let width = aspect.width, let height = aspect.height,
+      width > 0, height > 0
+    else { return 16.0 / 9.0 }
+    return Double(width) / Double(height)
   }
 }
 

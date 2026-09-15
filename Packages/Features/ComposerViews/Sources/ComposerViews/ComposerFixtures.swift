@@ -45,6 +45,7 @@ public enum ComposerFixtures {
   /// The order the debug surface and the screenshot loop walk.
   public static let allSurfaces = ComposerSurface.allCases
 
+  // swiftlint:disable:next function_body_length
   /// The composer state for a surface.
   ///
   /// Every case starts from ``ComposerReducer/createState(_:)`` and applies

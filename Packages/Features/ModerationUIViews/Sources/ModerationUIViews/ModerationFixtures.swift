@@ -18,8 +18,7 @@ public enum ModerationFixtures {
 
   /// A content-labels model with one labeler section and the global rows.
   public static func contentLabelsModel() -> ContentLabelsModel {
-    let globalRows = ContentLabels.globalLabelIdentifiers.compactMap {
-      identifier -> ContentLabelRow? in
+    let globalRows = ContentLabels.globalLabelIdentifiers.compactMap { identifier -> ContentLabelRow? in
       guard let definition = Moderation.labels[identifier] else { return nil }
       return ContentLabelRow(
         identifier: identifier,
@@ -129,9 +128,7 @@ public enum ModerationFixtures {
   // MARK: - Muted words
 
   /// Muted-word rows, newest first, as the list screen renders them.
-  public static func mutedWordRows(now: Date = Date(timeIntervalSince1970: 1_800_000_000))
-    -> [MutedWordRowModel]
-  {
+  public static func mutedWordRows(now: Date = Date(timeIntervalSince1970: 1_800_000_000)) -> [MutedWordRowModel] {
     let words = [
       MutedWord(value: "spoilers", targets: [.tag, .content], actorTarget: .all),
       MutedWord(value: "crypto", targets: [.tag], actorTarget: .excludeFollowing),
@@ -166,9 +163,7 @@ public enum ModerationFixtures {
   // MARK: - Labelers
 
   /// Sample labeler directory rows.
-  public static func labelerRows(subscribed: Bool, startIndex: Int = 0, count: Int = 3)
-    -> [LabelerRowModel]
-  {
+  public static func labelerRows(subscribed: Bool, startIndex: Int = 0, count: Int = 3) -> [LabelerRowModel] {
     (0..<count).map { offset in
       let index = startIndex + offset
       return LabelerRowModel(

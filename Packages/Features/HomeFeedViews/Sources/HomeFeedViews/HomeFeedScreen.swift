@@ -26,6 +26,7 @@ import UIComponentsCore
 public struct HomeFeedScreen: View {
   @State private var model: HomeFeedViewModel
   private let onOpenRichText: (RichTextTarget) -> Void
+  private let onOpenPost: (String) -> Void
   private let onSignIn: (() -> Void)?
   private let onAddFeeds: (() -> Void)?
 
@@ -37,16 +38,19 @@ public struct HomeFeedScreen: View {
   /// - Parameters:
   ///   - model: the view model, already built over a `HomeFeedModel`.
   ///   - onOpenRichText: link/tag/mention taps inside a post body.
+  ///   - onOpenPost: a body tap opens the post's thread, by `at://` URI.
   ///   - onSignIn: the logged-out call to action.
   ///   - onAddFeeds: the no-feeds-pinned call to action.
   public init(
     model: HomeFeedViewModel,
     onOpenRichText: @escaping (RichTextTarget) -> Void = { _ in },
+    onOpenPost: @escaping (String) -> Void = { _ in },
     onSignIn: (() -> Void)? = nil,
     onAddFeeds: (() -> Void)? = nil
   ) {
     _model = State(initialValue: model)
     self.onOpenRichText = onOpenRichText
+    self.onOpenPost = onOpenPost
     self.onSignIn = onSignIn
     self.onAddFeeds = onAddFeeds
   }
@@ -134,7 +138,7 @@ public struct HomeFeedScreen: View {
   private var rowList: some View {
     List {
       ForEach(model.rows) { row in
-        HomeFeedRowView(row: row, onOpenRichText: onOpenRichText)
+        HomeFeedRowView(row: row, onOpenRichText: onOpenRichText, onOpenPost: onOpenPost)
           .listRowInsets(EdgeInsets())
           .listRowSeparator(.hidden)
           .listRowBackground(theme.atomColors.bg)
@@ -174,12 +178,18 @@ public struct HomeFeedScreen: View {
 public struct HomeFeedRowView: View {
   private let row: HomeFeedRow
   private let onOpenRichText: (RichTextTarget) -> Void
+  private let onOpenPost: (String) -> Void
 
   @Environment(\.alfTheme) private var theme
 
-  public init(row: HomeFeedRow, onOpenRichText: @escaping (RichTextTarget) -> Void = { _ in }) {
+  public init(
+    row: HomeFeedRow,
+    onOpenRichText: @escaping (RichTextTarget) -> Void = { _ in },
+    onOpenPost: @escaping (String) -> Void = { _ in }
+  ) {
     self.row = row
     self.onOpenRichText = onOpenRichText
+    self.onOpenPost = onOpenPost
   }
 
   public var body: some View {
@@ -189,14 +199,19 @@ public struct HomeFeedRowView: View {
       }
       ForEach(row.items) { item in
         PostFeedItem(data: item.data, onOpen: onOpenRichText)
-          .overlay(alignment: .leading) {
+          .contentShape(.rect)
+          .onTapGesture { onOpenPost(item.uri) }
+          .overlay(alignment: .topLeading) {
             if item.showsReplyLine {
-              // The thread connector, inset to the avatar's centre line.
+              // The thread connector: a vertical rule on the avatar's centre
+              // line, from the avatar's centre down to the item's bottom edge
+              // (the geometry RN's Post.tsx draws between merged replies).
               Rectangle()
                 .fill(theme.atomColors.borderContrastLow)
                 .frame(width: 2)
-                .padding(.leading, Spacing.xl + Spacing.md)
-                .padding(.vertical, Spacing.xs)
+                .padding(.leading, Spacing.md + AvatarSize.md.side / 2)
+                .padding(.top, Spacing.md + AvatarSize.md.side / 2)
+                .frame(maxHeight: .infinity, alignment: .bottom)
             }
           }
         Divider()

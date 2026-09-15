@@ -84,6 +84,10 @@ public final class AppSession {
   /// Whether the last thing the store knew about the session was that it died.
   public private(set) var loginIsStale = false
 
+  /// Why the last `start()` landed on signed-out, for the login screen's
+  /// debug caption. Nil on a successful start or an in-session launch.
+  public private(set) var startDiagnosis: String?
+
   /// The bootstrap flag, so a repeated `start()` is a no-op.
   private var hasStarted = false
 
@@ -157,6 +161,7 @@ public final class AppSession {
 
     let snapshot = await sessionStore.hydrate()
     guard let account = snapshot.currentAccount else {
+      startDiagnosis = "signed out: no current account (accounts stored: \(snapshot.accounts.count))"
       state = .signedOut
       return
     }
@@ -165,19 +170,30 @@ public final class AppSession {
     // treats it the same way (`ResumeDecision`). Show the form instead of
     // burning a refresh against tokens we know are absent.
     guard ResumeDecision.forAccount(account) == .resume else {
+      startDiagnosis = "signed out: no access token stored for \(account.handle)"
       state = .signedOut
       return
     }
 
     do {
       let resumed = try await sessionStore.resume(account: account)
+      startDiagnosis = nil
       state = .signedIn(resumed)
     } catch {
-      // A failed resume is not a network failure the user can retry from here:
-      // the persisted entry stayed in place, so the sign-in form can offer the
-      // account again. Drop to signed-out rather than blocking the launch.
-      loginIsStale = true
-      state = .signedOut
+      // RN semantics: only a *definitive* auth failure ejects the user. A
+      // transient failure (network hiccup, PDS briefly down) keeps the
+      // account signed in from storage; the first authenticated call that
+      // fails is what surfaces the problem, exactly like the RN app.
+      if let xrpc = error as? XrpcError,
+        xrpc.code == .expiredToken || xrpc.code == .invalidToken
+      {
+        loginIsStale = true
+        startDiagnosis = "signed out: session rejected (\(xrpc.code?.rawValue ?? "unknown"))"
+        state = .signedOut
+      } else {
+        startDiagnosis = "resumed from storage (refresh deferred: \(String(describing: error)))"
+        state = .signedIn(account)
+      }
     }
   }
 
@@ -186,11 +202,18 @@ public final class AppSession {
   /**
    The login flow this app drives.
 
-   Built with the live session store, so a successful sign-in records the
-   account and its tokens without the view having to mirror anything.
+   Built with the live session store and the production handle resolver, so a
+   self-hosted account signs in against its own PDS: `hailey.at` resolves
+   through the public appview and the DID document to `cocoon.hailey.at`,
+   exactly the RN screen's `lookupHandle`.
    */
   public func makeLoginFlow() -> LoginFlow {
-    LoginFlow(transport: transport, sessionStore: sessionStore)
+    LoginFlow(
+      transport: transport,
+      sessionStore: sessionStore,
+      lookupHandle: { [transport] handle in
+        try await HandleResolver.resolve(handle, transport: transport)
+      })
   }
 
   /**
@@ -203,6 +226,20 @@ public final class AppSession {
     loginIsStale = false
     let snapshot = await sessionStore.snapshot()
     state = .signedIn(snapshot.currentAccount ?? account)
+  }
+
+  /**
+   The query plumbing for the signed-in shell, built from the store's live
+   session.
+
+   Nil when nobody is signed in or the store has not hydrated the session yet.
+   The store keeps one live `PasswordSession` per resumed/signed-in account
+   (its `resume` and the login flow both record it), so this is a read, not a
+   network round trip. Async only because the store is an actor.
+   */
+  func makeClients() async -> AppSessionClients? {
+    guard let session = await sessionStore.currentSession() else { return nil }
+    return try? await AppSessionClients(session: session, transport: transport)
   }
 
   /**

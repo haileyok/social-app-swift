@@ -38,14 +38,18 @@ public enum HomeFeedReasonLine: Equatable, Sendable {
 public struct HomeFeedRowItem: Identifiable {
   /// The item's react key, which already carries the slice key and index.
   public let id: String
+  /// The post's `at://` URI - the navigation target for a body tap. The
+  /// react key is display-only and must never be used as a URI.
+  public let uri: String
   /// The data `PostFeedItem` renders.
   public let data: FeedItemViewData
   /// True when a reply connector should be drawn above this item - i.e. it is
   /// part of a merged thread and is not the slice's selected post.
   public let showsReplyLine: Bool
 
-  public init(id: String, data: FeedItemViewData, showsReplyLine: Bool) {
+  public init(id: String, uri: String, data: FeedItemViewData, showsReplyLine: Bool) {
     self.id = id
+    self.uri = uri
     self.data = data
     self.showsReplyLine = showsReplyLine
   }
@@ -118,6 +122,7 @@ public enum HomeFeedViewData {
     let items = slice.items.enumerated().map { index, item in
       HomeFeedRowItem(
         id: item.reactKey.isEmpty ? item.uri : item.reactKey,
+        uri: item.uri,
         data: viewData(
           item,
           slice: slice,

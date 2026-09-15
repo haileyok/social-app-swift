@@ -15,13 +15,10 @@ public enum MessageDateSeparator {
   }
 
   /// The label for a separator, e.g. "Today", "Yesterday", or a medium date.
-  public static func label(for date: Date, now: Date = Date(), calendar: Calendar = .current)
-    -> String
-  {
+  public static func label(for date: Date, now: Date = Date(), calendar: Calendar = .current) -> String {
     if calendar.isDate(date, inSameDayAs: now) { return MessagesCopy.today }
     if let yesterday = calendar.date(byAdding: .day, value: -1, to: now),
-      calendar.isDate(date, inSameDayAs: yesterday)
-    {
+      calendar.isDate(date, inSameDayAs: yesterday) {
       return MessagesCopy.yesterday
     }
     return date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted))
@@ -63,9 +60,7 @@ public enum ConversationRow: Identifiable, Sendable {
 
   /// Builds the rows from the model's items, inserting a separator when the
   /// calendar day changes. The first item always gets a separator, matching RN.
-  static func build(_ items: [ConvoItem], calendar: Calendar = .current, now: Date = Date())
-    -> [ConversationRow]
-  {
+  static func build(_ items: [ConvoItem], calendar: Calendar = .current, now: Date = Date()) -> [ConversationRow] {
     var rows: [ConversationRow] = []
     var lastDay: Date?
     for item in items {

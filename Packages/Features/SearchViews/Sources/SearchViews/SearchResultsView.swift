@@ -44,9 +44,7 @@ public struct SearchResultsView: View {
     onRetry: @escaping () -> Void = {},
     onSelectProfile: @escaping (Lexicons.App.Bsky.ActorDefs_ProfileView) -> Void = { _ in },
     onSelectFeed: @escaping (Lexicons.App.Bsky.FeedDefs_GeneratorView) -> Void = { _ in },
-    onSelectStarterPack: @escaping (Lexicons.App.Bsky.GraphDefs_StarterPackView) -> Void = {
-      _ in
-    }
+    onSelectStarterPack: @escaping (Lexicons.App.Bsky.GraphDefs_StarterPackView) -> Void = { _ in }
   ) {
     self.model = model
     self.posts = posts

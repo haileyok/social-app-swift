@@ -122,7 +122,7 @@ public struct URLSessionTransport: HTTPTransport {
   public let userAgent: String
   public let session: URLSession
 
-  public init(userAgent: String = "SocialAppSwift/0.1 (Linux; atproto)") {
+  public init(userAgent: String = "SocialAppSwift/0.1 (iOS; atproto)") {
     self.userAgent = userAgent
     self.session = URLSession(configuration: .ephemeral)
   }
@@ -139,12 +139,16 @@ public struct URLSessionTransport: HTTPTransport {
     if headers["User-Agent"] == nil {
       request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
     }
-    // URLSession on Linux does not auto-decompress responses, and advertising
-    // any encoding makes servers compress bodies we then can't decode.
-    // Request identity until decompression is handled explicitly.
-    if headers["Accept-Encoding"] == nil {
-      request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
-    }
+    #if canImport(FoundationNetworking)
+      // URLSession on Linux does not auto-decompress responses, and advertising
+      // any encoding makes servers compress bodies we then can't decode.
+      // Darwin's URLSession decompresses transparently, so only the Linux
+      // build pins identity - an iOS client advertising `identity` (or a
+      // Linux-flavoured UA) is exactly what strict gateways filter on.
+      if headers["Accept-Encoding"] == nil {
+        request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
+      }
+    #endif
     let (data, resp) = try await session.data(for: request)
     guard let http = resp as? HTTPURLResponse else {
       throw XrpcError(
