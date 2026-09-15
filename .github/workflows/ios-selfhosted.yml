@@ -50,13 +50,13 @@ jobs:
           if xcodebuild -scheme AppShell \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$DD" \
-            CODE_SIGNING_ALLOWED=NO build > /tmp/ios-build.log 2>&1; then
-            tail -3 /tmp/ios-build.log
+            CODE_SIGNING_ALLOWED=NO build > /tmp/ios-build-$GITHUB_RUN_ID.log 2>&1; then
+            tail -3 /tmp/ios-build-$GITHUB_RUN_ID.log
           else
             echo "::error::iOS build failed - compile errors:"
-            grep -E 'error:|fatal error:' /tmp/ios-build.log | sort -u | head -60
+            grep -E 'error:|fatal error:' /tmp/ios-build-$GITHUB_RUN_ID.log | sort -u | head -60
             echo "--- last 40 lines of build log:"
-            tail -40 /tmp/ios-build.log
+            tail -40 /tmp/ios-build-$GITHUB_RUN_ID.log
             exit 1
           fi
 
@@ -65,7 +65,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ios-build-log
-          path: /tmp/ios-build.log
+          path: /tmp/ios-build-$GITHUB_RUN_ID.log
           if-no-files-found: ignore
 
       - name: Simulator inventory
@@ -118,13 +118,13 @@ jobs:
             -scheme SocialApp \
             -destination "id=$UDID" \
             -derivedDataPath "$DD" \
-            CODE_SIGNING_ALLOWED=NO > /tmp/ios-buildtests.log 2>&1; then
-            tail -3 /tmp/ios-buildtests.log
+            CODE_SIGNING_ALLOWED=NO > /tmp/ios-buildtests-$GITHUB_RUN_ID.log 2>&1; then
+            tail -3 /tmp/ios-buildtests-$GITHUB_RUN_ID.log
           else
             echo "::error::build-for-testing failed - compile errors:"
-            grep -E 'error:|fatal error:|The following build commands failed' /tmp/ios-buildtests.log | sort -u | head -60
+            grep -E 'error:|fatal error:|The following build commands failed' /tmp/ios-buildtests-$GITHUB_RUN_ID.log | sort -u | head -60
             echo "--- last 40 lines of build log:"
-            tail -40 /tmp/ios-buildtests.log
+            tail -40 /tmp/ios-buildtests-$GITHUB_RUN_ID.log
             exit 1
           fi
 
@@ -159,7 +159,7 @@ jobs:
         with:
           name: ios-test-logs
           path: |
-            /tmp/ios-buildtests.log
+            /tmp/ios-buildtests-$GITHUB_RUN_ID.log
             /tmp/ios-tests.log
             /tmp/ios-socialapp.xcresult
           if-no-files-found: ignore
