@@ -39,17 +39,18 @@ enum ProfileEditor {
     // The generated record types decode `$type` but do not encode it back
     // (the codegen gap documented in tools/lexicon-codegen); the PDS requires
     // it, so the dictionary path sets it explicitly.
-    record["$type"] = AnyCodable("app.bsky.actor.profile")
+    record["$type"] = try anyCodable("app.bsky.actor.profile")
 
+    // RN omits the field when the input is empty; removing the key matches.
     if edit.displayName.isEmpty {
-      record["displayName"] = nil
+      record.removeValue(forKey: "displayName")
     } else {
-      record["displayName"] = AnyCodable(edit.displayName)
+      record["displayName"] = try anyCodable(edit.displayName)
     }
     if edit.description.isEmpty {
-      record["description"] = nil
+      record.removeValue(forKey: "description")
     } else {
-      record["description"] = AnyCodable(edit.description)
+      record["description"] = try anyCodable(edit.description)
     }
 
     _ = try await clients.pds.putRecord(
@@ -57,5 +58,13 @@ enum ProfileEditor {
       collection: "app.bsky.actor.profile",
       rkey: "self",
       record: record)
+  }
+
+  /// Wraps a value for the record dictionary.
+  ///
+  /// `AnyCodable`'s value initializer is module-internal (vendored runtime),
+  /// so the public path is a JSON round trip.
+  private static func anyCodable(_ value: some Encodable) throws -> AnyCodable {
+    try JSONDecoder().decode(AnyCodable.self, from: JSONEncoder().encode(value))
   }
 }
