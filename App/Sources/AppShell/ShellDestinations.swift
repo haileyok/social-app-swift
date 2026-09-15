@@ -8,6 +8,7 @@ import MessagesViews
 import Moderation
 import PostThreadLogic
 import PostThreadViews
+import Preferences
 import ProfileLogic
 import ProfileViews
 import QueryStore
@@ -98,8 +99,8 @@ private struct ThreadRouteView: View {
     do {
       let output = try await PostThreadFetcher(client: clients.appview)
         .callAsFunction(PostThreadParams(uri: uri))
-      let tree = ThreadModel.build(output: output)
-      thread = ThreadFlattener.flatten(ThreadModel.annotate(tree))
+      let tree = ThreadTreeBuilder.build(output: output)
+      thread = ThreadFlattener.flatten(ThreadTreeAnnotator.annotate(tree))
       failed = false
     } catch {
       failed = true
@@ -140,7 +141,7 @@ private struct ProfileRouteView: View {
           onCancel: { showsEdit = false },
           onSave: { edit in
             showsEdit = false
-            Task { await ProfileEditor.save(clients: clients, edit: edit) }
+            Task { try? await ProfileEditor.save(clients: clients, edit: edit) }
           })
       }
     }

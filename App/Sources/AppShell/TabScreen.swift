@@ -493,7 +493,7 @@ private struct ProfileTabScreen: View {
       switch action {
       case .editProfile:
         showsEdit = true
-      case .follow, .unfollow, .showFollowers, .showFollows:
+      case .follow, .unfollow, .showFollowers, .showFollows, .showKnownFollowers:
         // Mutations and follower lists are the next seams.
         break
       }
