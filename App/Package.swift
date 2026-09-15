@@ -15,11 +15,12 @@ let package = Package(
     .library(name: "AppShell", targets: ["AppShell"])
   ],
   dependencies: [
-    // UI packages (macOS-CI-built). Added as they land:
+    // Views packages are macOS-CI-built. Added as they land:
     .package(path: "../Packages/DesignSystem"),
     .package(path: "../Packages/UIComponents"),
     .package(path: "../Packages/Features/LoginViews"),
     .package(path: "../Packages/Features/Login"),
+    .package(path: "../Packages/Features/ModerationUIViews"),
     .package(path: "../Packages/ATProtoClient"),
   ],
   targets: [
@@ -31,6 +32,7 @@ let package = Package(
         .product(name: "UIComponents", package: "UIComponents"),
         .product(name: "LoginViews", package: "LoginViews"),
         .product(name: "LoginLogic", package: "Login"),
+        .product(name: "ModerationUIViews", package: "ModerationUIViews"),
         .product(name: "ATProtoClient", package: "ATProtoClient"),
       ],
       path: "Sources/AppShell"
