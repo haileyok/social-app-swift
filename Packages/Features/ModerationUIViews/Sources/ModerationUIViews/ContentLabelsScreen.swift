@@ -161,7 +161,7 @@ public struct ContentLabelsScreen: View {
       VStack(spacing: 0) {
         if !section.isSubscribed {
           ModerationNotice(message: ModerationCopy.notSubscribedNotice)
-            .padding(.bottom, Spacing.xs)
+            .padding(.xs, .bottom)
         }
         ForEach(section.rows, id: \.identifier) { row in
           labelRow(row, labelerDid: section.labelerDid)
@@ -236,8 +236,8 @@ public struct ContentLabelsScreen: View {
   private func labelNotice(_ row: ContentLabelRow) -> some View {
     if let notice = noticeText(row) {
       ModerationNotice(message: notice)
-        .padding(.horizontal, .md)
-        .padding(.bottom, Spacing.xs)
+        .padding(.md, .horizontal)
+        .padding(.xs, .bottom)
     }
   }
 
