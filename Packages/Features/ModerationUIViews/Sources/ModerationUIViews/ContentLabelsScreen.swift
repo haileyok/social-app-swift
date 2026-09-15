@@ -175,17 +175,7 @@ public struct ContentLabelsScreen: View {
   @ViewBuilder
   private func labelRow(_ row: ContentLabelRow, labelerDid: String) -> some View {
     VStack(alignment: .leading, spacing: Spacing.xs) {
-      HStack(alignment: .center, spacing: Spacing.md) {
-        AlfText(
-          ModerationCopy.labelTitle(row.identifier), scale: .md,
-          weight: Scales.FontWeight.semiBold)
-          .frame(maxWidth: .infinity, alignment: .leading)
-
-        labelControl(row, labelerDid: labelerDid)
-      }
-      .padding(.md, .horizontal)
-      .padding(.sm, .vertical)
-
+      labelRowHeader(row, labelerDid: labelerDid)
       labelNotice(row)
     }
     .accessibilityElement(children: .contain)
@@ -193,12 +183,22 @@ public struct ContentLabelsScreen: View {
       ModerationAccessibility.contentLabelRow(labelerDid, row.identifier))
   }
 
+  /// The row's title and its trailing control.
+  private func labelRowHeader(_ row: ContentLabelRow, labelerDid: String) -> some View {
+    HStack(alignment: .center, spacing: Spacing.md) {
+      AlfText(
+        ModerationCopy.labelTitle(row.identifier), scale: .md,
+        weight: Scales.FontWeight.semiBold)
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+      labelControl(row, labelerDid: labelerDid)
+    }
+    .padding(.md, .horizontal)
+    .padding(.sm, .vertical)
+  }
+
   /// The row's trailing control: the toggle group, or the static value when the
   /// row cannot be configured.
-  ///
-  /// Kept out of ``labelRow(_:labelerDid:)`` because the generic radio group plus
-  /// the enclosing conditional is more than the type checker will solve in one
-  /// expression.
   @ViewBuilder
   private func labelControl(_ row: ContentLabelRow, labelerDid: String) -> some View {
     if row.showsStaticValue {
@@ -229,15 +229,15 @@ public struct ContentLabelsScreen: View {
 
   /// The explanation under a row that cannot be changed, when there is one.
   ///
-  /// The text is computed first and the notice rendered from the result, so the
-  /// view body holds one conditional instead of a `@ViewBuilder` pair.
-  @ViewBuilder
-  private func labelNotice(_ row: ContentLabelRow) -> some View {
-    if let notice = noticeText(row) {
+  /// The type is erased rather than left as `some View`: multiple restructurings
+  /// of this expression each failed to type-check, so the inference is removed
+  /// entirely. It is a leaf row, so the erasure costs nothing measurable.
+  private func labelNotice(_ row: ContentLabelRow) -> AnyView {
+    guard let notice = noticeText(row) else { return AnyView(EmptyView()) }
+    return AnyView(
       ModerationNotice(message: notice)
         .padding(.horizontal, .md)
-        .padding(.bottom, Spacing.xs)
-    }
+        .padding(.bottom, Spacing.xs))
   }
 
   /// The notice copy for a row, or nil when the row needs none.
