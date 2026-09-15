@@ -35,16 +35,16 @@ public struct LoginRootView: View {
 
   public var body: some View {
     VStack(spacing: 0) {
-      if let diagnosis = session.startDiagnosis {
-        // Restart diagnostics: why the last launch landed on this screen.
-        // Temporary scaffolding while the restart path is being hardened;
-        // remove once resume is provably stable.
+      // Restart + login diagnostics: why this screen is showing and, after a
+      // failed attempt, the raw server answer. Temporary scaffolding while
+      // the auth paths are being hardened; remove once both are stable.
+      if let diagnosis = session.startDiagnosis ?? viewModel.state.error?.appDebugDetail {
         Text(diagnosis)
           .font(.caption2)
           .foregroundStyle(.red)
           .padding(.horizontal, Spacing.md)
           .padding(.top, Spacing.xs)
-          .lineLimit(4)
+          .lineLimit(6)
           .accessibilityIdentifier("start-diagnosis")
       }
       LoginScreen(

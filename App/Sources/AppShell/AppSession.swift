@@ -188,7 +188,7 @@ public final class AppSession {
         xrpc.code == .expiredToken || xrpc.code == .invalidToken
       {
         loginIsStale = true
-        startDiagnosis = "signed out: session rejected (\(xrpc.code.rawValue))"
+        startDiagnosis = "signed out: session rejected (\(xrpc.code?.rawValue ?? "unknown"))"
         state = .signedOut
       } else {
         startDiagnosis = "resumed from storage (refresh deferred: \(String(describing: error)))"
