@@ -42,7 +42,7 @@ public struct LabelerRowModel: Equatable, Sendable, Identifiable {
 
   /// Builds a row from a detailed labeler view.
   public static func make(
-    _ labeler: App.Bsky.LabelerDefs_LabelerViewDetailed,
+    _ labeler: ModerationLabelerViewDetailed,
     appLabelers: [String],
     preferences: ModerationPrefs
   ) -> LabelerRowModel {

@@ -151,7 +151,7 @@ struct ModerationToggleRow: View {
   var subtitle: String?
   @Binding var isOn: Bool
 
-  var identifier: String?
+  var identifier: String? = nil
 
   @Environment(\.alfTheme) private var theme
 
@@ -179,7 +179,7 @@ struct ModerationRadioGroup<Value: Hashable>: View {
   let label: (Value) -> String
   @Binding var selection: Value
   /// The accessibility identifier for each option, given its value's label.
-  var identifier: ((Value) -> String)?
+  var identifier: ((Value) -> String)? = nil
 
   @Environment(\.alfTheme) private var theme
 

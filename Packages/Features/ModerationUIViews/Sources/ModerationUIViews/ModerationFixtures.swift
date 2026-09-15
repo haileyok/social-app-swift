@@ -154,9 +154,9 @@ public enum ModerationFixtures {
   // MARK: - Accounts
 
   /// Sample profiles for the blocked/muted lists.
-  public static func profileViews(count: Int = 5) -> [App.Bsky.ActorDefs_ProfileView] {
+  public static func profileViews(count: Int = 5) -> [ModerationProfileView] {
     (0..<count).map { index in
-      App.Bsky.ActorDefs_ProfileView(
+      ModerationProfileView(
         did: FormatString<DID>(rawValue: "did:plc:fixture\(index)"),
         displayName: "Fixture Account \(index)",
         handle: FormatString<Handle>(rawValue: "fixture\(index).test"))

@@ -136,10 +136,10 @@ public struct ModerationFixtureScreen: View {
       MutedWordsScreen(rows: ModerationFixtures.mutedWordRows())
     case .blockedAccounts:
       BlockedMutedAccountsScreen(
-        kind: .blocked, items: ModerationFixtures.profileViews(), hasMore: true)
+        kind: AccountListKind.blocked, items: ModerationFixtures.profileViews(), hasMore: true)
     case .mutedAccounts:
       BlockedMutedAccountsScreen(
-        kind: .muted, items: ModerationFixtures.profileViews(count: 2))
+        kind: AccountListKind.muted, items: ModerationFixtures.profileViews(count: 2))
     case .labelers:
       LabelerServicesScreen(
         subscribed: ModerationFixtures.labelerRows(subscribed: true),

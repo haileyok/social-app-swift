@@ -76,12 +76,12 @@ public enum AccountListKind: String, Sendable, Hashable, CaseIterable {
 /// `screens/Moderation/MutedAccounts.tsx`.
 public struct BlockedMutedAccountsScreen: View {
   private let kind: AccountListKind
-  private let items: [App.Bsky.ActorDefs_ProfileView]
+  private let items: [ModerationProfileView]
   private let isLoading: Bool
   private let isLoadingMore: Bool
   private let hasMore: Bool
   private let errorMessage: String?
-  private let onRemove: (App.Bsky.ActorDefs_ProfileView) -> Void
+  private let onRemove: (ModerationProfileView) -> Void
   private let onLoadMore: () -> Void
   private let onRetry: () -> Void
 
@@ -99,12 +99,12 @@ public struct BlockedMutedAccountsScreen: View {
   ///   - onRetry: asked for after a failure.
   public init(
     kind: AccountListKind,
-    items: [App.Bsky.ActorDefs_ProfileView] = [],
+    items: [ModerationProfileView] = [],
     isLoading: Bool = false,
     isLoadingMore: Bool = false,
     hasMore: Bool = false,
     errorMessage: String? = nil,
-    onRemove: @escaping (App.Bsky.ActorDefs_ProfileView) -> Void = { _ in },
+    onRemove: @escaping (ModerationProfileView) -> Void = { _ in },
     onLoadMore: @escaping () -> Void = {},
     onRetry: @escaping () -> Void = {}
   ) {
@@ -160,7 +160,10 @@ public struct BlockedMutedAccountsScreen: View {
 
   private var list: some View {
     VStack(spacing: 0) {
-      ForEach(items, id: \.did.rawValue) { profile in
+      // Identity is expressed as a closure rather than a chained key path
+      // (`\.did.rawValue`): a two-hop key path through `FormatString<DID>` is not
+      // inferable from the `ForEach` element type here.
+      ForEach(items, id: { $0.did.rawValue }) { profile in
         accountRow(profile)
         ModerationDivider()
       }
@@ -181,7 +184,7 @@ public struct BlockedMutedAccountsScreen: View {
     }
   }
 
-  private func accountRow(_ profile: App.Bsky.ActorDefs_ProfileView) -> some View {
+  private func accountRow(_ profile: ModerationProfileView) -> some View {
     let did = profile.did.rawValue
     return ModerationRow(title: profile.displayName ?? profile.handle.rawValue, subtitle: "@\(profile.handle.rawValue)") {
       Button(kind.removalAction) { onRemove(profile) }
@@ -195,5 +198,5 @@ public struct BlockedMutedAccountsScreen: View {
 
 #Preview {
   BlockedMutedAccountsScreen(
-    kind: .blocked, items: ModerationFixtures.profileViews(), hasMore: true)
+    kind: AccountListKind.blocked, items: ModerationFixtures.profileViews(), hasMore: true)
 }
