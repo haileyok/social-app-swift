@@ -56,6 +56,10 @@ public struct AppRootView: View {
         PostThreadSurfaces.threadScreen(theme: captureTheme ?? activePreference)
       case "starterpacks":
         StarterPacksSurfaces.starterPackScreen(theme: captureTheme ?? activePreference)
+      case "onboarding":
+        OnboardingSurfaces.wizardScreen(theme: captureTheme ?? activePreference)
+      case "settings":
+        SettingsSurfaces.settingsScreen(theme: captureTheme ?? activePreference)
       default:
         tabView
       }
