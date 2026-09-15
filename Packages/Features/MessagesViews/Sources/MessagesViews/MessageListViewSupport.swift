@@ -24,11 +24,7 @@ public enum MessageDateSeparator {
     {
       return MessagesCopy.yesterday
     }
-    let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
-    return date.formatted(
-      sameYear
-        ? Date.FormatStyle(date: .abbreviated, time: .omitted)
-        : Date.FormatStyle(date: .abbreviated, time: .omitted))
+    return date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted))
   }
 
   /// The relative time shown on an inbox row (or a short clock time for today).
@@ -52,13 +48,13 @@ public enum MessageDateSeparator {
 /// The items arrive in display order (oldest first, pending last); this splits
 /// them at day boundaries and inserts a separator row, which is what the RN
 /// `MessageList` does with `DateSeparator`.
-enum ConversationRow: Identifiable, Sendable {
+public enum ConversationRow: Identifiable, Sendable {
   /// A date separator.
   case separator(id: String, label: String)
   /// A message row.
   case item(ConvoItem)
 
-  var id: String {
+  public var id: String {
     switch self {
     case .separator(let id, _): "sep-\(id)"
     case .item(let item): "item-\(item.key)"

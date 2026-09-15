@@ -118,9 +118,9 @@ struct MessageBubble: View {
 
   /// The bubble's text surface. Mine is filled with the brand colour and the
   /// text is inverted; theirs is a contrast surface with normal text.
-  private func bubbleBody(_ text: String, facets: [App.Bsky.RichtextFacet]?, failed: Bool)
-    -> some View
-  {
+  private func bubbleBody(
+    _ text: String, facets: [Lexicons.App.Bsky.RichtextFacet]?, failed: Bool
+  ) -> some View {
     let segments = MessageFacets.segments(text: text, facets: facets)
     return Group {
       if isMine {

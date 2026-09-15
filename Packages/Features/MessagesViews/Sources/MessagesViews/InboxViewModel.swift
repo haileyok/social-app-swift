@@ -3,6 +3,7 @@ import Lexicons
 import MessagesLogic
 import Observation
 import QueryStore
+import UIComponentsCore
 
 /// The SwiftUI-facing adapter over ``InboxQuery``.
 ///

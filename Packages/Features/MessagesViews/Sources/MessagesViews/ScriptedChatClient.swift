@@ -172,13 +172,11 @@ public actor ScriptedChatClient: ChatXrpc {
 
   public func updateAllRead(status: ConvoStatusFilter?) async throws -> Int {
     calls.append("updateAllRead")
-    var updated = 0
-    for (id, var convo) in convos where convo.unreadCount > 0 {
-      convo.unreadCount = 0
-      convos[id] = convo
-      updated += 1
+    let unreadIds = convos.compactMap { $0.value.unreadCount > 0 ? $0.key : nil }
+    for id in unreadIds {
+      convos[id]?.unreadCount = 0
     }
-    return updated
+    return unreadIds.count
   }
 
   public func getUnreadCounts(includeGroupChats: Bool) async throws -> UnreadCounts {

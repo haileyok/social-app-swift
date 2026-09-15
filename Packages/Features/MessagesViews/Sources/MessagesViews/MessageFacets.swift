@@ -13,19 +13,19 @@ enum MessageFacets {
   ///
   /// Unknown feature kinds are dropped, matching the RN renderer, which ignores
   /// a facet it has no representation for.
-  static func segments(text: String, facets: [App.Bsky.RichtextFacet]?) -> [RichTextSegment] {
+  static func segments(text: String, facets: [Lexicons.App.Bsky.RichtextFacet]?) -> [RichTextSegment] {
     RichText(text: text, facets: converted(facets)).segments()
   }
 
   /// The wire facets, converted to the engine's `Facet`.
-  private static func converted(_ facets: [App.Bsky.RichtextFacet]?) -> [Facet]? {
+  private static func converted(_ facets: [Lexicons.App.Bsky.RichtextFacet]?) -> [Facet]? {
     guard let facets, !facets.isEmpty else { return nil }
     let result = facets.compactMap(facet)
     return result.isEmpty ? nil : result
   }
 
   /// One wire facet, or `nil` when no feature converts.
-  private static func facet(_ wire: App.Bsky.RichtextFacet) -> Facet? {
+  private static func facet(_ wire: Lexicons.App.Bsky.RichtextFacet) -> Facet? {
     let features: [FacetFeature] = wire.features.compactMap { element in
       switch element {
       case .richtextFacetLink(let link): return .link(uri: link.uri.rawValue)
