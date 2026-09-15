@@ -63,6 +63,12 @@ enum VideoPlayerPhase: Equatable {
   /// True while the media is rendering.
   var isPlaying: Bool { self == .playing }
 
+  /// True when the slot cannot play without a reload.
+  var isFailed: Bool {
+    if case .failed = self { return true }
+    return false
+  }
+
   /// True when the slot will not start without an explicit instruction.
   var isPlaybackHalted: Bool {
     switch self {

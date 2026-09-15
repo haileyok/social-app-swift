@@ -1,12 +1,17 @@
 import DesignSystem
 import DesignTokens
 import Lexicons
+import Moderation
 import RichText
 import SwiftUI
 import SwiftAtproto
 import UIComponents
 import UIComponentsCore
 import VideoFeedLogic
+
+/// The generated lexicon namespace, aliased because SwiftUI's own `App` protocol
+/// shadows the bare name in a UI file.
+typealias LexiconApp = Lexicons.App
 
 /// The chrome drawn over a video: author, caption, engagement affordances and the
 /// mute control.
@@ -61,7 +66,7 @@ struct VideoItemOverlay: View {
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(theme.atomColors.textInverted)
             .padding(Spacing.sm)
-            .background(theme.atomColors.bgContrast1000.opacity(0.35), in: Circle())
+            .background(theme.atomColors.bgContrast975.opacity(0.35), in: Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(isMuted ? VideoFeedStrings.unmute : VideoFeedStrings.mute)
@@ -139,7 +144,7 @@ struct VideoItemOverlay: View {
   /// The caption's rich-text segments, built from the post record.
   private var captionSegments: [RichTextSegment] {
     guard case .record(let value) = item.post.record,
-      let post = value as? App.Bsky.FeedPost
+      let post = value as? LexiconApp.Bsky.FeedPost
     else { return [] }
     return richTextFromRecord(FeedPostRecord(text: post.text)).segments()
   }
