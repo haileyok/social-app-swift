@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import DesignTokens
 import SettingsLogic
 import SwiftUI
@@ -116,15 +117,15 @@ public struct PrivacyAndSecurityScreen: View {
 
   private var rows: [SettingsRow] { SettingsMenu.privacyAndSecurity.flatMap(\.rows) }
 
+  /// The rows that push a settings route. `SettingsMenu` declares the row's
+  /// destination, so the filter is data-driven rather than a second list.
+  private var linkedRows: [SettingsRow] { rows.filter { $0.route != nil } }
+
   public var body: some View {
     Form {
       Section {
-        ForEach(rows, id: \.self) { row in
-          if let route = row.route {
-            NavigationLink(value: route) {
-              SettingsRowLabel(title: row.title)
-            }
-          } else {
+        ForEach(linkedRows, id: \.self) { row in
+          NavigationLink(value: row.route!) {
             SettingsRowLabel(title: row.title)
           }
         }
@@ -164,5 +165,5 @@ struct UnavailableFlowSheet: View {
   NavigationStack {
     AccountSettingsScreen(viewModel: .fixture())
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }

@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import DesignTokens
 import SettingsLogic
 import SwiftUI
@@ -115,5 +116,5 @@ public struct ContentAndMediaScreen: View {
   NavigationStack {
     ContentAndMediaScreen(viewModel: .fixture())
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }

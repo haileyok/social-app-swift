@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import DesignTokens
 import SettingsLogic
 import SwiftUI
@@ -179,5 +180,5 @@ public struct SavedFeedsScreen: View {
   NavigationStack {
     SavedFeedsScreen(viewModel: .fixture())
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }

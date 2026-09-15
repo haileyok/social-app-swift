@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import DesignTokens
 import Persistence
 import SettingsLogic
@@ -271,5 +272,5 @@ struct SettingsPlaceholderScreen: View {
 
 #Preview {
   SettingsRootScreen(viewModel: .fixture())
-    .theme(.light)
+    .theme(ThemePreference.light)
 }

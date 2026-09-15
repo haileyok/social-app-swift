@@ -198,5 +198,5 @@ struct ThemePreviewCard: View {
   NavigationStack {
     AppearanceSettingsScreen(viewModel: .fixture())
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }

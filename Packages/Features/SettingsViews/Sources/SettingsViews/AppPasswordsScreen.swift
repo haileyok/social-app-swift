@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import DesignTokens
 import SettingsLogic
 import SwiftUI
@@ -101,6 +102,10 @@ public struct AppPasswordsScreen: View {
         Section {
           ForEach(passwords, id: \.name) { password in
             row(password)
+          }
+          .onDelete { offsets in
+            guard let index = offsets.first, passwords.indices.contains(index) else { return }
+            revokeTarget = passwords[index]
           }
         } footer: {
           Text("App passwords can be revoked at any time.")
@@ -297,5 +302,5 @@ public struct AppPasswordCreatedSheet: View {
   NavigationStack {
     AppPasswordsScreen(viewModel: .fixture())
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }

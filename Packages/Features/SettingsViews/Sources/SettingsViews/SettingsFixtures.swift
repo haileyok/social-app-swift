@@ -69,19 +69,24 @@ public enum SettingsFixtures {
 
 /// Handle endpoints that succeed without a network, for the fixture surface.
 ///
+/// The methods are `nonisolated` because ``HandleService`` is a `Sendable`
+/// protocol whose requirements are nonisolated, while this module's default
+/// isolation is `MainActor`. The bodies read no shared state, so there is
+/// nothing to hop for.
+///
 /// The fixture does not fake the *flows*: ``ChangeHandleFlow`` and
 /// ``DeleteAccountFlow`` are the real types in both modes, and only their
 /// services differ.
 struct FixtureHandleService: HandleService {
-  func updateHandle(_ handle: String) async throws {}
-  func resolveHandle(_ handle: String) async throws -> String {
-    SettingsFixtures.sampleDID
+  nonisolated func updateHandle(_ handle: String) async throws {}
+  nonisolated func resolveHandle(_ handle: String) async throws -> String {
+    "did:plc:fixturesettings"
   }
 }
 
 /// An availability checker that always reports the handle as free.
 struct FixtureHandleAvailability: HandleAvailabilityChecking {
-  func checkHandleAvailability(
+  nonisolated func checkHandleAvailability(
     handle: String, serviceDID: String
   ) async throws -> HandleAvailabilityResult {
     .available
@@ -90,7 +95,7 @@ struct FixtureHandleAvailability: HandleAvailabilityChecking {
 
 /// Account-lifecycle endpoints that succeed without a network.
 struct FixtureAccountLifecycle: AccountLifecycleService {
-  func deactivateAccount() async throws {}
-  func requestAccountDelete() async throws {}
-  func deleteAccount(did: String, password: String, token: String) async throws {}
+  nonisolated func deactivateAccount() async throws {}
+  nonisolated func requestAccountDelete() async throws {}
+  nonisolated func deleteAccount(did: String, password: String, token: String) async throws {}
 }

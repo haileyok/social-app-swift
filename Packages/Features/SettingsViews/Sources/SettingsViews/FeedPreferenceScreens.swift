@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import DesignTokens
 import SettingsLogic
 import SwiftUI
@@ -161,5 +162,5 @@ public struct ThreadPreferencesScreen: View {
   NavigationStack {
     FollowingFeedPreferencesScreen(viewModel: .fixture())
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }

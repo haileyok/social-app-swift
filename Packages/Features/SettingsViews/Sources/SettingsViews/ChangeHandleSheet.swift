@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import DesignTokens
 import SettingsLogic
 import SwiftUI
@@ -89,7 +90,8 @@ public struct ChangeHandleSheet: View {
   }
 
   private var providedHandlePage: some View {
-    Section {
+    Group {
+      Section {
       HStack(spacing: Spacing.xs) {
         TextField("Subdomain", text: Binding(
           get: { state.subdomain },
@@ -118,9 +120,11 @@ public struct ChangeHandleSheet: View {
       }
       .disabled(state.isSubmitting || !validation.overall)
     }
+    }
   }
 
   private var ownHandlePage: some View {
+    Group {
     Section {
       TextField(
         "yourdomain.com",
@@ -163,6 +167,7 @@ public struct ChangeHandleSheet: View {
         Text(state.isSubmitting ? "Saving…" : "Save")
       }
       .disabled(state.isSubmitting || state.verification != .verified)
+    }
     }
   }
 
