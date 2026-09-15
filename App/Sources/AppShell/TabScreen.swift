@@ -86,6 +86,8 @@ struct TabScreen: View {
    */
   private let clients: AppSessionClients?
 
+  @Environment(ShellRouter.self) private var router
+
   init(tab: AppTab, session: AppSession?, clients: AppSessionClients? = nil) {
     self.tab = tab
     self.session = session
@@ -93,6 +95,13 @@ struct TabScreen: View {
   }
 
   var body: some View {
+    NavigationStack(path: router.path(for: tab)) {
+      content
+        .modifier(ShellDestinations())
+    }
+  }
+
+  @ViewBuilder private var content: some View {
     switch tab {
     case .home: HomeTabScreen(session: session, clients: clients)
     case .search: SearchTabScreen(clients: clients)
@@ -123,6 +132,7 @@ private struct HomeTabScreen: View {
   private let clients: AppSessionClients?
 
   @Environment(\.alfTheme) private var theme
+  @Environment(ShellRouter.self) private var router
 
   init(session: AppSession?, clients: AppSessionClients?) {
     self.session = session
@@ -130,13 +140,11 @@ private struct HomeTabScreen: View {
   }
 
   var body: some View {
-    NavigationStack {
-      content
-        .navigationTitle(AppTab.home.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar { toolbar }
-    }
-    .accessibilityIdentifier(ShellAccessibility.screen(AppTab.home.routeName))
+    content
+      .navigationTitle(AppTab.home.title)
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar { toolbar }
+      .accessibilityIdentifier(ShellAccessibility.screen(AppTab.home.routeName))
   }
 
   @ViewBuilder private var content: some View {
@@ -178,6 +186,7 @@ private struct HomeTabScreen: View {
     let clients: AppSessionClients
 
     @Environment(\.alfTheme) private var theme
+    @Environment(ShellRouter.self) private var router
 
     @State private var model: HomeFeedModel?
 
@@ -187,60 +196,16 @@ private struct HomeTabScreen: View {
           HomeFeedScreen(
             model: HomeFeedViewModel(
               model: model, presentation: .feeds, viewerDid: clients.did),
-            // TODO: router seam - post/link taps should open the thread or
-            // profile once the shell has a navigation layer.
-            onOpenRichText: { _ in })
+            onOpenRichText: { router.open($0) },
+            onOpenPost: { router.open(.thread(uri: $0)) })
         } else {
           ListSkeleton()
         }
       }
       .background(theme.atomColors.bg)
-      .task { await build() }
-    }
-
-    private func build() async {
-      let xrpc = LiveFeedXrpc(client: clients.appview)
-
-      // The timeline is always pinned first, matching the RN default; the
-      // stored saved-feeds v2 entries follow in stored order. A preferences
-      // read failure falls back to the timeline alone rather than an empty
-      // shell, the same tolerance the RN screen has.
-      let timeline = PinnedFeed(
-        config: SavedFeedEntry(
-          id: "home", type: .timeline, value: "following", pinned: true),
-        displayName: "Following")
-      var pinned = [timeline]
-      if let engine = try? PreferencesEngine(client: clients.pds),
-        let preferences = try? await engine.getPreferences()
-      {
-        let resolver = PinnedFeedsResolver(
-          store: clients.store, xrpc: xrpc, scope: clients.did, isAuthenticated: true)
-        pinned.append(
-          contentsOf: (try? await resolver.resolve(
-            savedItems: SavedFeedReader.entries(from: preferences))) ?? [])
+      .task {
+        model = await ShellFeedFactory.buildModel(clients: clients)
       }
-
-      var fetchers: [String: any FeedPageFetcher] = [:]
-      var tuners: [String: FeedTunerOptions] = [:]
-      for feed in pinned {
-        let key = feed.descriptor.description
-        tuners[key] = FeedTunerOptions(userDid: clients.did)
-        switch feed.descriptor {
-        case .following:
-          fetchers[key] = FollowingFeedFetcher(xrpc: xrpc)
-        case .feedgen(let uri):
-          fetchers[key] = CustomFeedFetcher(xrpc: xrpc, feedURI: uri)
-        case .list(let uri):
-          fetchers[key] = ListFeedFetcher(xrpc: xrpc, listURI: uri)
-        }
-      }
-
-      model = HomeFeedModel(
-        store: clients.store,
-        pinnedFeeds: pinned,
-        fetchersByDescriptor: fetchers,
-        tunerOptionsByDescriptor: tuners,
-        scope: clients.did)
     }
   }
 }
@@ -286,6 +251,8 @@ private struct SearchTabScreen: View {
   private struct LiveSearch: View {
     let clients: AppSessionClients
 
+    @Environment(ShellRouter.self) private var router
+
     @State private var explore = ExplorePageData(sections: [])
     @State private var isLoadingExplore = true
 
@@ -294,7 +261,11 @@ private struct SearchTabScreen: View {
         viewModel: SearchViewModel(
           service: LiveSearchService(fetchers: SearchFetchers(client: clients.appview))),
         exploreData: explore,
-        isLoadingExplore: isLoadingExplore)
+        isLoadingExplore: isLoadingExplore,
+        onSelectProfile: { router.open(.profile(actor: "\($0.did)")) },
+        onSelectFeed: { router.open(.feed(uri: "\($0.uri)", name: $0.displayName ?? "Feed")) },
+        onSelectStarterPack: { _ in },
+        onSelectTrendingTopic: { router.open(.search(query: $0)) })
         .task { await loadExplore() }
     }
 
@@ -338,6 +309,8 @@ private struct SearchTabScreen: View {
 private struct MessagesTabScreen: View {
   private let clients: AppSessionClients?
 
+  @Environment(ShellRouter.self) private var router
+
   init(clients: AppSessionClients?) {
     self.clients = clients
   }
@@ -352,9 +325,7 @@ private struct MessagesTabScreen: View {
               client: LiveChatXrpc(client: clients.chat),
               scope: clients.did),
             currentAccountDid: clients.did),
-          // TODO: router seam - open the tapped conversation once the shell
-          // has a navigation layer.
-          onSelect: { _ in })
+          onSelect: { router.open(.conversation(convoId: $0)) })
       } else {
         // The demo path: the scripted fixture inbox the screenshot loop
         // captures.
@@ -407,6 +378,8 @@ private struct NotificationsTabScreen: View {
   private struct LiveNotifications: View {
     let clients: AppSessionClients
 
+    @Environment(ShellRouter.self) private var router
+
     @State private var rows: [FeedNotification] = []
     @State private var isInitialLoading = true
     @State private var failed = false
@@ -416,9 +389,7 @@ private struct NotificationsTabScreen: View {
         rows: rows,
         isInitialLoading: isInitialLoading,
         onRefresh: { await load() },
-        // TODO: router seam - open the notification's post once the shell has
-        // a navigation layer.
-        onOpenPost: { _ in })
+        onOpenPost: { router.open(.thread(uri: $0)) })
         .task { await load() }
     }
 
@@ -484,8 +455,10 @@ private struct ProfileTabScreen: View {
     let clients: AppSessionClients
 
     @Environment(\.alfTheme) private var theme
+    @Environment(ShellRouter.self) private var router
 
     @State private var headerData: ProfileHeaderViewData?
+    @State private var showsEdit = false
 
     var body: some View {
       Group {
@@ -494,15 +467,36 @@ private struct ProfileTabScreen: View {
             headerData: headerData,
             // TODO: author-feed seam - the posts under the header need the
             // feed wiring the Home tab owns; the header renders alone until
-            // the shell can share it. onAction is the router seam for
-            // follow/mute/etc once mutations are wired.
-            onAction: { _ in })
+            // the shell can share it.
+            onAction: handle)
         } else {
           ListSkeleton()
         }
       }
       .background(theme.atomColors.bg)
+      .sheet(isPresented: $showsEdit) {
+        if let headerData, case .detailed(let profile) = headerData.unshadowedProfile {
+          EditProfileSheet(
+            profile: profile,
+            onCancel: { showsEdit = false },
+            onSave: { edit in
+              showsEdit = false
+              Task { try? await ProfileEditor.save(clients: clients, edit: edit) }
+            })
+        }
+      }
       .task { await load() }
+    }
+
+    /// Routes the header's actions; only edit-profile has a surface today.
+    private func handle(_ action: ProfileHeaderAction) {
+      switch action {
+      case .editProfile:
+        showsEdit = true
+      case .follow, .unfollow, .showFollowers, .showFollows:
+        // Mutations and follower lists are the next seams.
+        break
+      }
     }
 
     private func load() async {

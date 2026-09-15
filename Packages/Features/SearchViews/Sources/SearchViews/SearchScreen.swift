@@ -21,6 +21,10 @@ public struct SearchScreen: View {
   private let exploreData: ExplorePageData
   private let isLoadingExplore: Bool
   private let title: String
+  private let onSelectProfile: (Lexicons.App.Bsky.ActorDefs_ProfileView) -> Void
+  private let onSelectFeed: (Lexicons.App.Bsky.FeedDefs_GeneratorView) -> Void
+  private let onSelectStarterPack: (Lexicons.App.Bsky.GraphDefs_StarterPackView) -> Void
+  private let onSelectTrendingTopic: (String) -> Void
 
   @Environment(\.alfTheme) private var theme
 
@@ -33,16 +37,26 @@ public struct SearchScreen: View {
   ///     the screen renders its empty state rather than fabricating sections.
   ///   - isLoadingExplore: whether the Explore queries are still in flight.
   ///   - title: the navigation title copy.
+  ///   - onSelectProfile/onSelectFeed/onSelectStarterPack: result taps.
+  ///   - onSelectTrendingTopic: a trending-topic tap, with its query text.
   public init(
     viewModel: SearchViewModel = SearchViewModel(),
     exploreData: ExplorePageData = ExplorePageData(sections: []),
     isLoadingExplore: Bool = false,
-    title: String = SearchCopy.searchTitle
+    title: String = SearchCopy.searchTitle,
+    onSelectProfile: @escaping (Lexicons.App.Bsky.ActorDefs_ProfileView) -> Void = { _ in },
+    onSelectFeed: @escaping (Lexicons.App.Bsky.FeedDefs_GeneratorView) -> Void = { _ in },
+    onSelectStarterPack: @escaping (Lexicons.App.Bsky.GraphDefs_StarterPackView) -> Void = { _ in },
+    onSelectTrendingTopic: @escaping (String) -> Void = { _ in }
   ) {
     self._viewModel = State(initialValue: viewModel)
     self.exploreData = exploreData
     self.isLoadingExplore = isLoadingExplore
     self.title = title
+    self.onSelectProfile = onSelectProfile
+    self.onSelectFeed = onSelectFeed
+    self.onSelectStarterPack = onSelectStarterPack
+    self.onSelectTrendingTopic = onSelectTrendingTopic
   }
 
   public var body: some View {
@@ -69,7 +83,8 @@ public struct SearchScreen: View {
         data: exploreData,
         isLoading: isLoadingExplore,
         onRetry: { Task { await viewModel.loadResultsIfNeeded() } },
-        onLoadMoreFeeds: { Task { await viewModel.loadResultsIfNeeded() } })
+        onLoadMoreFeeds: { Task { await viewModel.loadResultsIfNeeded() } },
+        onSelectTrendingTopic: { onSelectTrendingTopic($0.topic) })
     case .suggesting(let suggestions):
       SearchSuggestionsList(
         suggestions: suggestions,
@@ -85,6 +100,9 @@ public struct SearchScreen: View {
         feeds: viewModel.feeds,
         starterPacks: viewModel.starterPacks,
         listState: viewModel.listState,
+        onSelectProfile: onSelectProfile,
+        onSelectFeed: onSelectFeed,
+        onSelectStarterPack: onSelectStarterPack,
         onSelectTab: { viewModel.select(tab: $0) },
         onRetry: { Task { await viewModel.loadResultsIfNeeded() } })
         .id(results.tab.rawValue)

@@ -103,8 +103,8 @@ public struct ContextLine: View {
 
   public var body: some View {
     HStack(spacing: Spacing.xs) {
-      Image(systemName: "arrow.2.squarepath")
-        .font(.system(size: 11, weight: .semibold))
+      Image(systemName: "arrow.2.square.path")
+        .font(.system(size: 13, weight: .semibold))
       Text(text)
         .font(TypeScale.xs.font(weight: "600"))
         .lineLimit(1)
@@ -219,7 +219,7 @@ public struct EngagementButton: View {
     } label: {
       HStack(spacing: Spacing.xs) {
         Image(systemName: systemImage)
-          .font(.system(size: 14))
+          .font(.system(size: 17, weight: .medium))
         if let count {
           Text(count)
             .font(TypeScale.xs.font())

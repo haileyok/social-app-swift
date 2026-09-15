@@ -86,6 +86,10 @@ public struct AppRootView: View {
 
   // MARK: - Roots
 
+  /// The demo shell's navigation state; pushed routes render fixture-free
+  /// skeletons without a session, so the demo path stays inert.
+  @State private var demoRouter = ShellRouter(activeTab: .home)
+
   /**
    The normal five-tab shell.
 
@@ -103,6 +107,9 @@ public struct AppRootView: View {
           .tag(tab)
       }
     }
+    .environment(demoRouter)
+    .imageLoader(AppImageLoader.shared)
+    .onChange(of: selection) { _, new in demoRouter.activeTab = new }
   }
 
   // MARK: - Theme
@@ -161,6 +168,9 @@ private struct SessionGateView: View {
    */
   @State private var clients: AppSessionClients?
 
+  /// The signed-in shell's navigation state; route screens read its `clients`.
+  @State private var router = ShellRouter(activeTab: .home)
+
   @Environment(\.colorScheme) private var colorScheme
 
   init(launch: ShellLaunch, surface: Surface) {
@@ -206,6 +216,9 @@ private struct SessionGateView: View {
           .tag(tab)
       }
     }
+    .environment(router)
+    .imageLoader(AppImageLoader.shared)
+    .onChange(of: selection) { _, new in router.activeTab = new }
   }
 
   private var launchPlaceholder: some View {
@@ -253,7 +266,9 @@ private struct SessionGateView: View {
       // the listener callback rather than making the callback async (every
       // listener is sync by contract).
       Task { @MainActor in
-        clients = await session.makeClients()
+        let built = await session.makeClients()
+        clients = built
+        router.clients = built
       }
     case .signedOut, .loading:
       clients = nil
