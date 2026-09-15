@@ -19,7 +19,7 @@ public enum StarterPackMemberLayout: String, CaseIterable, Sendable {
 /// Reads only; the caller supplies the items. The grid is the sample the pack
 /// view carries, the list is what ``StarterPackMembersQuery`` pages in.
 public struct StarterPackMemberCollection: View {
-  private let members: [App.Bsky.GraphDefs_ListItemView]
+  private let members: [Lexicons.App.Bsky.GraphDefs_ListItemView]
   private let layout: StarterPackMemberLayout
   private let optedOutDIDs: Set<String>
 
@@ -32,7 +32,7 @@ public struct StarterPackMemberCollection: View {
   ///   - layout: grid or list.
   ///   - optedOutDIDs: members who opted out, which the row badges.
   public init(
-    members: [App.Bsky.GraphDefs_ListItemView],
+    members: [Lexicons.App.Bsky.GraphDefs_ListItemView],
     layout: StarterPackMemberLayout = .list,
     optedOutDIDs: Set<String> = []
   ) {
@@ -70,19 +70,19 @@ public struct StarterPackMemberCollection: View {
     }
   }
 
-  private func isOptedOut(_ item: App.Bsky.GraphDefs_ListItemView) -> Bool {
+  private func isOptedOut(_ item: Lexicons.App.Bsky.GraphDefs_ListItemView) -> Bool {
     item.subjectOptedOut == true || optedOutDIDs.contains(item.subject.did.rawValue)
   }
 }
 
 /// One member as a grid tile: avatar over name.
 public struct StarterPackMemberTile: View {
-  private let item: App.Bsky.GraphDefs_ListItemView
+  private let item: Lexicons.App.Bsky.GraphDefs_ListItemView
   private let isOptedOut: Bool
 
   @Environment(\.alfTheme) private var theme
 
-  public init(item: App.Bsky.GraphDefs_ListItemView, isOptedOut: Bool = false) {
+  public init(item: Lexicons.App.Bsky.GraphDefs_ListItemView, isOptedOut: Bool = false) {
     self.item = item
     self.isOptedOut = isOptedOut
   }
@@ -119,12 +119,12 @@ public struct StarterPackMemberTile: View {
 
 /// One member as a list row: avatar, name, handle, optional badge.
 public struct StarterPackMemberRow: View {
-  private let item: App.Bsky.GraphDefs_ListItemView
+  private let item: Lexicons.App.Bsky.GraphDefs_ListItemView
   private let isOptedOut: Bool
 
   @Environment(\.alfTheme) private var theme
 
-  public init(item: App.Bsky.GraphDefs_ListItemView, isOptedOut: Bool = false) {
+  public init(item: Lexicons.App.Bsky.GraphDefs_ListItemView, isOptedOut: Bool = false) {
     self.item = item
     self.isOptedOut = isOptedOut
   }
@@ -184,11 +184,11 @@ public struct StarterPackOptedOutBadge: View {
 
 /// One pinned feed, as the feeds tab and the wizard's feeds step both render it.
 public struct StarterPackFeedRow: View {
-  private let feed: App.Bsky.FeedDefs_GeneratorView
+  private let feed: Lexicons.App.Bsky.FeedDefs_GeneratorView
 
   @Environment(\.alfTheme) private var theme
 
-  public init(feed: App.Bsky.FeedDefs_GeneratorView) {
+  public init(feed: Lexicons.App.Bsky.FeedDefs_GeneratorView) {
     self.feed = feed
   }
 

@@ -16,7 +16,7 @@ import UIComponents
  */
 public struct StarterPackScreen: View {
   private let detail: StarterPackDetail
-  private let members: [App.Bsky.GraphDefs_ListItemView]
+  private let members: [Lexicons.App.Bsky.GraphDefs_ListItemView]
   private let optedOutDIDs: Set<String>
   private let membership: StarterPackMembership?
   private let shareData: StarterPackShareData?
@@ -85,7 +85,7 @@ public struct StarterPackScreen: View {
   ///     only one page.
   public init(
     detail: StarterPackDetail,
-    members: [App.Bsky.GraphDefs_ListItemView] = [],
+    members: [Lexicons.App.Bsky.GraphDefs_ListItemView] = [],
     optedOutDIDs: Set<String> = [],
     membership: StarterPackMembership? = nil,
     shareData: StarterPackShareData? = nil,

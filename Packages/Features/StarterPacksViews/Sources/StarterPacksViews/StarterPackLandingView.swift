@@ -137,7 +137,7 @@ public struct StarterPackLandingView: View {
 public struct StarterPackDetailRouter: View {
   private let detail: StarterPackDetail
   private let landingState: StarterPackLandingState?
-  private let members: [App.Bsky.GraphDefs_ListItemView]
+  private let members: [Lexicons.App.Bsky.GraphDefs_ListItemView]
   private let onJoin: () -> Void
   private let onEdit: () -> Void
   private let onShare: () -> Void
@@ -145,7 +145,7 @@ public struct StarterPackDetailRouter: View {
   public init(
     detail: StarterPackDetail,
     landingState: StarterPackLandingState?,
-    members: [App.Bsky.GraphDefs_ListItemView] = [],
+    members: [Lexicons.App.Bsky.GraphDefs_ListItemView] = [],
     onJoin: @escaping () -> Void = {},
     onEdit: @escaping () -> Void = {},
     onShare: @escaping () -> Void = {}

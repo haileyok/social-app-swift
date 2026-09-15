@@ -46,13 +46,13 @@ public enum StarterPacksFixtures {
     feedCount: Int = 1,
     creatorDID: String = authorDID,
     creatorHandle: String = authorHandle
-  ) -> App.Bsky.GraphDefs_StarterPackView {
+  ) -> Lexicons.App.Bsky.GraphDefs_StarterPackView {
     let listURI = "at://\(creatorDID)/app.bsky.graph.list/\(listRkey)"
     let members = memberItems(count: min(memberCount, 12))
     let feeds = (0..<feedCount).map { index in
       generatorView(index: index, creatorDID: creatorDID)
     }
-    return App.Bsky.GraphDefs_StarterPackView(
+    return Lexicons.App.Bsky.GraphDefs_StarterPackView(
       cid: FormatString<LexLink>(rawValue: "bafyreiforfixtureonly"),
       creator: profileBasic(
         did: creatorDID, handle: creatorHandle, displayName: "Joshua Friedman"),
@@ -60,7 +60,7 @@ public enum StarterPacksFixtures {
       indexedAt: FormatString<Date>(rawValue: date),
       joinedAllTimeCount: joinedAllTimeCount,
       joinedWeekCount: 96,
-      list: App.Bsky.GraphDefs_ListViewBasic(
+      list: Lexicons.App.Bsky.GraphDefs_ListViewBasic(
         cid: FormatString<LexLink>(rawValue: "listcid"),
         listItemCount: memberCount,
         name: name,
@@ -68,10 +68,10 @@ public enum StarterPacksFixtures {
         uri: FormatString<ATURI>(rawValue: listURI)),
       listItemsSample: members,
       record: .record(
-        App.Bsky.GraphStarterpack(
+        Lexicons.App.Bsky.GraphStarterpack(
           createdAt: FormatString<Date>(rawValue: date),
           description: description,
-          feeds: feeds.map { App.Bsky.GraphStarterpack_FeedItem(uri: $0.uri) },
+          feeds: feeds.map { Lexicons.App.Bsky.GraphStarterpack_FeedItem(uri: $0.uri) },
           list: FormatString<ATURI>(rawValue: listURI),
           name: name)),
       uri: FormatString<ATURI>(
@@ -97,9 +97,9 @@ public enum StarterPacksFixtures {
   /// A member list-item for a synthetic account.
   public static func memberItem(
     index: Int, optedOut: Bool = false
-  ) -> App.Bsky.GraphDefs_ListItemView {
+  ) -> Lexicons.App.Bsky.GraphDefs_ListItemView {
     let did = "did:plc:member\(index)"
-    return App.Bsky.GraphDefs_ListItemView(
+    return Lexicons.App.Bsky.GraphDefs_ListItemView(
       subject: profile(
         did: did,
         handle: "member\(index).test",
@@ -111,16 +111,16 @@ public enum StarterPacksFixtures {
   }
 
   /// A run of member items.
-  public static func memberItems(count: Int) -> [App.Bsky.GraphDefs_ListItemView] {
+  public static func memberItems(count: Int) -> [Lexicons.App.Bsky.GraphDefs_ListItemView] {
     (0..<count).map { memberItem(index: $0) }
   }
 
   /// A pinned feed generator.
   public static func generatorView(
     index: Int, creatorDID: String = authorDID
-  ) -> App.Bsky.FeedDefs_GeneratorView {
+  ) -> Lexicons.App.Bsky.FeedDefs_GeneratorView {
     let did = "did:plc:feed\(index)"
-    return App.Bsky.FeedDefs_GeneratorView(
+    return Lexicons.App.Bsky.FeedDefs_GeneratorView(
       cid: FormatString<LexLink>(rawValue: "gencid\(index)"),
       creator: profile(did: did, handle: "curator\(index).test", displayName: "Curator \(index)"),
       did: FormatString<DID>(rawValue: did),
@@ -204,8 +204,8 @@ public enum StarterPacksFixtures {
 
   private static func profileBasic(
     did: String, handle: String, displayName: String? = nil
-  ) -> App.Bsky.ActorDefs_ProfileViewBasic {
-    App.Bsky.ActorDefs_ProfileViewBasic(
+  ) -> Lexicons.App.Bsky.ActorDefs_ProfileViewBasic {
+    Lexicons.App.Bsky.ActorDefs_ProfileViewBasic(
       did: FormatString<DID>(rawValue: did),
       displayName: displayName,
       handle: FormatString<Handle>(rawValue: handle))
@@ -213,8 +213,8 @@ public enum StarterPacksFixtures {
 
   private static func profile(
     did: String, handle: String, displayName: String? = nil
-  ) -> App.Bsky.ActorDefs_ProfileView {
-    App.Bsky.ActorDefs_ProfileView(
+  ) -> Lexicons.App.Bsky.ActorDefs_ProfileView {
+    Lexicons.App.Bsky.ActorDefs_ProfileView(
       did: FormatString<DID>(rawValue: did),
       displayName: displayName,
       handle: FormatString<Handle>(rawValue: handle))
