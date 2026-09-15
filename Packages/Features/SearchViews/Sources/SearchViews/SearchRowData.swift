@@ -51,6 +51,11 @@ public enum SearchRowData {
     "@\(profile.handle.rawValue)"
   }
 
+  /// The handle line for a basic profile view.
+  public static func handle(_ profile: Lexicons.App.Bsky.ActorDefs_ProfileViewBasic) -> String {
+    "@\(profile.handle.rawValue)"
+  }
+
   /// The bio line, when the profile has one.
   public static func bio(_ profile: Lexicons.App.Bsky.ActorDefs_ProfileView) -> String? {
     let text = profile.description?.trimmingCharacters(in: .whitespacesAndNewlines)
