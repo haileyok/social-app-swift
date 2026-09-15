@@ -60,7 +60,7 @@ public struct ShellLaunch: Sendable, Equatable {
    instead of dependent on whatever session the simulator happens to hold.
    */
   public var isDemoLaunch: Bool {
-    isDemoArgument || hasTabArgument || screen != nil || isUITestLaunch
+    isDemoArgument || hasTabArgument || screen != nil || Self.isUITestLaunch
   }
 
   /**
