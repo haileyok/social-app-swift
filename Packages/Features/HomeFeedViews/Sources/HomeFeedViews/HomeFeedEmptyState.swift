@@ -88,5 +88,5 @@ public struct HomeFeedEmptyState: View {
     HomeFeedEmptyState(reason: .following)
     HomeFeedEmptyState(reason: .noFeedsPinned)
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }

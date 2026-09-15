@@ -52,5 +52,5 @@ public struct NewPostsPill: View {
 
 #Preview {
   NewPostsPill {}
-    .theme(.light)
+    .theme(ThemePreference.light)
 }

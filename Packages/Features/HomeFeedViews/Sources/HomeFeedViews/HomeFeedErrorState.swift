@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import SwiftUI
 import UIComponents
 
@@ -60,5 +61,5 @@ public struct HomeFeedErrorState: View {
     HomeFeedErrorState(error: .network) {}
     HomeFeedErrorState(error: .service(message: nil)) {}
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }

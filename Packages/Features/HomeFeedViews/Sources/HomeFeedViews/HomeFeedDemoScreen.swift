@@ -159,5 +159,5 @@ public enum HomeFeedRenderOptions {
 
 #Preview {
   HomeFeedDemoScreen()
-    .theme(.light)
+    .theme(ThemePreference.light)
 }

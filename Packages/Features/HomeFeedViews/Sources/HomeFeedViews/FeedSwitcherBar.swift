@@ -1,4 +1,5 @@
 import DesignSystem
+import DesignSystemCore
 import SwiftUI
 
 /// The feed switcher: one tab per pinned feed.
@@ -88,5 +89,5 @@ public struct FeedSwitcherBar: View {
       onSelect: { _ in })
     Spacer()
   }
-  .theme(.light)
+  .theme(ThemePreference.light)
 }
