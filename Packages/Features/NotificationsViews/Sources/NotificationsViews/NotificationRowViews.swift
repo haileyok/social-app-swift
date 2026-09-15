@@ -126,7 +126,7 @@ public struct NotificationSentenceRow: View {
   /// The relative timestamp, through the shared formatter so it matches the
   /// feed rows.
   private var relativeTime: String {
-    relativeTimeString(row.notification.indexedAt.rawValue, now: now)
+    relativeTimeString(indexedAt: row.notification.indexedAt.rawValue, now: now)
   }
 
   private var notificationAuthorHandle: String {
