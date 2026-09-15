@@ -66,6 +66,16 @@ public enum AccountListKind: String, Sendable, Hashable, CaseIterable {
   }
 }
 
+/// One account row, with the identity `ForEach` needs.
+///
+/// The profile view's identity is its did, which lives behind
+/// `FormatString<DID>`; wrapping it makes that identity a plain `String` and
+/// avoids a two-hop key path the `ForEach` initializer cannot infer.
+struct ModerationAccountItem: Identifiable {
+  let profile: ModerationProfileView
+  var id: String { profile.did.rawValue }
+}
+
 /// The viewer's blocked or muted accounts, with the action that removes each.
 ///
 /// A paginated list of profile rows. The rows come from the caller (which owns
@@ -160,11 +170,8 @@ public struct BlockedMutedAccountsScreen: View {
 
   private var list: some View {
     VStack(spacing: 0) {
-      // Identity is expressed as a closure rather than a chained key path
-      // (`\.did.rawValue`): a two-hop key path through `FormatString<DID>` is not
-      // inferable from the `ForEach` element type here.
-      ForEach(items, id: { $0.did.rawValue }) { profile in
-        accountRow(profile)
+      ForEach(items.map(ModerationAccountItem.init)) { item in
+        accountRow(item.profile)
         ModerationDivider()
       }
 
