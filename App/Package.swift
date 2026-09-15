@@ -21,6 +21,7 @@ let package = Package(
     .package(path: "../Packages/Features/ProfileViews"),
     .package(path: "../Packages/Features/LoginViews"),
     .package(path: "../Packages/Features/Login"),
+    .package(path: "../Packages/Features/ComposerViews"),
     .package(path: "../Packages/ATProtoClient"),
   ],
   targets: [
@@ -33,6 +34,7 @@ let package = Package(
         .product(name: "ProfileViews", package: "ProfileViews"),
         .product(name: "LoginViews", package: "LoginViews"),
         .product(name: "LoginLogic", package: "Login"),
+        .product(name: "ComposerViews", package: "ComposerViews"),
         .product(name: "ATProtoClient", package: "ATProtoClient"),
       ],
       path: "Sources/AppShell"
