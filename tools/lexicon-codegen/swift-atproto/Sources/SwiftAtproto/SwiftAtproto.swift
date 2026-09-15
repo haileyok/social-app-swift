@@ -293,17 +293,17 @@ public struct LexLink: Sendable, Hashable, Codable, CborCodable, CustomStringCon
 
   @available(*, deprecated, message: "Use LexLink(try CID(version:codec:hash:)). Scheduled for removal in 0.44.0.")
   public init(version: CIDVersion, codec: Codecs, hash: String) throws {
-    self.cid = try CID(version: version, codec: codec, hash: hash)
+    self.cid = try CID(version: version, codec: codec, multihash: hash)
   }
 
   @available(*, deprecated, message: "Use LexLink(try CID(version:codec:hash:)). Scheduled for removal in 0.44.0.")
   public init(version: CIDVersion, codec: Codecs, hash: Data) throws {
-    self.cid = try CID(version: version, codec: codec, hash: hash)
+    self.cid = try CID(version: version, codec: codec, multihash: hash)
   }
 
   @available(*, deprecated, message: "Use LexLink(try CID(version:codec:hash:)). Scheduled for removal in 0.44.0.")
   public init(version: CIDVersion, codec: Codecs, hash: [UInt8]) throws {
-    self.cid = try CID(version: version, codec: codec, hash: hash)
+    self.cid = try CID(version: version, codec: codec, multihash: hash)
   }
 
   @available(*, deprecated, message: "Use LexLink(try CID(version:codec:multihash:)). Scheduled for removal in 0.44.0.")
