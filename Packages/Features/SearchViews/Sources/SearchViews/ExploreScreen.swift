@@ -19,10 +19,10 @@ public struct ExploreScreen: View {
   private let isLoading: Bool
   private let onRetry: () -> Void
   private let onSelectProfile: (ExploreRecommendedProfile) -> Void
-  private let onSelectFeed: (App.Bsky.FeedDefs_GeneratorView) -> Void
-  private let onSelectStarterPack: (App.Bsky.GraphDefs_StarterPackView) -> Void
-  private let onSelectTrendingTopic: (App.Bsky.UnspeccedDefs_TrendingTopic) -> Void
-  private let onSelectTrendingVideo: (App.Bsky.UnspeccedDefs_TrendView) -> Void
+  private let onSelectFeed: (Lexicons.App.Bsky.FeedDefs_GeneratorView) -> Void
+  private let onSelectStarterPack: (Lexicons.App.Bsky.GraphDefs_StarterPackView) -> Void
+  private let onSelectTrendingTopic: (Lexicons.App.Bsky.UnspeccedDefs_TrendingTopic) -> Void
+  private let onSelectTrendingVideo: (Lexicons.App.Bsky.UnspeccedDefs_TrendView) -> Void
   private let onLoadMoreFeeds: () -> Void
 
   @Environment(\.alfTheme) private var theme
@@ -32,10 +32,10 @@ public struct ExploreScreen: View {
     isLoading: Bool = false,
     onRetry: @escaping () -> Void = {},
     onSelectProfile: @escaping (ExploreRecommendedProfile) -> Void = { _ in },
-    onSelectFeed: @escaping (App.Bsky.FeedDefs_GeneratorView) -> Void = { _ in },
-    onSelectStarterPack: @escaping (App.Bsky.GraphDefs_StarterPackView) -> Void = { _ in },
-    onSelectTrendingTopic: @escaping (App.Bsky.UnspeccedDefs_TrendingTopic) -> Void = { _ in },
-    onSelectTrendingVideo: @escaping (App.Bsky.UnspeccedDefs_TrendView) -> Void = { _ in },
+    onSelectFeed: @escaping (Lexicons.App.Bsky.FeedDefs_GeneratorView) -> Void = { _ in },
+    onSelectStarterPack: @escaping (Lexicons.App.Bsky.GraphDefs_StarterPackView) -> Void = { _ in },
+    onSelectTrendingTopic: @escaping (Lexicons.App.Bsky.UnspeccedDefs_TrendingTopic) -> Void = { _ in },
+    onSelectTrendingVideo: @escaping (Lexicons.App.Bsky.UnspeccedDefs_TrendView) -> Void = { _ in },
     onLoadMoreFeeds: @escaping () -> Void = {}
   ) {
     self.data = data

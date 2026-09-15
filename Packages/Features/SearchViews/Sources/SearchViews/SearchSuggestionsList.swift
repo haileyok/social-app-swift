@@ -39,7 +39,7 @@ public struct SearchSuggestionsList: View {
   private let history: [SearchHistoryEntry]
   private let onSearchFor: (String) -> Void
   private let onSubmit: () -> Void
-  private let onSelectProfile: (Lexicons.App.Bsky.ActorDefs_ProfileViewBasic) -> Void
+  private let onSelectProfile: (Lexicons.Lexicons.App.Bsky.ActorDefs_ProfileViewBasic) -> Void
   private let onSelectHistory: (SearchHistoryEntry) -> Void
   private let onRemoveHistory: (SearchHistoryEntry) -> Void
 
@@ -50,7 +50,7 @@ public struct SearchSuggestionsList: View {
     history: [SearchHistoryEntry],
     onSearchFor: @escaping (String) -> Void = { _ in },
     onSubmit: @escaping () -> Void = {},
-    onSelectProfile: @escaping (Lexicons.App.Bsky.ActorDefs_ProfileViewBasic) -> Void = { _ in },
+    onSelectProfile: @escaping (Lexicons.Lexicons.App.Bsky.ActorDefs_ProfileViewBasic) -> Void = { _ in },
     onSelectHistory: @escaping (SearchHistoryEntry) -> Void = { _ in },
     onRemoveHistory: @escaping (SearchHistoryEntry) -> Void = { _ in }
   ) {
