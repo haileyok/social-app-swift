@@ -27,6 +27,9 @@ let package = Package(
         .product(name: "Lexicons", package: "Lexicons"),
         .product(name: "Moderation", package: "Moderation"),
         .product(name: "QueryStore", package: "QueryStore"),
+        // `Lexicons` surfaces `SwiftAtproto` types (FormatString/ATURI/DID) in
+        // its public API, so this target needs the product directly to link.
+        .product(name: "SwiftAtproto", package: "swift-atproto"),
       ],
       path: "Sources/PostThreadLogic"
     ),
