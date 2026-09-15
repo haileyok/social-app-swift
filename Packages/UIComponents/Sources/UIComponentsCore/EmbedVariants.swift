@@ -68,6 +68,9 @@ public func embedVariantInfo(_ embed: PostViewEmbed?) -> EmbedVariantInfo? {
   case .external:
     return EmbedVariantInfo(
       variant: .external, hasMedia: true)
+  case .video:
+    return EmbedVariantInfo(
+      variant: .video, hasMedia: true, isVideo: true)
   case .record(let record):
     // A quote with no recognisable record (blocked/not-found) still renders
     // as the record variant, with the "not available" body.
@@ -96,6 +99,7 @@ private func mediaInfo(_ media: RecordWithMediaViewMedia?) -> (
   case .images(let images): return (images.count, true, false)
   case .gallery(let items): return (items.count, true, false)
   case .external: return (0, true, false)
+  case .video: return (0, true, true)
   case .unknown: return (0, false, false)
   }
 }

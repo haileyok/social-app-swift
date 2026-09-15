@@ -186,11 +186,18 @@ public final class AppSession {
   /**
    The login flow this app drives.
 
-   Built with the live session store, so a successful sign-in records the
-   account and its tokens without the view having to mirror anything.
+   Built with the live session store and the production handle resolver, so a
+   self-hosted account signs in against its own PDS: `hailey.at` resolves
+   through the public appview and the DID document to `cocoon.hailey.at`,
+   exactly the RN screen's `lookupHandle`.
    */
   public func makeLoginFlow() -> LoginFlow {
-    LoginFlow(transport: transport, sessionStore: sessionStore)
+    LoginFlow(
+      transport: transport,
+      sessionStore: sessionStore,
+      lookupHandle: { handle in
+        try await HandleResolver.resolve(handle, transport: transport)
+      })
   }
 
   /**

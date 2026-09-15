@@ -76,18 +76,11 @@ public struct PostFeedItem: View {
 
   @ViewBuilder
   private func embedBody(_ embed: EmbedVariantInfo) -> some View {
-    // A video embed has no case in the engine's stand-in union, so an adapter
-    // that decodes the full lexicon renders ``VideoPlaceholder`` directly. The
-    // dispatch here falls back to the placeholder for the video variant.
-    if embed.isVideo {
-      VideoPlaceholder()
-    } else {
-      PostEmbed(
-        embed: data.postEmbed,
-        info: embed,
-        moderation: data.moderation.media,
-        onOpen: onOpen)
-    }
+    PostEmbed(
+      embed: data.postEmbed,
+      info: embed,
+      moderation: data.moderation.media,
+      onOpen: onOpen)
   }
 }
 

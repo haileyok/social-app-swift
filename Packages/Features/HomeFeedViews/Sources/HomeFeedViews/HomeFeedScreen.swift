@@ -200,15 +200,18 @@ public struct HomeFeedRowView: View {
       ForEach(row.items) { item in
         PostFeedItem(data: item.data, onOpen: onOpenRichText)
           .contentShape(.rect)
-          .onTapGesture { onOpenPost(item.id) }
-          .overlay(alignment: .leading) {
+          .onTapGesture { onOpenPost(item.uri) }
+          .overlay(alignment: .topLeading) {
             if item.showsReplyLine {
-              // The thread connector, inset to the avatar's centre line.
+              // The thread connector: a vertical rule on the avatar's centre
+              // line, from the avatar's centre down to the item's bottom edge
+              // (the geometry RN's Post.tsx draws between merged replies).
               Rectangle()
                 .fill(theme.atomColors.borderContrastLow)
                 .frame(width: 2)
-                .padding(.leading, Spacing.xl + Spacing.md)
-                .padding(.vertical, Spacing.xs)
+                .padding(.leading, Spacing.md + AvatarSize.md.side / 2)
+                .padding(.top, Spacing.md + AvatarSize.md.side / 2)
+                .frame(maxHeight: .infinity, alignment: .bottom)
             }
           }
         Divider()
