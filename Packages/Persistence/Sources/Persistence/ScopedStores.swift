@@ -62,7 +62,7 @@ public struct ScopedStores: Sendable {
   public let account: Storage<AccountSchemaMarker>
 
   /// Creates both stores under `directory`.
-  public init(directory: URL, fileManager: FileManager = .default) {
+  public init(directory: URL, fileManager: SendableFileManager = SendableFileManager()) {
     self.device = Storage(
       id: "bsky_device", scope: [], directory: directory, fileManager: fileManager)
     self.account = Storage(

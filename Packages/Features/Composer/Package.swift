@@ -3,8 +3,8 @@ import PackageDescription
 
 let package = Package(
   name: "Composer",
-  platforms: [.iOS(.v18), .macOS(.v14)],
   defaultLocalization: "en",
+  platforms: [.iOS(.v18), .macOS(.v14)],
   products: [
     .library(name: "ComposerLogic", targets: ["ComposerLogic"])
   ],

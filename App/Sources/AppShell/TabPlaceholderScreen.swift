@@ -37,6 +37,9 @@ public struct TabPlaceholderScreen: View {
             .accessibilityLabel("Token gallery")
             .accessibilityIdentifier(ShellAccessibility.tokenGalleryButton)
           }
+          ToolbarItem(placement: .topBarLeading) {
+            LoginDebugButton()
+          }
         }
     }
     .accessibilityIdentifier(ShellAccessibility.screen(tab.routeName))

@@ -13,7 +13,9 @@ public actor PersistedStore {
 
   private let fileURL: URL
   private let directory: URL
-  private let fileManager: FileManager
+  private let fileManagerBox: SendableFileManager
+
+  private var fileManager: FileManager { fileManagerBox.value }
   private let migration: (@Sendable (Int, [String: JSONValue]) -> [String: JSONValue])?
 
   /// The current in-memory document. Starts at defaults until ``hydrate()``.
@@ -35,14 +37,14 @@ public actor PersistedStore {
   public init(
     directory: URL,
     schemaVersion: Int = PersistedMigrator.currentVersion,
-    fileManager: FileManager = .default,
+    fileManager: SendableFileManager = SendableFileManager(),
     migration: (@Sendable (Int, [String: JSONValue]) -> [String: JSONValue])? = nil,
     defaultLanguagePrefs: LanguagePrefs = LanguagePrefs()
   ) {
     self.directory = directory
     self.fileURL = directory.appendingPathComponent("\(Self.storageKey).json")
     self.schemaVersion = schemaVersion
-    self.fileManager = fileManager
+    self.fileManagerBox = fileManager
     self.migration = migration
     self.state = PersistedSchema.defaults(languagePrefs: defaultLanguagePrefs)
   }
