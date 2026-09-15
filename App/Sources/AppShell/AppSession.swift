@@ -249,4 +249,24 @@ public final class AppSession {
       return FileTokenStore(rootDirectory: directory)
     #endif
   }
+
+  /**
+   A session owner over a store rooted at `directory`.
+
+   The production path is ``init(launch:)``; this seam exists so the session can
+   be driven over a scratch directory - by a test, a preview, or a future
+   "reset local data" affordance - without the caller having to know how the
+   Persistence stores are wired together.
+   */
+  public static func withStorage(
+    directory: URL,
+    transport: HTTPTransport = URLSessionTransport()
+  ) -> AppSession {
+    AppSession(
+      sessionStore: SessionStore(
+        persisted: PersistedStore(directory: directory),
+        tokenStore: makeTokenStore(at: directory),
+        transport: transport),
+      transport: transport)
+  }
 }

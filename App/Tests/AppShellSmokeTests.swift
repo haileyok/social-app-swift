@@ -1,5 +1,4 @@
 import AppShell
-import Persistence
 import XCTest
 
 /**
@@ -173,11 +172,7 @@ final class ShellLaunchTests: XCTestCase {
 @MainActor
 final class AppSessionTests: XCTestCase {
   func testASessionWithNoStoredAccountSettlesSignedOut() async {
-    let session = AppSession(
-      sessionStore: SessionStore(
-        persisted: PersistedStore(directory: temporaryDirectory()),
-        tokenStore: InMemoryTokenStore()),
-      tokenStore: InMemoryTokenStore())
+    let session = AppSession.withStorage(directory: temporaryDirectory())
 
     await session.start()
 
@@ -189,11 +184,7 @@ final class AppSessionTests: XCTestCase {
   /// Bootstrap is idempotent: a view that re-runs its task must not start a
   /// second resume.
   func testStartIsIdempotent() async {
-    let session = AppSession(
-      sessionStore: SessionStore(
-        persisted: PersistedStore(directory: temporaryDirectory()),
-        tokenStore: InMemoryTokenStore()),
-      tokenStore: InMemoryTokenStore())
+    let session = AppSession.withStorage(directory: temporaryDirectory())
 
     await session.start()
     await session.start()
@@ -204,17 +195,25 @@ final class AppSessionTests: XCTestCase {
   /// A listener registered after bootstrap receives the settled state
   /// immediately, which is what lets a view mount late without waiting.
   func testListenerReceivesTheCurrentStateOnRegistration() async {
-    let session = AppSession(
-      sessionStore: SessionStore(
-        persisted: PersistedStore(directory: temporaryDirectory()),
-        tokenStore: InMemoryTokenStore()),
-      tokenStore: InMemoryTokenStore())
+    let session = AppSession.withStorage(directory: temporaryDirectory())
     await session.start()
 
     var received: [AppSession.State] = []
     session.addListener { received.append($0) }
 
     XCTAssertEqual(received, [.signedOut])
+  }
+
+  /// Signing out with nothing signed in is a no-op that leaves the root where
+  /// it was, rather than throwing.
+  func testSignOutWithNoAccountStaysSignedOut() async {
+    let session = AppSession.withStorage(directory: temporaryDirectory())
+    await session.start()
+
+    await session.signOut()
+
+    XCTAssertEqual(session.state, .signedOut)
+    XCTAssertFalse(session.loginIsStale)
   }
 
   private func temporaryDirectory() -> URL {
