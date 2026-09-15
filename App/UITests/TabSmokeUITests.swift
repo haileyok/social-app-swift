@@ -22,6 +22,11 @@ final class TabSmokeUITests: XCTestCase {
     super.setUp()
     continueAfterFailure = false
     app = XCUIApplication()
+    // A bare launch would consult the session gate, and a signed-out
+    // simulator would show the login root instead of the tab shell this suite
+    // asserts. The demo flag is the documented UI-test launch contract (the
+    // same one the session-gate tests use): the tab shell, with no session.
+    app.launchArguments = ["-\(ShellLaunchArgument.demo)", "1"]
     app.launch()
   }
 

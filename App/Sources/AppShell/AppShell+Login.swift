@@ -6,28 +6,72 @@ import SwiftUI
 // Re-exported so the app and its test targets reach `LoginAccessibility` (and
 // the rest of the surface) through `import AppShell` alone, the same way they
 // reach `ShellAccessibility`. XCUITest bundles are built by the project rather
-// than by a package, so they link only the AppShell product. The `@_exported`
-// form is also what makes the plain `import LoginViews` redundant above.
+// than by a package, so they link only the AppShell product.
 @_exported import LoginViews
+
+/**
+ The signed-out root: the sign-in screen, presented full-screen.
+
+ This is the real login path - no sheet, no debug affordance - so the login
+ smoke test drives exactly what a signed-out user gets. A success hands the
+ account to the session, which switches the root to the tab shell; the flow has
+ already recorded the account and its tokens in the session store by then, so
+ the root only has to follow.
+
+ The view model is created once, in `init`, from the session's own flow: a
+ model rebuilt on every render would re-register its listener and drop the
+ password the user had typed.
+ */
+public struct LoginRootView: View {
+  private let session: AppSession
+
+  @State private var viewModel: LoginViewModel
+
+  @MainActor
+  public init(session: AppSession) {
+    self.session = session
+    _viewModel = State(initialValue: LoginViewModel(flow: session.makeLoginFlow()))
+  }
+
+  public var body: some View {
+    LoginScreen(
+      viewModel: viewModel,
+      onSignedIn: { account in
+        Task { await session.adoptSignedInAccount(account) }
+      },
+      onForgotPassword: { _ in }
+    )
+    // A container identifier for the signed-out root. It is a marker for
+    // screenshots and accessibility review rather than an assertion target: the
+    // UI test identifies the root by what it does not have (the shell's tab bar,
+    // the sheet's close control) plus the credential form it does, because a
+    // container identifier on a ScrollView-backed screen is not reliably
+    // exposed to XCUITest.
+    .accessibilityIdentifier(ShellAccessibility.loginRoot)
+  }
+}
 
 /**
  The login entry point for the debug toolbar.
 
- Mirrors `AppShell+Components.swift`: the hook lives in its own file so the shell
- agent's work on the root view and this debug surface do not conflict. Nothing
- here is referenced by the root view by default - the login flow is presented as
- a sheet from a tab toolbar, which keeps the 5-tab root and its smoke tests
- untouched while the first real screen is reachable.
+ Mirrors `AppShell+Components.swift`: the hook lives in its own file so the
+ shell's root work and this debug surface do not conflict. The toolbar shows it
+ only while nothing is signed in (see `ShellAccountControl`), so a real session
+ gets the account menu instead.
 
  ```swift
  // A tab's toolbar, alongside the token-gallery link:
- LoginDebugButton()
+ LoginDebugButton(session: session)
  ```
  */
 public struct LoginDebugButton: View {
+  private let session: AppSession?
+
   @State private var isPresented = false
 
-  public init() {}
+  public init(session: AppSession? = nil) {
+    self.session = session
+  }
 
   public var body: some View {
     Button {
@@ -35,10 +79,10 @@ public struct LoginDebugButton: View {
     } label: {
       Image(systemName: "person.crop.circle")
     }
-    .accessibilityLabel("Login")
+    .accessibilityLabel(ShellCopy.loginTitle)
     .accessibilityIdentifier(ShellAccessibility.loginButton)
     .sheet(isPresented: $isPresented) {
-      LoginDebugSheet()
+      LoginDebugSheet(session: session)
     }
   }
 }
@@ -49,24 +93,44 @@ public struct LoginDebugButton: View {
 
  `showsStoredAccounts` is off so the debug entry point always lands on the
  credential form: the smoke test asserts the form's fields exist, and what
- happens to be stored on the simulator's device must not change that.
+ happens to be stored on the simulator's device must not change that. A success
+ is adopted by the session and the sheet closes itself.
  */
 public struct LoginDebugSheet: View {
   @AppStorage("alfTheme") private var themePreference = ThemePreference.system.rawValue
 
   @Environment(\.dismiss) private var dismiss
 
-  public init() {}
+  private let session: AppSession?
+
+  @State private var viewModel: LoginViewModel
+
+  @MainActor
+  public init(session: AppSession? = nil) {
+    self.session = session
+    _viewModel = State(
+      initialValue: LoginViewModel(
+        flow: session?.makeLoginFlow() ?? LoginFlow()))
+  }
 
   public var body: some View {
     NavigationStack {
-      LoginScreen(showsStoredAccounts: false)
-        .navigationTitle(LoginStrings.signInTitle)
+      LoginScreen(
+        viewModel: viewModel,
+        showsStoredAccounts: false,
+        onSignedIn: { account in
+          Task {
+            await session?.adoptSignedInAccount(account)
+            dismiss()
+          }
+        }
+      )
+      .navigationTitle(LoginStrings.signInTitle)
       .navigationBarTitleDisplayMode(.inline)
       .theme(ThemePreference(rawValue: themePreference) ?? .system)
       .toolbar {
         ToolbarItem(placement: .topBarLeading) {
-          Button("Close") { dismiss() }
+          Button(ShellCopy.loginCancelAction) { dismiss() }
             .accessibilityIdentifier(ShellAccessibility.loginCloseButton)
         }
       }
