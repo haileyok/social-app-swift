@@ -276,9 +276,9 @@ private struct ComposerApplyWritesBody: Encodable, Sendable {
 }
 
 private enum ComposerApplyWrite: Encodable, Sendable {
-  case post(collection: String, rkey: String, value: App.Bsky.FeedPost)
-  case threadgate(collection: String, rkey: String, value: App.Bsky.FeedThreadgate)
-  case postgate(collection: String, rkey: String, value: App.Bsky.FeedPostgate)
+  case post(collection: String, rkey: String, value: Lexicons.App.Bsky.FeedPost)
+  case threadgate(collection: String, rkey: String, value: Lexicons.App.Bsky.FeedThreadgate)
+  case postgate(collection: String, rkey: String, value: Lexicons.App.Bsky.FeedPostgate)
 
   init(_ write: ComposerWrite) {
     switch write {
