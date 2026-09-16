@@ -19,13 +19,64 @@ public enum PostModerationAdapter {
       cid: post.cid.rawValue,
       author: author(post.author),
       record: record(post.record),
-      // Embeds are not bridged yet: the engine only reads them for
-      // record-with-media label checks, which the thread screen does not
-      // surface. Add the bridge when a caller needs it.
-      embed: nil,
+      embed: postViewEmbed(post.embed),
       labels: post.labels?.map(label),
       indexedAt: post.indexedAt.rawValue
     )
+  }
+
+  /// Bridges every hydrated post-view embed into the render/moderation union.
+  public static func postViewEmbed(
+    _ embed: App.Bsky.FeedDefs_PostView_Embed?
+  ) -> Moderation.PostViewEmbed? {
+    guard let embed else { return nil }
+    switch embed {
+    case .embedImagesView(let view):
+      return .images(view.images.map(image))
+    case .embedGalleryView(let view):
+      return .gallery(view.items.map(galleryItem))
+    case .embedExternalView(let view):
+      return .external(
+        Moderation.EmbedExternal(
+          uri: view.external.uri.rawValue,
+          title: view.external.title,
+          description: view.external.description))
+    case .embedVideoView:
+      return .unknown(type: "app.bsky.embed.video#view")
+    case .embedRecordView(let view):
+      guard let decoded: Moderation.EmbedRecordView = decode(view) else {
+        return .unknown(type: "app.bsky.embed.record#view")
+      }
+      return .record(decoded)
+    case .embedRecordWithMediaView(let view):
+      guard let decoded: Moderation.EmbedRecordWithMediaView = decode(view) else {
+        return .unknown(type: "app.bsky.embed.recordWithMedia#view")
+      }
+      return .recordWithMedia(decoded)
+    case ._other(let record):
+      return .unknown(type: record.type)
+    }
+  }
+
+  static func image(_ image: App.Bsky.EmbedImages_ViewImage) -> Moderation.EmbedImage {
+    Moderation.EmbedImage(alt: image.alt, image: image.thumb.rawValue)
+  }
+
+  static func galleryItem(
+    _ item: App.Bsky.EmbedGallery_View_Items_Elem
+  ) -> Moderation.EmbedGalleryItem {
+    switch item {
+    case .embedGalleryViewImage(let image):
+      return .image(
+        Moderation.EmbedImage(alt: image.alt, image: image.thumbnail.rawValue))
+    case ._other:
+      return .unknown(type: "app.bsky.embed.gallery#viewImage")
+    }
+  }
+
+  static func decode<T: Decodable>(_ value: some Encodable) -> T? {
+    guard let data = try? JSONEncoder().encode(value) else { return nil }
+    return try? JSONDecoder().decode(T.self, from: data)
   }
 
   /// Runs the engine over a post view.
