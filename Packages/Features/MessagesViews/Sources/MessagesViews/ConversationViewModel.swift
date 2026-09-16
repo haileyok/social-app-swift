@@ -60,6 +60,11 @@ public final class ConversationViewModel {
     return partner?.avatar?.rawValue
   }
 
+  /// The direct conversation partner's DID, used by profile navigation.
+  public var partnerDid: String? {
+    convo?.members.first { $0.did.rawValue != currentAccountDid }?.did.rawValue
+  }
+
   /// Whether the conversation is muted.
   public var isMuted: Bool { convo?.muted ?? false }
 
@@ -173,6 +178,18 @@ public final class ConversationViewModel {
   public func setMuted(_ muted: Bool) async {
     _ = try? await model.setMuted(muted)
     await refresh()
+  }
+
+  /// Leaves the conversation, returning whether the server confirmed removal.
+  public func leaveConversation() async -> Bool {
+    do {
+      _ = try await model.leaveConvo()
+      await refresh()
+      return true
+    } catch {
+      await refresh()
+      return false
+    }
   }
 
   // MARK: - Log ingest

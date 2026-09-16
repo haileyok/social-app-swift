@@ -511,7 +511,9 @@ private struct ConversationRouteView: View {
               senderDid: clients.did,
               convo: convo),
             currentAccountDid: clients.did),
-          showsBackButton: false)
+          showsBackButton: false,
+          onOpenProfile: { router.open(.profile(actor: $0)) },
+          onLeave: { router.pop() })
       } else {
         ListSkeleton()
       }

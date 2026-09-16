@@ -18,8 +18,12 @@ public struct ConversationScreen: View {
   /// True when the user has scrolled away from the newest message, so the
   /// scroll-to-bottom control is showing.
   @State private var isScrolledAway = false
+  @State private var confirmsLeave = false
+  @State private var showsLeaveError = false
 
   private let onBack: (() -> Void)?
+  private let onOpenProfile: ((String) -> Void)?
+  private let onLeave: (() -> Void)?
 
   /// Creates the conversation screen.
   ///
@@ -30,11 +34,15 @@ public struct ConversationScreen: View {
   public init(
     viewModel: ConversationViewModel,
     showsBackButton: Bool = true,
-    onBack: (() -> Void)? = nil
+    onBack: (() -> Void)? = nil,
+    onOpenProfile: ((String) -> Void)? = nil,
+    onLeave: (() -> Void)? = nil
   ) {
     _viewModel = State(initialValue: viewModel)
     self.showsBackButton = showsBackButton
     self.onBack = onBack
+    self.onOpenProfile = onOpenProfile
+    self.onLeave = onLeave
   }
 
   private let showsBackButton: Bool
@@ -65,13 +73,56 @@ public struct ConversationScreen: View {
         }
       }
       ToolbarItem(placement: .topBarTrailing) {
-        Button {
-          Task { await viewModel.setMuted(!viewModel.isMuted) }
+        Menu {
+          if let partnerDid = viewModel.partnerDid, let onOpenProfile {
+            Button {
+              onOpenProfile(partnerDid)
+            } label: {
+              Label("Go to profile", systemImage: "person.crop.circle")
+            }
+          }
+          Button {
+            Task { await viewModel.setMuted(!viewModel.isMuted) }
+          } label: {
+            Label(
+              viewModel.isMuted ? "Unmute conversation" : "Mute conversation",
+              systemImage: viewModel.isMuted ? "bell" : "bell.slash")
+          }
+          Divider()
+          Button(role: .destructive) {
+            confirmsLeave = true
+          } label: {
+            Label("Leave conversation", systemImage: "rectangle.portrait.and.arrow.right")
+          }
         } label: {
-          Image(systemName: viewModel.isMuted ? "bell.slash.fill" : "bell")
+          Image(systemName: "ellipsis.circle")
         }
-        .accessibilityLabel(viewModel.isMuted ? "Unmute" : "Mute")
+        .accessibilityLabel("Conversation settings")
       }
+    }
+    .confirmationDialog(
+      "Leave conversation",
+      isPresented: $confirmsLeave,
+      titleVisibility: .visible
+    ) {
+      Button("Leave", role: .destructive) {
+        Task {
+          if await viewModel.leaveConversation() {
+            onLeave?()
+          } else {
+            showsLeaveError = true
+          }
+        }
+      }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text(
+        "Your messages will be deleted for you, but not for the other participant.")
+    }
+    .alert("Could not leave chat", isPresented: $showsLeaveError) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text("Check your internet connection and try again.")
     }
     .accessibilityIdentifier(MessagesAccessibility.conversation)
     .task {
