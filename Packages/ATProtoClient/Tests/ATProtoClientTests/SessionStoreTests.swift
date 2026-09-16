@@ -440,10 +440,12 @@ func sampleAccount(did: String, handle: String = "alice.example") -> PersistedAc
       refreshJwt: "refresh-1",
       accessJwt: makeJWT(payload: ["exp": 1_000_000_000, "scope": "com.atproto.access"]))
     try await store.upsertAccount(expired)
+    _ = try await store.switchToAccount(expired.did)
 
-    await #expect(throws: URLError.self) {
-      try await store.resume(account: expired)
-    }
+    let resumed = try await store.resumeCurrent()
+
+    #expect(resumed.accessJwt == expired.accessJwt)
+    #expect(resumed.refreshJwt == expired.refreshJwt)
     let session = try #require(await store.currentSession())
     #expect(!(await session.isDestroyed()))
     #expect(try await session.sessionData().did == expired.did)
