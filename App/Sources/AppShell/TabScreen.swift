@@ -263,6 +263,8 @@ private struct SearchTabScreen: View {
         SearchFixtureSurfaces.searchContent(theme: themePreference)
       }
     }
+    .navigationTitle(AppTab.search.title)
+    .navigationBarTitleDisplayMode(.inline)
     .accessibilityIdentifier(ShellAccessibility.screen(AppTab.search.routeName))
   }
 
@@ -396,6 +398,8 @@ private struct NotificationsTabScreen: View {
         NotificationsSurfaces.notificationsScreen(theme: themePreference)
       }
     }
+    .navigationTitle(AppTab.notifications.title)
+    .navigationBarTitleDisplayMode(.inline)
     .accessibilityIdentifier(ShellAccessibility.screen(AppTab.notifications.routeName))
   }
 
@@ -478,6 +482,8 @@ private struct ProfileTabScreen: View {
         ProfileFixtureSurface()
       }
     }
+    .navigationTitle(AppTab.profile.title)
+    .navigationBarTitleDisplayMode(.inline)
     .accessibilityIdentifier(ShellAccessibility.screen(AppTab.profile.routeName))
   }
 
