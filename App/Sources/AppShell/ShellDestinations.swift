@@ -229,6 +229,8 @@ private struct ProfileRouteView: View {
           headerData: headerData,
           content: profileContent,
           onOpen: { router.open($0) },
+          onLikePost: { target in await react(.like, target: target) },
+          onRepostPost: { target in await react(.repost, target: target) },
           onAction: handle)
       } else if failed {
         RetryRow(message: "Could not load this profile.", retry: { Task { await load() } })
@@ -268,6 +270,21 @@ private struct ProfileRouteView: View {
     default:
       break
     }
+  }
+
+  private func react(_ kind: ShellPostReaction, target: ProfilePostInteraction) async {
+    guard let clients = router.clients else { return }
+    let existingRecordURI: String?
+    switch kind {
+    case .like: existingRecordURI = target.likeURI
+    case .repost: existingRecordURI = target.repostURI
+    }
+    try? await clients.toggleReaction(
+      kind,
+      uri: target.uri,
+      cid: target.cid,
+      existingRecordURI: existingRecordURI)
+    await load()
   }
 
   /** Applies a follow intent to the viewer's PDS, then reloads server state. */
@@ -328,7 +345,27 @@ private struct FeedRouteView: View {
       if let model {
         HomeFeedScreen(
           model: HomeFeedViewModel(model: model, presentation: .feeds, viewerDid: router.clients?.did),
-          onOpenRichText: { router.open($0) })
+          onOpenRichText: { router.open($0) },
+          onOpenPost: { router.open(.thread(uri: $0)) },
+          onReplyToPost: { router.open(.thread(uri: $0)) },
+          onLikePost: { target in
+            guard let clients = router.clients else { return }
+            try? await clients.toggleReaction(
+              .like,
+              uri: target.uri,
+              cid: target.cid,
+              existingRecordURI: target.likeURI)
+            await model.refresh()
+          },
+          onRepostPost: { target in
+            guard let clients = router.clients else { return }
+            try? await clients.toggleReaction(
+              .repost,
+              uri: target.uri,
+              cid: target.cid,
+              existingRecordURI: target.repostURI)
+            await model.refresh()
+          })
       } else {
         ListSkeleton()
       }
@@ -469,6 +506,7 @@ enum ProfileContentLoader {
   static func load(actor: String, clients: AppSessionClients) async -> ProfileScreenContent {
     let client = ProfileClient(client: clients.appview)
     var items: [ProfileTab: [FeedItemViewData]] = [:]
+    var interactions: [ProfileTab: [ProfilePostInteraction]] = [:]
     var states: [ProfileSection: ListState] = [:]
 
     for tab in ProfileTab.allCases {
@@ -489,13 +527,20 @@ enum ProfileContentLoader {
             options: FeedItemRenderOptions())
         }
         items[tab] = rows
+        interactions[tab] = page.items.map { item in
+          ProfilePostInteraction(
+            uri: item.post.uri.rawValue,
+            cid: item.post.cid.rawValue,
+            likeURI: item.post.viewer?.like?.rawValue,
+            repostURI: item.post.viewer?.repost?.rawValue)
+        }
         states[section(for: tab)] = rows.isEmpty ? .empty : .content
       } catch {
         states[section(for: tab)] = .error(
           .init(title: "Could not load posts", message: error.localizedDescription))
       }
     }
-    return ProfileScreenContent(feedItems: items, states: states)
+    return ProfileScreenContent(feedItems: items, interactions: interactions, states: states)
   }
 
   private static func section(for tab: ProfileTab) -> ProfileSection {

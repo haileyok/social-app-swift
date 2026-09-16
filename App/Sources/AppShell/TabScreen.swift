@@ -494,6 +494,8 @@ private struct ProfileTabScreen: View {
             headerData: headerData,
             content: profileContent,
             onOpen: { router.open($0) },
+            onLikePost: { target in await react(.like, target: target) },
+            onRepostPost: { target in await react(.repost, target: target) },
             onAction: handle)
         } else if failed {
           RetryRow(message: "Could not load your profile.", retry: { Task { await load() } })
@@ -521,6 +523,20 @@ private struct ProfileTabScreen: View {
         }
       }
       .task { await load() }
+    }
+
+    private func react(_ kind: ShellPostReaction, target: ProfilePostInteraction) async {
+      let existingRecordURI: String?
+      switch kind {
+      case .like: existingRecordURI = target.likeURI
+      case .repost: existingRecordURI = target.repostURI
+      }
+      try? await clients.toggleReaction(
+        kind,
+        uri: target.uri,
+        cid: target.cid,
+        existingRecordURI: existingRecordURI)
+      await load()
     }
 
     /// Routes the header's actions; only edit-profile has a surface today.
