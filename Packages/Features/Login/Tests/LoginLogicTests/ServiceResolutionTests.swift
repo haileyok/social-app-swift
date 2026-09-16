@@ -133,6 +133,13 @@ import Testing
         == "alice.example.com")
   }
 
+  @Test func aQualifiedHandleIsNeverRewrittenForAnotherServiceDomain() {
+    #expect(
+      LoginIdentifier.fullIdentifier(
+        identifier: "hailey.at", serviceProviderDomains: [".bsky.social"])
+        == "hailey.at")
+  }
+
   @Test func anEmailIsNeverCompletedWithADomain() {
     #expect(
       LoginIdentifier.fullIdentifier(

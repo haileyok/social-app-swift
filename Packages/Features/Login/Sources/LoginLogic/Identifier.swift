@@ -58,7 +58,8 @@ public enum LoginIdentifier {
   ) -> String {
     let normalized = normalize(identifier)
     guard let domain = serviceProviderDomains.first, !domain.isEmpty,
-      !normalized.contains("@"), !normalized.hasPrefix("did:"),
+      !normalized.contains("."), !normalized.contains("@"),
+      !normalized.hasPrefix("did:"),
       !serviceProviderDomains.contains(where: { normalized.hasSuffix($0) })
     else {
       return normalized
