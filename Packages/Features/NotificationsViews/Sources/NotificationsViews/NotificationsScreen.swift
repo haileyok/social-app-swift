@@ -118,6 +118,7 @@ public struct NotificationsScreen: View {
         case .external(let url): onOpenPost(url.absoluteString)
         case .profile(let did): onOpenPost(did)
         case .hashtag(let tag): onOpenPost(tag)
+        case .post(let uri): onOpenPost(uri)
         }
       }
     } else {
