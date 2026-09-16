@@ -85,6 +85,11 @@ public struct HomeFeedRow: Identifiable {
   public var isRenderable: Bool {
     items.contains { $0.data.moderation.content.isVisible }
   }
+
+  /// Remote assets to warm before this row enters the viewport.
+  public var imageURLs: [URL] {
+    items.flatMap(\.data.imageURLs)
+  }
 }
 
 /// Turns tuned slices into render rows.

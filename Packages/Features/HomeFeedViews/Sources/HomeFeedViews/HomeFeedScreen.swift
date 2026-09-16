@@ -34,6 +34,7 @@ public struct HomeFeedScreen: View {
   private let onAddFeeds: (() -> Void)?
 
   @Environment(\.alfTheme) private var theme
+  @Environment(\.imageLoader) private var imageLoader
   @Environment(\.scenePhase) private var scenePhase
 
   /// Creates the screen.
@@ -171,6 +172,10 @@ public struct HomeFeedScreen: View {
     .scrollContentBackground(.hidden)
     .background(theme.atomColors.bg)
     .refreshable { await model.refresh() }
+    .task(id: model.rows.map(\.id)) {
+      let urls = model.rows.prefix(12).flatMap(\.imageURLs)
+      await imageLoader.prefetch(urls, targetSize: nil)
+    }
   }
 
   /// Wraps a full-surface state so it centres on the screen.

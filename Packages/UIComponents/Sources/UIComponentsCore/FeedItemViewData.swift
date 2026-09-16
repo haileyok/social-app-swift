@@ -64,6 +64,47 @@ public struct FeedItemViewData: Sendable {
   }
 }
 
+extension FeedItemViewData {
+  /// Remote assets this post row will draw, ordered avatar first then media.
+  public var imageURLs: [URL] {
+    var urls: [URL] = []
+    if case .remote(let url) = avatar { urls.append(url) }
+    if let postEmbed { urls.append(contentsOf: postEmbed.imageURLs) }
+    return urls
+  }
+}
+
+extension PostViewEmbed {
+  /// Image URLs nested in this hydrated embed.
+  public var imageURLs: [URL] {
+    switch self {
+    case .images(let images):
+      return images.compactMap(embedImageURL)
+    case .gallery(let items):
+      return galleryImages(items).compactMap(embedImageURL)
+    case .recordWithMedia(let value):
+      return value.media?.imageURLs ?? []
+    case .record(let record):
+      guard let avatar = record?.record?.viewRecord?.author?.avatar,
+        let url = URL(string: avatar)
+      else { return [] }
+      return [url]
+    case .external, .video, .unknown:
+      return []
+    }
+  }
+}
+
+extension RecordWithMediaViewMedia {
+  fileprivate var imageURLs: [URL] {
+    switch self {
+    case .images(let images): return images.compactMap(embedImageURL)
+    case .gallery(let items): return galleryImages(items).compactMap(embedImageURL)
+    case .external, .video, .unknown: return []
+    }
+  }
+}
+
 /// Everything the view builder needs that is not on the post itself.
 public struct FeedItemRenderOptions: Sendable {
   /// The current time, so relative timestamps are deterministic in tests.

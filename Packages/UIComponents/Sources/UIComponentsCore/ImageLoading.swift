@@ -28,6 +28,14 @@ public protocol ImageLoading: Sendable {
   ///   an implementation can downsample rather than decode full-resolution
   ///   bytes. `nil` means "no size hint".
   func loadImage(at url: URL, targetSize: ImageTargetSize?) async throws -> Data
+
+  /// Best-effort cache warming for images that will render shortly.
+  func prefetch(_ urls: [URL], targetSize: ImageTargetSize?) async
+}
+
+extension ImageLoading {
+  /// Loaders without a cache can safely ignore prefetch requests.
+  public func prefetch(_ urls: [URL], targetSize: ImageTargetSize?) async {}
 }
 
 /// A display-size hint, in points, for downsampling.
