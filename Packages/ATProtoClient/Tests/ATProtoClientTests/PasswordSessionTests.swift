@@ -116,7 +116,7 @@ final class Box<T>: @unchecked Sendable {
       proxyService: "did:web:api.bsky.app#bsky_appview",
       transport: PasswordSessionTransport(session: session))
 
-    let _: EmptyBody = try await client.get("app.bsky.feed.getTimeline")
+    let _: PasswordSession.EmptyBody = try await client.get("app.bsky.feed.getTimeline")
 
     #expect(transport.received.count == 3)
     #expect(transport.received[0].headers["Authorization"] == "Bearer acc1")
