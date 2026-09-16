@@ -423,7 +423,7 @@ private struct NotificationsTabScreen: View {
         rows: rows,
         isInitialLoading: isInitialLoading,
         onRefresh: { await load() },
-        onOpenPost: { router.open(.thread(uri: $0)) })
+        onOpen: { router.open($0) })
         .task { await load() }
     }
 

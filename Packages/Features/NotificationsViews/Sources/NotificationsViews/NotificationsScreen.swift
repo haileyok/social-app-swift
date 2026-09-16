@@ -30,7 +30,7 @@ public struct NotificationsScreen: View {
   private let error: ListState.ListErrorState?
   private let showsFilterBar: Bool
   private let onRefresh: () async -> Void
-  private let onOpenPost: (String) -> Void
+  private let onOpen: (RichTextTarget) -> Void
 
   @State private var selection: NotificationsFilterTab = .all
 
@@ -42,14 +42,14 @@ public struct NotificationsScreen: View {
     error: ListState.ListErrorState? = nil,
     showsFilterBar: Bool = true,
     onRefresh: @escaping () async -> Void = {},
-    onOpenPost: @escaping (String) -> Void = { _ in }
+    onOpen: @escaping (RichTextTarget) -> Void = { _ in }
   ) {
     self.rows = rows
     self.isInitialLoading = isInitialLoading
     self.error = error
     self.showsFilterBar = showsFilterBar
     self.onRefresh = onRefresh
-    self.onOpenPost = onOpenPost
+    self.onOpen = onOpen
   }
 
   public var body: some View {
@@ -113,16 +113,11 @@ public struct NotificationsScreen: View {
   @ViewBuilder
   private func rowView(_ row: FeedNotification) -> some View {
     if row.isReplyShaped {
-      NotificationPostRow(row: row) { target in
-        switch target {
-        case .external(let url): onOpenPost(url.absoluteString)
-        case .profile(let did): onOpenPost(did)
-        case .hashtag(let tag): onOpenPost(tag)
-        case .post(let uri): onOpenPost(uri)
-        }
-      }
+      NotificationPostRow(row: row, onOpen: onOpen)
     } else {
-      NotificationSentenceRow(row: row, onOpenAuthor: onOpenPost)
+      NotificationSentenceRow(
+        row: row,
+        onOpenAuthor: { handle in onOpen(.profile(handle)) })
     }
   }
 
