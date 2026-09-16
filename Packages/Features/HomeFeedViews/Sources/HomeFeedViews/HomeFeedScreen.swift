@@ -1,5 +1,6 @@
 import DesignSystem
 import DesignSystemCore
+import Foundation
 import HomeFeedLogic
 import RichText
 import SwiftUI
@@ -25,6 +26,7 @@ import UIComponentsCore
 /// ``HomeFeedLogic/HomeFeedSlice`` values through `UIComponents.PostFeedItem`.
 public struct HomeFeedScreen: View {
   @State private var model: HomeFeedViewModel
+  @State private var feedResetID = UUID()
   private let onOpenRichText: (RichTextTarget) -> Void
   private let onOpenPost: (String) -> Void
   private let onReplyToPost: (String) -> Void
@@ -97,12 +99,16 @@ public struct HomeFeedScreen: View {
         })
 
       content
+        .id(feedResetID)
         // The pill floats over the list rather than insetting it, so revealing
         // it does not shift the content the user is reading.
         .overlay(alignment: .top) {
           if model.hasNewPosts {
             NewPostsPill {
-              Task { await model.tapNewPosts() }
+              Task {
+                await model.tapNewPosts()
+                feedResetID = UUID()
+              }
             }
             .padding(.top, Spacing.md)
             .transition(.move(edge: .top).combined(with: .opacity))

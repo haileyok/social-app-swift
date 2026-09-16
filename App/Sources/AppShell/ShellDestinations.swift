@@ -358,7 +358,8 @@ enum ProfileContentLoader {
 
     for tab in ProfileTab.allCases {
       do {
-        let page = try await client.getAuthorFeed(actor: actor, tab: tab)
+        let page = try await client.getAuthorFeedPage(
+          actor: actor, tab: tab, cursor: nil, limit: tab.pageSize)
         let rows = page.items.map { item in
           let subject = LexiconModeration.subject(item.post)
           return feedItemViewData(
@@ -422,6 +423,8 @@ enum ShellFeedFactory {
           contentsOf: (try? await resolver.resolve(
             savedItems: SavedFeedReader.entries(from: preferences))) ?? [])
       }
+      var seen = Set<HomeFeedDescriptor>()
+      pinned = pinned.filter { seen.insert($0.descriptor).inserted }
     }
 
     var fetchers: [String: any FeedPageFetcher] = [:]
