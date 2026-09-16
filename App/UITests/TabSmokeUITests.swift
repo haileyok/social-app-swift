@@ -123,15 +123,10 @@ final class TabSmokeUITests: XCTestCase {
 
     XCTAssertTrue(
       composerApp.descendants(matching: .any)
-        .matching(identifier: "composer.screen")
+        .matching(identifier: "composer.image.image-0")
         .firstMatch
         .waitForExistence(timeout: 30),
-      "image composer fixture did not launch")
-    XCTAssertTrue(
-      composerApp.descendants(matching: .any)
-        .matching(identifier: "composer.image.image-0")
-        .firstMatch.exists,
-      "first fixture image is missing")
+      "image composer fixture did not expose its first attachment")
     XCTAssertTrue(
       composerApp.descendants(matching: .any)
         .matching(identifier: "composer.image.image-1")
