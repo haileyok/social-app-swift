@@ -85,7 +85,7 @@ extension PostViewEmbed {
     case .recordWithMedia(let value):
       return value.media?.imageURLs ?? []
     case .record(let record):
-      guard let avatar = record?.record?.viewRecord?.author?.avatar,
+      guard let avatar = record.record?.viewRecord?.author?.avatar,
         let url = URL(string: avatar)
       else { return [] }
       return [url]
