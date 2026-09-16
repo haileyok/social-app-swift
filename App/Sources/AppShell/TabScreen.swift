@@ -384,6 +384,7 @@ private struct NotificationsTabScreen: View {
   private let clients: AppSessionClients?
 
   @Environment(\.alfTheme) private var theme
+  @State private var showsActivitySubscriptions = false
 
   init(clients: AppSessionClients?) {
     self.clients = clients
@@ -400,6 +401,25 @@ private struct NotificationsTabScreen: View {
     }
     .navigationTitle(AppTab.notifications.title)
     .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      if clients != nil {
+        ToolbarItem(placement: .topBarTrailing) {
+          Menu {
+            Button("Activity notifications", systemImage: "bell.badge") {
+              showsActivitySubscriptions = true
+            }
+          } label: {
+            Image(systemName: "gearshape")
+          }
+          .accessibilityLabel("Notification settings")
+        }
+      }
+    }
+    .sheet(isPresented: $showsActivitySubscriptions) {
+      if let clients {
+        ActivitySubscriptionsScreen(clients: clients)
+      }
+    }
     .accessibilityIdentifier(ShellAccessibility.screen(AppTab.notifications.routeName))
   }
 
@@ -501,6 +521,146 @@ private struct NotificationsTabScreen: View {
       } catch {
         // Keep the loaded rows visible. Scrolling back to the footer retries.
       }
+    }
+  }
+}
+
+private struct ActivitySubscriptionsScreen: View {
+  let clients: AppSessionClients
+
+  @Environment(\.dismiss) private var dismiss
+  @Environment(\.alfTheme) private var theme
+  @Environment(ShellRouter.self) private var router
+
+  @State private var profiles: [App.Bsky.ActorDefs_ProfileView] = []
+  @State private var query: InfiniteQuery<App.Bsky.ActorDefs_ProfileView>?
+  @State private var isLoading = true
+  @State private var isLoadingMore = false
+  @State private var hasMore = false
+  @State private var failed = false
+  @State private var updating = Set<String>()
+
+  var body: some View {
+    NavigationStack {
+      Group {
+        if isLoading {
+          ProgressView().controlSize(.large)
+        } else if failed && profiles.isEmpty {
+          ContentUnavailableView {
+            Label("Couldn't load subscriptions", systemImage: "exclamationmark.triangle")
+          } actions: {
+            Button("Try again") { Task { await load() } }
+          }
+        } else if profiles.isEmpty {
+          ContentUnavailableView(
+            "No activity notifications",
+            systemImage: "bell.slash",
+            description: Text("Profiles you subscribe to will appear here."))
+        } else {
+          List {
+            ForEach(profiles, id: \.did.rawValue) { profile in
+              profileRow(profile)
+            }
+            if hasMore || isLoadingMore {
+              ProgressView()
+                .frame(maxWidth: .infinity)
+                .task { await loadMore() }
+            }
+          }
+          .listStyle(.plain)
+          .refreshable { await load() }
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(theme.atomColors.bg)
+      .navigationTitle("Activity notifications")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") { dismiss() }
+        }
+      }
+      .task { await load() }
+    }
+  }
+
+  private func profileRow(_ profile: App.Bsky.ActorDefs_ProfileView) -> some View {
+    HStack(spacing: Spacing.md) {
+      Button {
+        router.open(.profile(did: profile.did.rawValue))
+        dismiss()
+      } label: {
+        HStack(spacing: Spacing.md) {
+          Avatar(
+            avatar: profile.avatar,
+            handle: profile.handle.rawValue,
+            displayName: profile.displayName,
+            size: .md)
+          VStack(alignment: .leading, spacing: Spacing.xs) {
+            Text(profile.displayName ?? profile.handle.rawValue)
+              .font(TypeScale.body.weight(.semibold))
+              .foregroundStyle(theme.atomColors.text)
+              .lineLimit(1)
+            Text("@\(profile.handle.rawValue)")
+              .font(TypeScale.caption)
+              .foregroundStyle(theme.atomColors.textSecondary)
+              .lineLimit(1)
+          }
+          Spacer(minLength: 0)
+        }
+      }
+      .buttonStyle(.plain)
+
+      Button("Remove") { Task { await unsubscribe(profile) } }
+        .buttonStyle(.bordered)
+        .disabled(updating.contains(profile.did.rawValue))
+    }
+    .padding(.vertical, Spacing.xs)
+  }
+
+  private var api: ActivitySubscriptionsAPI {
+    ActivitySubscriptionsAPI(
+      client: XRPCNotificationClient(client: clients.appview),
+      scope: clients.did)
+  }
+
+  private func load() async {
+    isLoading = profiles.isEmpty
+    defer { isLoading = false }
+    let next = api.query(store: clients.store)
+    do {
+      _ = try await next.loadFirstPage()
+      profiles = await next.items()
+      hasMore = await next.hasNextPage()
+      query = next
+      failed = false
+    } catch {
+      failed = true
+    }
+  }
+
+  private func loadMore() async {
+    guard !isLoadingMore, hasMore, let query else { return }
+    isLoadingMore = true
+    defer { isLoadingMore = false }
+    do {
+      _ = try await query.loadMore()
+      profiles = await query.items()
+      hasMore = await query.hasNextPage()
+    } catch {
+      // Keep the loaded subscriptions visible; reaching the footer retries.
+    }
+  }
+
+  private func unsubscribe(_ profile: App.Bsky.ActorDefs_ProfileView) async {
+    let did = profile.did.rawValue
+    guard updating.insert(did).inserted else { return }
+    defer { updating.remove(did) }
+    do {
+      _ = try await api.put(subject: did, subscription: ActivitySubscription())
+      profiles.removeAll { $0.did.rawValue == did }
+    } catch {
+      // Keep the row present so the UI never claims a failed unsubscribe worked.
     }
   }
 }
