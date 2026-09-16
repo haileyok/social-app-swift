@@ -418,7 +418,7 @@ enum ShellFeedFactory {
           contentsOf: (try? await resolver.resolve(
             savedItems: SavedFeedReader.entries(from: preferences))) ?? [])
       }
-      var seen = Set<HomeFeedDescriptor>()
+      var seen = Set<FeedDescriptor>()
       pinned = pinned.filter { seen.insert($0.descriptor).inserted }
     }
 
