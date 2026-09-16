@@ -1,5 +1,6 @@
 import ATProtoClient
 import DesignSystem
+import Foundation
 import HomeFeedLogic
 import HomeFeedViews
 import Lexicons
@@ -118,6 +119,7 @@ private struct ProfileRouteView: View {
   @State private var headerData: ProfileHeaderViewData?
   @State private var failed = false
   @State private var showsEdit = false
+  @State private var isMutatingFollow = false
 
   var body: some View {
     Group {
@@ -151,11 +153,37 @@ private struct ProfileRouteView: View {
     switch action {
     case .editProfile:
       showsEdit = true
+    case .follow:
+      Task { await setFollowing(true) }
+    case .unfollow:
+      Task { await setFollowing(false) }
     case .showFollowers, .showFollows:
       // List screens exist in ProfileViews; wiring them is the next seam.
       break
     default:
       break
+    }
+  }
+
+  /** Applies a follow intent to the viewer's PDS, then reloads server state. */
+  private func setFollowing(_ shouldFollow: Bool) async {
+    guard !isMutatingFollow, let clients = router.clients, let headerData,
+      case .detailed(let profile) = headerData.unshadowedProfile
+    else { return }
+
+    isMutatingFollow = true
+    defer { isMutatingFollow = false }
+    do {
+      let writer = ProfileClient(client: clients.pds)
+      if shouldFollow {
+        _ = try await writer.follow(
+          subject: profile.did.rawValue, repo: clients.did, createdAt: Date())
+      } else if let followURI = profile.viewer?.following?.rawValue {
+        try await writer.unfollow(repo: clients.did, followUri: followURI)
+      }
+      await load()
+    } catch {
+      failed = false
     }
   }
 
