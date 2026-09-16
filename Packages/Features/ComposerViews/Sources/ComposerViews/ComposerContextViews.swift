@@ -20,25 +20,39 @@ struct ComposerReplyHeader: View {
   @Environment(\.alfTheme) private var theme
 
   var body: some View {
-    VStack(alignment: .leading, spacing: Spacing.xxs) {
-      HStack(spacing: Spacing.xxs) {
-        AlfText(
-          ComposerCopy.replyingToLabel,
-          scale: .xs,
-          color: theme.atomColors.textContrastMedium)
-        AlfText(
-          "@\(context.handle)",
-          scale: .xs,
-          weight: Scales.FontWeight.medium,
-          color: theme.colors.primary500)
+    HStack(alignment: .top, spacing: Spacing.sm) {
+      Image(systemName: "arrowshape.turn.up.left.fill")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(theme.colors.primary500)
+        .frame(width: 32, height: 32)
+        .background(theme.colors.primary50)
+        .clipShape(Circle())
+
+      VStack(alignment: .leading, spacing: Spacing.xxs) {
+        HStack(spacing: Spacing.xxs) {
+          AlfText(
+            ComposerCopy.replyingToLabel,
+            scale: .xs,
+            color: theme.atomColors.textContrastMedium)
+          AlfText(
+            "@\(context.handle)",
+            scale: .xs,
+            weight: Scales.FontWeight.semiBold,
+            color: theme.colors.primary500)
+        }
+        AlfText(context.text, scale: .sm, color: theme.atomColors.text)
+          .lineLimit(3)
+          .fixedSize(horizontal: false, vertical: true)
       }
-      AlfText(context.text, scale: .sm, color: theme.atomColors.textContrastMedium)
-        .lineLimit(3)
     }
-    .padding(.horizontal, Spacing.md)
-    .padding(.vertical, Spacing.sm)
+    .padding(Spacing.md)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(theme.atomColors.bgContrast25)
+    .overlay {
+      RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+        .strokeBorder(theme.atomColors.borderContrastLow, lineWidth: 1)
+    }
+    .clipShape(.rect(cornerRadius: Radius.lg, style: .continuous))
     .accessibilityElement(children: .combine)
     .accessibilityIdentifier(ComposerAccessibility.replyHeader)
   }

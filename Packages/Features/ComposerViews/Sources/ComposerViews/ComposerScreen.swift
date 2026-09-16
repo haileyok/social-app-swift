@@ -109,41 +109,42 @@ public struct ComposerScreen: View {
   }
 
   public var body: some View {
-    VStack(spacing: 0) {
-      ScrollView {
-        VStack(alignment: .leading, spacing: Spacing.md) {
-          if let replyContext {
-            ComposerReplyHeader(context: replyContext)
-          }
-          if let quote = activePost.embed.quote {
-            ComposerQuoteHeader(uri: quote.uri) {
-              onReduce(.updatePost(postId: activePost.id, action: .removeQuote))
-            }
-          }
-
-          editorSection
-          threadTail
-          attachmentSection
-          ComposerSettingsStrip(
-            labels: activePost.labels,
-            languages: languages,
-            threadgate: state.thread.threadgate,
-            onLanguages: { isLanguagesPresented = true },
-            onLabels: { isLabelsPresented = true },
-            onThreadgate: { isThreadgatePresented = true },
-            onDrafts: { isDraftsPresented = true })
-
-          if let publishPhase {
-            ComposerPublishBanner(phase: publishPhase, onRetry: onPublish)
-          }
-
-          validationLine
+    ScrollView {
+      VStack(alignment: .leading, spacing: Spacing.lg) {
+        if let replyContext {
+          ComposerReplyHeader(context: replyContext)
         }
-        .padding(.md)
+        if let quote = activePost.embed.quote {
+          ComposerQuoteHeader(uri: quote.uri) {
+            onReduce(.updatePost(postId: activePost.id, action: .removeQuote))
+          }
+        }
+
+        editorSection
+        threadTail
+        attachmentSection
+        ComposerSettingsStrip(
+          labels: activePost.labels,
+          languages: languages,
+          threadgate: state.thread.threadgate,
+          onLanguages: { isLanguagesPresented = true },
+          onLabels: { isLabelsPresented = true },
+          onThreadgate: { isThreadgatePresented = true },
+          onDrafts: { isDraftsPresented = true })
+
+        if let publishPhase {
+          ComposerPublishBanner(phase: publishPhase, onRetry: onPublish)
+        }
+
+        validationLine
       }
-      toolbar
+      .padding(.horizontal, Spacing.md)
+      .padding(.vertical, Spacing.lg)
     }
+    .scrollDismissesKeyboard(.interactively)
+    .safeAreaInset(edge: .bottom) { mediaBar }
     .background(theme.atomColors.bg)
+    .toolbar { navigationActions }
     .accessibilityIdentifier(ComposerAccessibility.screen)
     .sheet(isPresented: $isLanguagesPresented) {
       ComposerLanguageSheet(selection: languages, onChange: onLanguagesChange) {
@@ -196,10 +197,7 @@ public struct ComposerScreen: View {
         placeholder: ComposerCopy.textPlaceholder,
         identifier: ComposerAccessibility.textEditor,
         isFocused: $isEditorFocused)
-      HStack {
-        Spacer(minLength: 0)
-        ComposerCharacterCounter(post: activePost)
-      }
+        .frame(minHeight: 150, alignment: .top)
     }
   }
 
@@ -279,24 +277,38 @@ public struct ComposerScreen: View {
     }
   }
 
-  private var toolbar: some View {
-    HStack(spacing: Spacing.md) {
+  @ToolbarContentBuilder
+  private var navigationActions: some ToolbarContent {
+    ToolbarItem(placement: .cancellationAction) {
       Button(ComposerCopy.cancelAction, action: onCancel)
-        .font(.body)
-        .foregroundStyle(theme.colors.primary500)
+        .foregroundStyle(theme.atomColors.text)
         .accessibilityIdentifier(ComposerAccessibility.cancelButton)
+    }
+    ToolbarItem(placement: .confirmationAction) {
+      Button(
+        state.thread.posts.count > 1 ? ComposerCopy.postAllAction : ComposerCopy.postAction,
+        action: onPublish)
+        .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.capsule)
+        .disabled(!canPost)
+        .accessibilityIdentifier(ComposerAccessibility.publishButton)
+    }
+  }
 
+  private var mediaBar: some View {
+    HStack(spacing: Spacing.md) {
       PhotosPicker(
         selection: $pickedPhotos,
         maxSelectionCount: max(1, remainingImageCapacity),
         matching: .images
       ) {
-        Image(systemName: "photo.on.rectangle")
-          .font(.system(size: 18, weight: .semibold))
+        Label(ComposerCopy.addMediaAction, systemImage: "photo.on.rectangle")
+          .font(.subheadline.weight(.semibold))
           .foregroundStyle(theme.colors.primary500)
-          .frame(width: 36, height: 36)
+          .padding(.horizontal, Spacing.sm)
+          .frame(height: 40)
           .background(theme.colors.primary50)
-          .clipShape(Circle())
+          .clipShape(Capsule())
       }
       .disabled(!canAttachImages)
       .accessibilityLabel(ComposerCopy.addMediaAction)
@@ -306,42 +318,12 @@ public struct ComposerScreen: View {
         Task { await importPhotos(items) }
       }
 
-      AlfIconButton(
-        systemImage: "plus.circle",
-        label: ComposerCopy.addPostAction,
-        color: .secondary,
-        size: .small,
-        shape: .round,
-        action: {
-          onReduce(.addPost(newId: "post-\(state.thread.posts.count)"))
-        }
-      )
-      .accessibilityIdentifier(ComposerAccessibility.addPostButton)
-
-      AlfIconButton(
-        systemImage: "tray.and.arrow.down",
-        label: ComposerCopy.saveDraftAction,
-        color: .secondary,
-        size: .small,
-        shape: .round,
-        action: {}
-      )
-      .accessibilityIdentifier(ComposerAccessibility.saveDraftButton)
-
       Spacer(minLength: 0)
-
-      AlfButton(
-        state.thread.posts.count > 1 ? ComposerCopy.postAllAction : ComposerCopy.postAction,
-        color: .primary,
-        size: .small,
-        action: onPublish
-      )
-      .disabled(!canPost)
-      .accessibilityIdentifier(ComposerAccessibility.publishButton)
+      ComposerCharacterCounter(post: activePost)
     }
     .padding(.horizontal, Spacing.md)
     .padding(.vertical, Spacing.sm)
-    .background(theme.atomColors.bg)
+    .background(.ultraThinMaterial)
     .overlay(alignment: .top) {
       Rectangle()
         .fill(theme.atomColors.borderContrastLow)
