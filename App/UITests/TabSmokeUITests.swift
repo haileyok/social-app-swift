@@ -114,30 +114,31 @@ final class TabSmokeUITests: XCTestCase {
   /// The image-composer fixture exposes every attachment and missing-alt guidance.
   func testImageComposerExposesAttachmentsAndAltTextGuidance() {
     app.terminate()
-    app.launchArguments = [
+    let composerApp = XCUIApplication()
+    composerApp.launchArguments = [
       "-\(ShellLaunchArgument.screen)", "composer",
       "-\(ComposerSurfaces.variantArgument)", "images",
     ]
-    app.launch()
+    composerApp.launch()
 
     XCTAssertTrue(
-      app.descendants(matching: .any)
+      composerApp.descendants(matching: .any)
         .matching(identifier: "composer.screen")
         .firstMatch
         .waitForExistence(timeout: 30),
       "image composer fixture did not launch")
     XCTAssertTrue(
-      app.descendants(matching: .any)
+      composerApp.descendants(matching: .any)
         .matching(identifier: "composer.image.image-0")
         .firstMatch.exists,
       "first fixture image is missing")
     XCTAssertTrue(
-      app.descendants(matching: .any)
+      composerApp.descendants(matching: .any)
         .matching(identifier: "composer.image.image-1")
         .firstMatch.exists,
       "second fixture image is missing")
     XCTAssertTrue(
-      app.descendants(matching: .any)
+      composerApp.descendants(matching: .any)
         .matching(identifier: "composer.image.altHelp")
         .firstMatch.exists,
       "missing-alt guidance is not exposed")
