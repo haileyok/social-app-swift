@@ -489,6 +489,7 @@ private struct ProfileTabScreen: View {
           ProfileScreen(
             headerData: headerData,
             content: profileContent,
+            onOpen: { router.open($0) },
             onAction: handle)
         } else if failed {
           RetryRow(message: "Could not load your profile.", retry: { Task { await load() } })

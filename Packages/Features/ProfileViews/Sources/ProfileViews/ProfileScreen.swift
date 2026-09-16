@@ -74,6 +74,7 @@ public struct ProfileScreen: View {
   private let labeler: LabelerProfileViewData?
   private let content: ProfileScreenContent
   private let strings: any ProfileStrings
+  private let onOpen: (RichTextTarget) -> Void
   private let onAction: (ProfileHeaderAction) -> Void
 
   @Environment(\.alfTheme) private var theme
@@ -84,12 +85,14 @@ public struct ProfileScreen: View {
     labeler: LabelerProfileViewData? = nil,
     content: ProfileScreenContent = ProfileScreenContent(),
     strings: any ProfileStrings = defaultProfileStrings,
+    onOpen: @escaping (RichTextTarget) -> Void = { _ in },
     onAction: @escaping (ProfileHeaderAction) -> Void = { _ in }
   ) {
     self.headerData = headerData
     self.labeler = labeler
     self.content = content
     self.strings = strings
+    self.onOpen = onOpen
     self.onAction = onAction
     _selected = State(initialValue: headerData.tabs.sections.first ?? .posts)
   }
@@ -156,7 +159,10 @@ public struct ProfileScreen: View {
     ScrollView {
       LazyVStack(spacing: 0) {
         ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-          PostFeedItem(data: item)
+          PostFeedItem(
+            data: item,
+            onOpen: onOpen,
+            onOpenAuthor: { onOpen(.profile(did: $0)) })
             .padding(.horizontal, Spacing.md)
             .padding(.vertical, Spacing.sm)
           Divider().padding(.leading, Spacing.xxl)
