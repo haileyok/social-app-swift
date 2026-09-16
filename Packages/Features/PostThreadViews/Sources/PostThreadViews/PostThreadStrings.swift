@@ -79,7 +79,7 @@ public struct PostThreadStrings: Equatable, Sendable {
 
   public init(
     title: String = "Post",
-    deletedPost: String = "Post not found",
+    deletedPost: String = "Post has been deleted",
     blockedPost: String = "Post hidden by block",
     hiddenPost: String = "Post hidden by moderation",
     replyCount: String = "replies",

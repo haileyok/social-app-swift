@@ -306,6 +306,10 @@ struct ThreadTombstoneRow: View {
     .padding(.horizontal, Spacing.md)
     .padding(.vertical, Spacing.sm)
     .frame(maxWidth: .infinity, alignment: .leading)
+    .background(theme.atomColors.bgContrast25)
+    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
+    .padding(.horizontal, Spacing.md)
+    .padding(.vertical, Spacing.xs)
     .accessibilityElement(children: .combine)
   }
 
