@@ -592,7 +592,7 @@ private struct ActivitySubscriptionsScreen: View {
       } label: {
         HStack(spacing: Spacing.md) {
           Avatar(
-            avatar: profile.avatar,
+            avatar: profile.avatar?.rawValue,
             handle: profile.handle.rawValue,
             displayName: profile.displayName,
             size: .md)
