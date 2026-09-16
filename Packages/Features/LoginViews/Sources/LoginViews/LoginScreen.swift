@@ -90,6 +90,23 @@ public struct LoginScreen: View {
     .sheet(isPresented: $isAuthFactorPresented) {
       authFactor
     }
+    .alert(
+      LoginCopy.hostingProviderConfirmationTitle,
+      isPresented: Binding(
+        get: { viewModel.hostingProviderConfirmation != nil },
+        set: { _ in })
+    ) {
+      Button(LoginCopy.continueSignInAction) {
+        Task { await viewModel.confirmHostingProvider() }
+      }
+      Button(LoginCopy.goBackAction, role: .cancel) {
+        viewModel.cancelHostingProvider()
+      }
+    } message: {
+      if let host = viewModel.hostingProviderConfirmation {
+        Text(LoginCopy.hostingProviderConfirmationMessage(host: host))
+      }
+    }
   }
 
   // MARK: - Sections

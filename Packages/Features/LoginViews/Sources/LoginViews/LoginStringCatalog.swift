@@ -71,6 +71,19 @@ public enum LoginCopy {
   public static let resumeAccountAction = "Resume"
   /// Forgetting a stored account.
   public static let forgetAccountAction = "Forget"
+  /// Approves an unfamiliar auto-detected provider.
+  public static let continueSignInAction = "Continue"
+  /// Cancels provider confirmation so the username can be checked.
+  public static let goBackAction = "Go back"
+
+  // MARK: - Hosting-provider confirmation
+
+  /// Security-check title, matching the RN dialog.
+  public static let hostingProviderConfirmationTitle = "Everything look right?"
+  /// Security-check body, matching the RN dialog.
+  public static func hostingProviderConfirmationMessage(host: String) -> String {
+    "Your username and password will be shared with \(host). If you don’t recognize this provider, double-check your username. This is just a one-time security check, since we haven't seen this account on this device before."
+  }
 
   // MARK: - Status
 

@@ -62,13 +62,14 @@ Native-first choices, with the reason:
    vertical: true)` so it wraps rather than truncating, and the form is capped at
    `maxWidth: 480` inside a `ScrollView` so it stays readable at large sizes and
    on iPad.
+8. **The hosting-provider security check uses a native alert.** The flow resolves
+   the handle without sending the password, then pauses for explicit approval
+   when an unfamiliar DID points at a non-Bluesky provider. Continue authenticates
+   the retained resolved context; Go back returns to the editable form without a
+   `createSession` request.
 
 ## Not implemented here
 
 - No session/root takeover. `LoginScreen` reports a successful sign-in through
   its `onSignedIn` callback; deciding what the app root shows afterwards is the
   app shell's call, not this package's.
-- The hosting-provider confirmation dialog
-  (`LoginFlow.requiresHostingProviderConfirmation`) is not wired up: it needs the
-  DID and the known-DID set from a lookup that the flow performs during submit,
-  so it belongs with the session work that can answer it before the attempt.
