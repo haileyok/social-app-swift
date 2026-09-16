@@ -153,6 +153,7 @@ private struct ProfileRouteView: View {
 
   @Environment(ShellRouter.self) private var router
   @State private var headerData: ProfileHeaderViewData?
+  @State private var profileContent = ProfileContentLoader.loading
   @State private var failed = false
   @State private var showsEdit = false
   @State private var isMutatingFollow = false
@@ -160,7 +161,10 @@ private struct ProfileRouteView: View {
   var body: some View {
     Group {
       if let headerData {
-        ProfileScreen(headerData: headerData, onAction: handle)
+        ProfileScreen(
+          headerData: headerData,
+          content: profileContent,
+          onAction: handle)
       } else if failed {
         RetryRow(message: "Could not load this profile.", retry: { Task { await load() } })
       } else {
@@ -236,6 +240,7 @@ private struct ProfileRouteView: View {
         moderationOpts: ModerationOpts(userDid: clients.did, prefs: ModerationPrefs()),
         viewerDid: clients.did,
         hasSession: true)
+      profileContent = await ProfileContentLoader.load(actor: actor, clients: clients)
       failed = false
     } catch {
       failed = true
@@ -336,6 +341,55 @@ private struct ConversationRouteView: View {
       }
     }
     .navigationBarTitleDisplayMode(.inline)
+  }
+}
+
+// MARK: - Profile content
+
+enum ProfileContentLoader {
+  static let loading = ProfileScreenContent(
+    states: Dictionary(
+      uniqueKeysWithValues: ProfileTab.allCases.map { (section(for: $0), .loading) }))
+
+  static func load(actor: String, clients: AppSessionClients) async -> ProfileScreenContent {
+    let client = ProfileClient(client: clients.appview)
+    var items: [ProfileTab: [FeedItemViewData]] = [:]
+    var states: [ProfileSection: ListState] = [:]
+
+    for tab in ProfileTab.allCases {
+      do {
+        let page = try await client.getAuthorFeed(actor: actor, tab: tab)
+        let rows = page.items.map { item in
+          let subject = LexiconModeration.subject(item.post)
+          return feedItemViewData(
+            subject,
+            counts: FeedItemCounts(
+              replyCount: item.post.replyCount,
+              repostCount: item.post.repostCount,
+              likeCount: item.post.likeCount),
+            decision: moderatePost(
+              subject,
+              opts: ModerationOpts(userDid: clients.did, prefs: ModerationPrefs())),
+            options: FeedItemRenderOptions())
+        }
+        items[tab] = rows
+        states[section(for: tab)] = rows.isEmpty ? .empty : .content
+      } catch {
+        states[section(for: tab)] = .error(
+          .init(title: "Could not load posts", message: error.localizedDescription))
+      }
+    }
+    return ProfileScreenContent(feedItems: items, states: states)
+  }
+
+  private static func section(for tab: ProfileTab) -> ProfileSection {
+    switch tab {
+    case .posts: .posts
+    case .replies: .replies
+    case .media: .media
+    case .videos: .videos
+    case .likes: .likes
+    }
   }
 }
 

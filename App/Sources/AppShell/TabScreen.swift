@@ -465,6 +465,7 @@ private struct ProfileTabScreen: View {
     @Environment(ShellRouter.self) private var router
 
     @State private var headerData: ProfileHeaderViewData?
+    @State private var profileContent = ProfileContentLoader.loading
     @State private var showsEdit = false
     @State private var failed = false
 
@@ -473,9 +474,7 @@ private struct ProfileTabScreen: View {
         if let headerData {
           ProfileScreen(
             headerData: headerData,
-            // TODO: author-feed seam - the posts under the header need the
-            // feed wiring the Home tab owns; the header renders alone until
-            // the shell can share it.
+            content: profileContent,
             onAction: handle)
         } else if failed {
           RetryRow(message: "Could not load your profile.", retry: { Task { await load() } })
@@ -527,6 +526,8 @@ private struct ProfileTabScreen: View {
           moderationOpts: ModerationOpts(userDid: clients.did, prefs: ModerationPrefs()),
           viewerDid: clients.did,
           hasSession: true)
+        profileContent = await ProfileContentLoader.load(
+          actor: clients.did, clients: clients)
         failed = false
       } catch {
         if headerData == nil { failed = true }
