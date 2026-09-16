@@ -26,6 +26,7 @@ public struct PostThreadScreen: View {
   private let onReply: (ThreadPostContent) -> Void
   private let onLike: (ThreadPostContent) -> Void
   private let onRepost: (ThreadPostContent) -> Void
+  private let onOpenEngagement: (String, ThreadEngagementKind) -> Void
 
   /// The window the caller handed us, and the one the UI widens. Local state so
   /// a "load more" tap is immediate; the parent's value is the starting point.
@@ -42,7 +43,8 @@ public struct PostThreadScreen: View {
     onOpen: @escaping (RichTextTarget) -> Void = { _ in },
     onReply: @escaping (ThreadPostContent) -> Void = { _ in },
     onLike: @escaping (ThreadPostContent) -> Void = { _ in },
-    onRepost: @escaping (ThreadPostContent) -> Void = { _ in }
+    onRepost: @escaping (ThreadPostContent) -> Void = { _ in },
+    onOpenEngagement: @escaping (String, ThreadEngagementKind) -> Void = { _, _ in }
   ) {
     self.window = ThreadWindow(thread: thread, showMore: showMore)
     self.strings = strings
@@ -52,6 +54,7 @@ public struct PostThreadScreen: View {
     self.onReply = onReply
     self.onLike = onLike
     self.onRepost = onRepost
+    self.onOpenEngagement = onOpenEngagement
     _current = State(initialValue: ThreadWindow(thread: thread, showMore: showMore))
   }
 
@@ -73,7 +76,8 @@ public struct PostThreadScreen: View {
             onOpen: onOpen,
             onReply: onReply,
             onLike: onLike,
-            onRepost: onRepost)
+            onRepost: onRepost,
+            onOpenEngagement: onOpenEngagement)
 
           if item.isAnchor, case .post(let content) = item.content, !content.replyDisabled {
             ThreadComposerRow(strings: strings, onTap: { onReply(content) })
@@ -100,7 +104,8 @@ public struct PostThreadScreen: View {
                 onOpen: onOpen,
                 onReply: onReply,
                 onLike: onLike,
-                onRepost: onRepost)
+                onRepost: onRepost,
+                onOpenEngagement: onOpenEngagement)
             }
           }
         }

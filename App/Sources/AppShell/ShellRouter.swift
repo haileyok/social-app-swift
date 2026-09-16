@@ -24,6 +24,12 @@ final class ShellRouter {
     case thread(uri: String)
     /** A profile, by handle or DID. */
     case profile(actor: String)
+    /** Actors who liked a post. */
+    case postLikes(uri: String)
+    /** Actors who reposted a post. */
+    case postReposts(uri: String)
+    /** Posts quoting a post. */
+    case postQuotes(uri: String)
     /** A custom feed, by generator URI. */
     case feed(uri: String, name: String)
     /** A starter pack, by record URI. */

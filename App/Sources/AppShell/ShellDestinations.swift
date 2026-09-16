@@ -51,6 +51,12 @@ struct ShellDestinationView: View {
       ThreadRouteView(uri: uri)
     case .profile(let actor):
       ProfileRouteView(actor: actor)
+    case .postLikes(let uri):
+      PostLikesRouteView(uri: uri)
+    case .postReposts(let uri):
+      PostRepostsRouteView(uri: uri)
+    case .postQuotes(let uri):
+      PostQuotesRouteView(uri: uri)
     case .feed(let uri, let name):
       FeedRouteView(uri: uri, name: name)
     case .starterPack(let uri, let name):
@@ -89,7 +95,14 @@ private struct ThreadRouteView: View {
           onOpen: { router.open($0) },
           onReply: { content in replyTarget = makeReplyTarget(for: content) },
           onLike: { content in Task { await toggleLike(content) } },
-          onRepost: { content in Task { await toggleRepost(content) } })
+          onRepost: { content in Task { await toggleRepost(content) } },
+          onOpenEngagement: { uri, kind in
+            switch kind {
+            case .likes: router.open(.postLikes(uri: uri))
+            case .reposts: router.open(.postReposts(uri: uri))
+            case .quotes: router.open(.postQuotes(uri: uri))
+            }
+          })
       } else if failed {
         RetryRow(message: "Could not load this post.", retry: { Task { await load() } })
       } else {

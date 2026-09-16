@@ -13,6 +13,12 @@ import PostThreadLogic
 /// PostThreadScreen(thread: fixture)             // PostThreadStrings.defaults
 /// PostThreadScreen(thread: fixture, strings: .init(...))
 /// ```
+public enum ThreadEngagementKind: Hashable, Sendable {
+  case reposts
+  case quotes
+  case likes
+}
+
 public struct PostThreadStrings: Equatable, Sendable {
   /// The screen/navigation title.
   public let title: String

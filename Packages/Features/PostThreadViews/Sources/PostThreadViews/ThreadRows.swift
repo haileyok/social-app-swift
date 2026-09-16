@@ -21,6 +21,7 @@ struct ThreadRow: View {
   let onReply: (ThreadPostContent) -> Void
   let onLike: (ThreadPostContent) -> Void
   let onRepost: (ThreadPostContent) -> Void
+  let onOpenEngagement: (String, ThreadEngagementKind) -> Void
 
   @Environment(\.alfTheme) private var theme
 
@@ -44,7 +45,8 @@ struct ThreadRow: View {
         onOpen: onOpen,
         onReply: onReply,
         onLike: onLike,
-        onRepost: onRepost)
+        onRepost: onRepost,
+        onOpenEngagement: onOpenEngagement)
     case .tombstone(let tombstone):
       ThreadTombstoneRow(tombstone: tombstone, strings: strings)
     case .readMore(let readMore):
@@ -67,6 +69,7 @@ struct ThreadPostRow: View {
   let onReply: (ThreadPostContent) -> Void
   let onLike: (ThreadPostContent) -> Void
   let onRepost: (ThreadPostContent) -> Void
+  let onOpenEngagement: (String, ThreadEngagementKind) -> Void
 
   @Environment(\.alfTheme) private var theme
 
@@ -79,7 +82,8 @@ struct ThreadPostRow: View {
     onOpen: @escaping (RichTextTarget) -> Void,
     onReply: @escaping (ThreadPostContent) -> Void,
     onLike: @escaping (ThreadPostContent) -> Void,
-    onRepost: @escaping (ThreadPostContent) -> Void
+    onRepost: @escaping (ThreadPostContent) -> Void,
+    onOpenEngagement: @escaping (String, ThreadEngagementKind) -> Void
   ) {
     self.item = item
     self.content = content
@@ -90,6 +94,7 @@ struct ThreadPostRow: View {
     self.onReply = onReply
     self.onLike = onLike
     self.onRepost = onRepost
+    self.onOpenEngagement = onOpenEngagement
   }
 
   var body: some View {
@@ -102,10 +107,12 @@ struct ThreadPostRow: View {
       if item.isAnchor {
         ThreadAnchorPost(
           data: data,
+          postURI: content.post.uri.rawValue,
           createdAt: content.record?.createdAt.rawValue,
           quoteCount: content.post.quoteCount,
           strings: strings,
           onOpen: onOpen,
+          onOpenEngagement: onOpenEngagement,
           onOpenAuthor: { onOpen(.profile(did: $0)) },
           onReply: content.replyDisabled ? nil : { onReply(content) },
           onRepost: { onRepost(content) },
@@ -136,10 +143,12 @@ struct ThreadPostRow: View {
 /// and controls each receive the full content width.
 struct ThreadAnchorPost: View {
   let data: FeedItemViewData
+  let postURI: String
   let createdAt: String?
   let quoteCount: Int?
   let strings: PostThreadStrings
   let onOpen: (RichTextTarget) -> Void
+  let onOpenEngagement: (String, ThreadEngagementKind) -> Void
   let onOpenAuthor: (String) -> Void
   let onReply: (() -> Void)?
   let onRepost: (() -> Void)?
@@ -218,13 +227,15 @@ struct ThreadAnchorPost: View {
   private var engagementSummary: some View {
     HStack(spacing: Spacing.lg) {
       if let repostCount = nonZero(data.repostCount) {
-        stat(repostCount, singular: strings.repost, plural: strings.reposts)
+        stat(
+          repostCount, singular: strings.repost, plural: strings.reposts, kind: .reposts)
       }
       if let quoteCount, quoteCount > 0 {
-        stat(String(quoteCount), singular: strings.quote, plural: strings.quotes)
+        stat(
+          String(quoteCount), singular: strings.quote, plural: strings.quotes, kind: .quotes)
       }
       if let likeCount = nonZero(data.likeCount) {
-        stat(likeCount, singular: strings.like, plural: strings.likes)
+        stat(likeCount, singular: strings.like, plural: strings.likes, kind: .likes)
       }
       if let replyCount = nonZero(data.replyCount) {
         stat(replyCount, singular: strings.reply, plural: strings.replies)
@@ -238,7 +249,24 @@ struct ThreadAnchorPost: View {
     return count
   }
 
-  private func stat(_ value: String, singular: String, plural: String) -> some View {
+  @ViewBuilder
+  private func stat(
+    _ value: String,
+    singular: String,
+    plural: String,
+    kind: ThreadEngagementKind? = nil
+  ) -> some View {
+    if let kind {
+      Button { onOpenEngagement(postURI, kind) } label: {
+        statLabel(value, singular: singular, plural: plural)
+      }
+      .buttonStyle(.plain)
+    } else {
+      statLabel(value, singular: singular, plural: plural)
+    }
+  }
+
+  private func statLabel(_ value: String, singular: String, plural: String) -> some View {
     HStack(spacing: Spacing.xs) {
       Text(value)
         .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
