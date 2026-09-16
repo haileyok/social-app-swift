@@ -3,6 +3,7 @@ import ComposerLogic
 import DesignSystem
 import DesignSystemCore
 import Foundation
+import RichText
 import SwiftUI
 
 // Re-exported so the app and its test targets reach `ComposerAccessibility` (and
@@ -207,10 +208,12 @@ struct LiveComposerSheet: View {
     do {
       let post = state.thread.posts[0]
       let rkey = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+      let resolvedMentions = await resolveMentions(in: post.richText)
       let inputs = PublishInputs(
         thread: state.thread,
         langs: languages.codes,
         reply: replyTarget.map { ReplyContext(root: $0.root, parent: $0.parent) },
+        resolvedMentions: resolvedMentions,
         rkeys: [post.id: rkey],
         did: clients.did)
       let built = try ComposerRecordBuilder.build(inputs) { _ in
@@ -229,6 +232,28 @@ struct LiveComposerSheet: View {
       phase = .failed(message: error.localizedDescription)
     }
   }
+
+  private func resolveMentions(in value: RichTextValue) async -> [String: String] {
+    let detected = value.detectingFacetsWithoutResolution()
+    let handles = Set(
+      (detected.facets ?? []).flatMap(\.features).compactMap { feature -> String? in
+        guard case .mention(let handle) = feature else { return nil }
+        return handle.lowercased()
+      })
+    var resolved: [String: String] = [:]
+    for handle in handles {
+      let output: ResolveHandleOutput? = try? await clients.appview.get(
+        "com.atproto.identity.resolveHandle", params: [("handle", handle)])
+      if let did = output?.did, !did.isEmpty {
+        resolved[handle] = did
+      }
+    }
+    return resolved
+  }
+}
+
+private struct ResolveHandleOutput: Decodable {
+  let did: String
 }
 
 private enum LiveComposerError: LocalizedError {

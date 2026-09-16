@@ -221,6 +221,8 @@ public struct PublishInputs: Sendable {
   public var langs: [String]
   /// The reply context, when this is a reply.
   public var reply: ReplyContext?
+  /// Handle-to-DID resolutions used to turn detected mention facets into live links.
+  public var resolvedMentions: [String: String]
   /// Resolved embeds per post id. A post with no entry publishes without an embed.
   public var media: [String: ResolvedEmbedMedia]
   /// Resolved link cards per post id (used when the post has no media).
@@ -241,6 +243,7 @@ public struct PublishInputs: Sendable {
     thread: ThreadDraft,
     langs: [String] = [],
     reply: ReplyContext? = nil,
+    resolvedMentions: [String: String] = [:],
     media: [String: ResolvedEmbedMedia] = [:],
     linkCards: [String: ResolvedExternal] = [:],
     quoteReferences: [String: RecordReference]? = nil,
@@ -251,6 +254,7 @@ public struct PublishInputs: Sendable {
     self.thread = thread
     self.langs = langs
     self.reply = reply
+    self.resolvedMentions = resolvedMentions
     self.media = media
     self.linkCards = linkCards
     self.quoteReferences = quoteReferences
@@ -335,7 +339,8 @@ public enum ComposerRecordBuilder {
     createdAt: Date
   ) -> App.Bsky.FeedPost {
     _ = uri
-    let richText = ComposerText.publishRichText(post.richText)
+    let richText = ComposerText.publishRichText(
+      post.richText, resolvedMentions: inputs.resolvedMentions)
     let labels = post.labels.recordValue
     return App.Bsky.FeedPost(
       createdAt: FormatString<Date>(rawValue: isoString(createdAt)),

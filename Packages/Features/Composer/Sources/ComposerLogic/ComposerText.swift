@@ -48,10 +48,21 @@ public enum ComposerText {
   /// trimmed text with `cleanNewlines`, facets are (re)detected, links are
   /// shortened, and unresolved mentions are stripped. The publish path owns
   /// mention resolution; see ``ComposerRecordBuilder``.
-  public static func publishRichText(_ richText: RichTextValue) -> RichText {
+  public static func publishRichText(
+    _ richText: RichTextValue,
+    resolvedMentions: [String: String] = [:]
+  ) -> RichText {
     let text = publishText(richText.text)
     let result = RichText(text: text, cleanNewlines: true)
     result.detectFacetsWithoutResolution()
+    result.facets = result.facets?.map { facet in
+      var resolved = facet
+      resolved.features = facet.features.map { feature in
+        guard case .mention(let handle) = feature else { return feature }
+        return resolvedMentions[handle.lowercased()].map { .mention(did: $0) } ?? feature
+      }
+      return resolved
+    }
     return stripInvalidMentions(shortenLinks(result))
   }
 }

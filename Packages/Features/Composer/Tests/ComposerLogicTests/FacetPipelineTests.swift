@@ -57,6 +57,20 @@ struct FacetPipelineTests {
     #expect(mention.did.rawValue == "did:plc:alice")
   }
 
+  @Test("publish-time handle resolution produces a live mention facet")
+  func publishTimeMentionResolution() {
+    let published = ComposerText.publishRichText(
+      RichTextValue(text: "hi @Alice.Test"),
+      resolvedMentions: ["alice.test": "did:plc:alice"])
+    let facets = ComposerRecordBuilder.facets(from: published)
+
+    guard case .richtextFacetMention(let mention) = facets?.first?.features.first else {
+      Issue.record("expected a resolved mention feature")
+      return
+    }
+    #expect(mention.did.rawValue == "did:plc:alice")
+  }
+
   @Test("an unresolved mention is dropped from the published facets")
   func unresolvedMentionDropped() {
     let richText = RichText(
