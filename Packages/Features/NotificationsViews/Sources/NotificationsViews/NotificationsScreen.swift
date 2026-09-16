@@ -92,7 +92,7 @@ public struct NotificationsScreen: View {
     case .empty:
       emptyState
     case .error(let err):
-      ErrorStateView(error: err) {}
+      ErrorStateView(error: err) { Task { await onRefresh() } }
     case .content, .loadingMore:
       rowList
     }

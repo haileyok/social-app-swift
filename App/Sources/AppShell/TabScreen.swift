@@ -423,13 +423,23 @@ private struct NotificationsTabScreen: View {
       NotificationsScreen(
         rows: rows,
         isInitialLoading: isInitialLoading,
+        error: notificationError,
         onRefresh: { await load(selectedFilter) },
         onFilterChange: { tab in
           selectedFilter = tab
+          rows = []
+          failed = false
           Task { await load(tab) }
         },
         onOpen: { router.open($0) })
         .task { await load(selectedFilter) }
+    }
+
+    private var notificationError: ListState.ListErrorState? {
+      guard failed, rows.isEmpty else { return nil }
+      return ListState.ListErrorState(
+        title: NotificationsListModel.strings.errorTitle,
+        message: NotificationsListModel.strings.errorMessage)
     }
 
     private func load(_ tab: NotificationsFilterTab) async {
