@@ -532,8 +532,8 @@ private struct ActivitySubscriptionsScreen: View {
   @Environment(\.alfTheme) private var theme
   @Environment(ShellRouter.self) private var router
 
-  @State private var profiles: [App.Bsky.ActorDefs_ProfileView] = []
-  @State private var query: InfiniteQuery<App.Bsky.ActorDefs_ProfileView>?
+  @State private var profiles: [Lexicons.App.Bsky.ActorDefs_ProfileView] = []
+  @State private var query: InfiniteQuery<Lexicons.App.Bsky.ActorDefs_ProfileView>?
   @State private var isLoading = true
   @State private var isLoadingMore = false
   @State private var hasMore = false
@@ -584,7 +584,7 @@ private struct ActivitySubscriptionsScreen: View {
     }
   }
 
-  private func profileRow(_ profile: App.Bsky.ActorDefs_ProfileView) -> some View {
+  private func profileRow(_ profile: Lexicons.App.Bsky.ActorDefs_ProfileView) -> some View {
     HStack(spacing: Spacing.md) {
       Button {
         router.open(.profile(did: profile.did.rawValue))
@@ -652,7 +652,7 @@ private struct ActivitySubscriptionsScreen: View {
     }
   }
 
-  private func unsubscribe(_ profile: App.Bsky.ActorDefs_ProfileView) async {
+  private func unsubscribe(_ profile: Lexicons.App.Bsky.ActorDefs_ProfileView) async {
     let did = profile.did.rawValue
     guard updating.insert(did).inserted else { return }
     defer { updating.remove(did) }
