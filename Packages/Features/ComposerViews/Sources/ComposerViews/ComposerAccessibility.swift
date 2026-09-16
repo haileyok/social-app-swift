@@ -31,6 +31,8 @@ public enum ComposerAccessibility {
   public static func imageAltField(_ id: String) -> String { "composer.image.alt.\(id)" }
   /// One image's remove control, suffixed by its id.
   public static func imageRemove(_ id: String) -> String { "composer.image.remove.\(id)" }
+  /// Accessibility guidance shown when at least one image lacks alt text.
+  public static let imageAltHelp = "composer.image.altHelp"
 
   /// The video attach row.
   public static let videoRow = "composer.video"

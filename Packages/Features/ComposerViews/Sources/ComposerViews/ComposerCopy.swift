@@ -47,6 +47,9 @@ public enum ComposerCopy {
   public static let altTextLabel = "Alt text"
   /// The alt-text field's placeholder.
   public static let altTextPlaceholder = "Describe this image"
+  /// Guidance shown while one or more attached images do not have alt text.
+  public static let altTextHelp =
+    "Alt text describes images for blind and low-vision users, and gives context to everyone."
   /// The character counter's accessibility label prefix.
   public static let characterCountLabel = "Characters remaining"
 

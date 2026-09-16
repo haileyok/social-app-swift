@@ -237,6 +237,9 @@ public struct ComposerScreen: View {
               onReduce(.updatePost(postId: activePost.id, action: .removeImage(image)))
             })
         }
+        if images.images.contains(where: { $0.alt.isEmpty }) {
+          imageAltTextHelp
+        }
 
       case .video(let video):
         ComposerVideoAttachRow(
@@ -265,6 +268,25 @@ public struct ComposerScreen: View {
           })
       }
     }
+  }
+
+  private var imageAltTextHelp: some View {
+    HStack(alignment: .top, spacing: Spacing.sm) {
+      Image(systemName: "info.circle.fill")
+        .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
+        .foregroundStyle(theme.colors.primary500)
+      AlfText(
+        ComposerCopy.altTextHelp,
+        scale: .sm,
+        color: theme.atomColors.textContrastMedium)
+        .fixedSize(horizontal: false, vertical: true)
+      Spacer(minLength: 0)
+    }
+    .padding(Spacing.sm)
+    .background(theme.atomColors.bgContrast25)
+    .clipShape(RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+    .accessibilityElement(children: .combine)
+    .accessibilityIdentifier(ComposerAccessibility.imageAltHelp)
   }
 
   @ViewBuilder
