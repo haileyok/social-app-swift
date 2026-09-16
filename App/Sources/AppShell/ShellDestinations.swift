@@ -200,8 +200,17 @@ private struct ThreadRouteView: View {
     do {
       let output = try await PostThreadFetcher(client: clients.appview)
         .callAsFunction(PostThreadParams(uri: uri))
-      let tree = ThreadTreeBuilder.build(output: output)
-      thread = ThreadFlattener.flatten(ThreadTreeAnnotator.annotate(tree))
+      let fetchedAt = Int(Date().timeIntervalSince1970)
+      let moderationOpts = ModerationOpts(userDid: clients.did, prefs: ModerationPrefs())
+      let options = ThreadFlattenOptions(
+        hasSession: true,
+        moderationOpts: moderationOpts,
+        fetchedAt: fetchedAt)
+      thread = ThreadPresentationPipeline.prepare(
+        ThreadTreeBuilder.build(output: output),
+        order: .hotness,
+        inputs: ThreadSortInputs(currentDid: clients.did, fetchedAt: fetchedAt),
+        options: options)
       failed = false
     } catch {
       failed = true

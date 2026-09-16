@@ -302,6 +302,24 @@ struct SortingTests {
     #expect(flat.postUris == ["at://anchor", "at://newer", "at://older"])
   }
 
+  @Test("presentation pipeline sorts before flattening")
+  func presentationPipelineSorts() {
+    let older = Fixtures.post(
+      "at://older", author: "did:plc:x", indexedAt: "2026-01-01T00:00:00.000Z")
+    let newer = Fixtures.post(
+      "at://newer", author: "did:plc:y", indexedAt: "2026-01-05T00:00:00.000Z")
+    let tree = Fixtures.withDepths(
+      Fixtures.post("at://anchor", replies: [older, newer]))
+
+    let flat = ThreadPresentationPipeline.prepare(
+      tree,
+      order: .newest,
+      inputs: ThreadSortInputs(currentDid: Fixtures.selfDid),
+      options: ThreadFlattenOptions(hasSession: true))
+
+    #expect(flat.postUris == ["at://anchor", "at://newer", "at://older"])
+  }
+
   @Test("hotness is monotonically decreasing with age for a fixed like count")
   func hotnessMonotonic() {
     let fetchedAt = 1_800_000_000

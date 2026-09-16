@@ -262,6 +262,22 @@ public enum ThreadTreeSorter {
   }
 }
 
+/// Runs the complete presentation pipeline used by the live thread screen.
+/// Keeping annotation, sorting, moderation, and flattening behind one tested
+/// entry point prevents production routes from accidentally skipping a pass.
+public enum ThreadPresentationPipeline {
+  public static func prepare(
+    _ tree: ThreadNode,
+    order: ThreadSortOrder = .hotness,
+    inputs: ThreadSortInputs = ThreadSortInputs(),
+    options: ThreadFlattenOptions = ThreadFlattenOptions()
+  ) -> FlattenedThread {
+    let annotated = ThreadTreeAnnotator.annotate(tree)
+    let sorted = ThreadTreeSorter.sort(annotated, order: order, inputs: inputs)
+    return ThreadFlattener.flatten(sorted, options: options)
+  }
+}
+
 /// Thread shape detection.
 extension ThreadShape {
   /// Whether the thread branches anywhere.

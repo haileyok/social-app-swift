@@ -30,6 +30,7 @@ public struct PostThreadScreen: View {
   /// The window the caller handed us, and the one the UI widens. Local state so
   /// a "load more" tap is immediate; the parent's value is the starting point.
   @State private var current: ThreadWindow
+  @State private var showingOtherReplies = false
   @Environment(\.alfTheme) private var theme
 
   public init(
@@ -80,7 +81,28 @@ public struct PostThreadScreen: View {
         }
 
         if current.thread.hasOtherReplies {
-          ThreadOtherRepliesRow(strings: strings, count: current.thread.otherItems.count)
+          ThreadOtherRepliesRow(
+            strings: strings,
+            count: current.thread.otherItems.count,
+            isExpanded: showingOtherReplies,
+            onTap: { withAnimation { showingOtherReplies.toggle() } })
+
+          if showingOtherReplies {
+            ForEach(current.thread.otherItems, id: \.id) { item in
+              Divider()
+                .foregroundStyle(theme.atomColors.borderContrastLow)
+              ThreadRow(
+                item: item,
+                strings: strings,
+                now: now,
+                locale: locale,
+                onShowMoreReplies: handleShowMore,
+                onOpen: onOpen,
+                onReply: onReply,
+                onLike: onLike,
+                onRepost: onRepost)
+            }
+          }
         }
       }
     }
@@ -110,20 +132,29 @@ public struct PostThreadScreen: View {
 struct ThreadOtherRepliesRow: View {
   let strings: PostThreadStrings
   let count: Int
+  let isExpanded: Bool
+  let onTap: () -> Void
 
   @Environment(\.alfTheme) private var theme
 
   var body: some View {
-    HStack(spacing: Spacing.sm) {
-      Image(systemName: "eye.slash")
-        .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
-      Text("\(strings.otherReplies) (\(count))")
-        .font(TypeScale.sm.font(weight: Scales.FontWeight.medium))
-      Spacer(minLength: 0)
+    Button(action: onTap) {
+      HStack(spacing: Spacing.sm) {
+        Image(systemName: "eye.slash")
+          .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
+        Text("\(strings.otherReplies) (\(count))")
+          .font(TypeScale.sm.font(weight: Scales.FontWeight.medium))
+        Spacer(minLength: 0)
+        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+          .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
+      }
+      .foregroundStyle(theme.atomColors.textContrastMedium)
+      .padding(Spacing.md)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .contentShape(Rectangle())
     }
-    .foregroundStyle(theme.atomColors.textContrastMedium)
-    .padding(Spacing.md)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .accessibilityElement(children: .combine)
+    .buttonStyle(.plain)
+    .accessibilityLabel("\(strings.otherReplies) (\(count))")
+    .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
   }
 }
