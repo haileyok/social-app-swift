@@ -1,6 +1,7 @@
 import ATProtoClient
 import Foundation
 import Lexicons
+import NotificationsLogic
 import QueryStore
 
 /**
@@ -51,6 +52,9 @@ final class AppSessionClients {
   /// The plain PDS client (no proxy, no labeler header), for preference reads.
   let pds: XrpcClient
 
+  /// Account-scoped notification polling, watermark, and tab-badge state.
+  let notificationUnread: NotificationUnreadCoordinator
+
   /**
    Builds the bundle from the session's live `PasswordSession`.
 
@@ -69,11 +73,22 @@ final class AppSessionClients {
       baseURL: data.pdsEndpoint ?? data.service,
       transport: sessionTransport)
 
+    let store = QueryStore()
+    let appview = base.withProxy(BlueskyAPI.appService)
+
     self.did = data.did
-    self.store = QueryStore()
-    self.appview = base.withProxy(BlueskyAPI.appService)
+    self.store = store
+    self.appview = appview
     self.chat = base.withProxy(BlueskyAPI.chatService)
     self.pds = base
+    self.notificationUnread = NotificationUnreadCoordinator(
+      client: XRPCNotificationClient(client: appview),
+      store: store,
+      scope: data.did)
+  }
+
+  deinit {
+    notificationUnread.stopPolling()
   }
 
   /// Creates or deletes a like/repost record for a hydrated post.

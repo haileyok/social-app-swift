@@ -1,6 +1,7 @@
 import DesignSystem
 import DesignSystemCore
 import DesignTokens
+import NotificationsLogic
 import SwiftUI
 import UIComponents
 
@@ -167,6 +168,7 @@ private struct SessionGateView: View {
    teardown the RN app performs by rebuilding its client bundle too.
    */
   @State private var clients: AppSessionClients?
+  @State private var notificationUnread = UnreadCount.none
 
   /// The signed-in shell's navigation state; route screens read its `clients`.
   @State private var router = ShellRouter(activeTab: .home)
@@ -213,6 +215,7 @@ private struct SessionGateView: View {
             Label(tab.title, systemImage: tab.systemImage)
               .accessibilityIdentifier(tab.accessibilityIdentifier)
           }
+          .badge(tab == .notifications ? notificationUnread.rawValue : "")
           .tag(tab)
       }
     }
@@ -269,9 +272,16 @@ private struct SessionGateView: View {
         let built = await session.makeClients()
         clients = built
         router.clients = built
+        notificationUnread = built?.notificationUnread.state.unreadCount ?? .none
+        built?.notificationUnread.addListener { state in
+          Task { @MainActor in notificationUnread = state.unreadCount }
+        }
+        built?.notificationUnread.startPolling()
       }
     case .signedOut, .loading:
+      clients?.notificationUnread.stopPolling()
       clients = nil
+      notificationUnread = .none
     }
   }
 }

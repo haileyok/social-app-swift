@@ -440,7 +440,16 @@ private struct NotificationsTabScreen: View {
           Task { await load(tab) }
         },
         onOpen: { router.open($0) })
-        .task { await load(selectedFilter) }
+        .task {
+          async let focused: Void = onScreenFocused()
+          await load(selectedFilter)
+          await focused
+        }
+    }
+
+    private func onScreenFocused() async {
+      await clients.notificationUnread.checkUnread(invalidate: true)
+      try? await clients.notificationUnread.markAllRead()
     }
 
     private var notificationError: ListState.ListErrorState? {
