@@ -415,6 +415,7 @@ private struct NotificationsTabScreen: View {
     @Environment(ShellRouter.self) private var router
 
     @State private var rows: [FeedNotification] = []
+    @State private var selectedFilter = NotificationsFilterTab.all
     @State private var isInitialLoading = true
     @State private var failed = false
 
@@ -422,26 +423,36 @@ private struct NotificationsTabScreen: View {
       NotificationsScreen(
         rows: rows,
         isInitialLoading: isInitialLoading,
-        onRefresh: { await load() },
+        onRefresh: { await load(selectedFilter) },
+        onFilterChange: { tab in
+          selectedFilter = tab
+          Task { await load(tab) }
+        },
         onOpen: { router.open($0) })
-        .task { await load() }
+        .task { await load(selectedFilter) }
     }
 
-    private func load() async {
-      isInitialLoading = rows.isEmpty
+    private func load(_ tab: NotificationsFilterTab) async {
+      isInitialLoading = true
       let fetcher = NotificationPageFetcher(
-        client: XRPCNotificationClient(client: clients.appview))
+        client: XRPCNotificationClient(client: clients.appview),
+        reasons: tab.feedFilter.reasons,
+        priority: tab.priorityOnly ? true : nil)
       let query = NotificationFeedQuery(
         store: clients.store,
-        filter: .all,
+        filter: tab.feedFilter,
+        priorityOnly: tab.priorityOnly,
         scope: clients.did,
         fetchPage: { cursor in try await fetcher.page(cursor: cursor) })
 
       do {
         _ = try await query.loadFirstPage()
-        rows = try await query.items()
+        let loadedRows = await query.items()
+        guard selectedFilter == tab else { return }
+        rows = loadedRows
         failed = false
       } catch {
+        guard selectedFilter == tab else { return }
         failed = true
       }
       isInitialLoading = false

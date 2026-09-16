@@ -30,6 +30,7 @@ public struct NotificationsScreen: View {
   private let error: ListState.ListErrorState?
   private let showsFilterBar: Bool
   private let onRefresh: () async -> Void
+  private let onFilterChange: (NotificationsFilterTab) -> Void
   private let onOpen: (RichTextTarget) -> Void
 
   @State private var selection: NotificationsFilterTab = .all
@@ -42,6 +43,7 @@ public struct NotificationsScreen: View {
     error: ListState.ListErrorState? = nil,
     showsFilterBar: Bool = true,
     onRefresh: @escaping () async -> Void = {},
+    onFilterChange: @escaping (NotificationsFilterTab) -> Void = { _ in },
     onOpen: @escaping (RichTextTarget) -> Void = { _ in }
   ) {
     self.rows = rows
@@ -49,6 +51,7 @@ public struct NotificationsScreen: View {
     self.error = error
     self.showsFilterBar = showsFilterBar
     self.onRefresh = onRefresh
+    self.onFilterChange = onFilterChange
     self.onOpen = onOpen
   }
 
@@ -60,6 +63,7 @@ public struct NotificationsScreen: View {
       content
     }
     .background(theme.atomColors.bg)
+    .onChange(of: selection) { _, tab in onFilterChange(tab) }
     .accessibilityIdentifier(NotificationsAccessibility.screen)
   }
 
