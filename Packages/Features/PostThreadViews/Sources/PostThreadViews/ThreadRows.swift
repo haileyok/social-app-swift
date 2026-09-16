@@ -4,6 +4,7 @@ import Foundation
 import PostThreadLogic
 import SwiftUI
 import UIComponents
+import UIComponentsCore
 
 /// One row of the thread list: the gutter, then the content for the row's kind.
 ///
@@ -97,60 +98,143 @@ struct ThreadPostRow: View {
       now: now,
       locale: locale,
       contextLine: contextLine)
-    VStack(alignment: .leading, spacing: 0) {
-      PostFeedItem(
-        data: data,
-        onOpen: onOpen,
-        onOpenAuthor: { onOpen(.profile(did: $0)) },
-        onReply: content.replyDisabled ? nil : { onReply(content) },
-        onRepost: { onRepost(content) },
-        onLike: { onLike(content) })
-
+    Group {
       if item.isAnchor {
-        anchorDetails
+        ThreadAnchorPost(
+          data: data,
+          createdAt: content.record?.createdAt.rawValue,
+          onOpen: onOpen,
+          onOpenAuthor: { onOpen(.profile(did: $0)) },
+          onReply: content.replyDisabled ? nil : { onReply(content) },
+          onRepost: { onRepost(content) },
+          onLike: { onLike(content) })
+      } else {
+        PostFeedItem(
+          data: data,
+          onOpen: onOpen,
+          onOpenAuthor: { onOpen(.profile(did: $0)) },
+          onReply: content.replyDisabled ? nil : { onReply(content) },
+          onRepost: { onRepost(content) },
+          onLike: { onLike(content) })
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .accessibilityElement(children: .contain)
   }
 
-  /// Expanded context unique to the focused post, matching the RN anchor's
-  /// absolute timestamp and readable engagement summary.
-  private var anchorDetails: some View {
-    VStack(alignment: .leading, spacing: Spacing.sm) {
-      if let createdAt = content.record?.createdAt.rawValue,
-        let date = ISO8601DateFormatter().date(from: createdAt)
-      {
-        Text(date.formatted(date: .long, time: .shortened))
-          .font(TypeScale.sm.font())
-          .foregroundStyle(theme.atomColors.textContrastMedium)
-      }
+  /// The context line above a row: an OP-liked reply is the case the data layer
+  /// flags explicitly, since RN labels it in the thread.
+  private var contextLine: String? {
+    content.hasOPLike ? strings.likedByAuthor : nil
+  }
+}
 
-      HStack(spacing: Spacing.lg) {
-        anchorStat(content.post.repostCount, label: "reposts")
-        anchorStat(content.post.likeCount, label: "likes")
-        anchorStat(content.post.replyCount, label: "replies")
+/// The focused post uses a deliberately different visual hierarchy from feed
+/// rows. Its author identity leads, while the body, media, timestamp, metrics,
+/// and controls each receive the full content width.
+struct ThreadAnchorPost: View {
+  let data: FeedItemViewData
+  let createdAt: String?
+  let onOpen: (RichTextTarget) -> Void
+  let onOpenAuthor: (String) -> Void
+  let onReply: (() -> Void)?
+  let onRepost: (() -> Void)?
+  let onLike: (() -> Void)?
+
+  @Environment(\.alfTheme) private var theme
+
+  var body: some View {
+    ModerationMask(surface: data.moderation.content) {
+      VStack(alignment: .leading, spacing: Spacing.md) {
+        authorHeader
+
+        if !data.text.isEmpty {
+          RichTextBody(segments: data.segments, scale: .lg, onOpen: onOpen)
+        }
+
+        if let embed = data.embed {
+          PostEmbed(
+            embed: data.postEmbed,
+            info: embed,
+            moderation: data.moderation.media,
+            onOpen: onOpen)
+        }
+
+        if let absoluteDate {
+          Text(absoluteDate)
+            .font(TypeScale.sm.font())
+            .foregroundStyle(theme.atomColors.textContrastMedium)
+        }
+
+        Divider()
+        engagementSummary
+        Divider()
+
+        EngagementRow(
+          replyCount: nil,
+          repostCount: nil,
+          likeCount: nil,
+          onReply: onReply,
+          onRepost: onRepost,
+          onLike: onLike)
       }
+      .padding(.horizontal, Spacing.md)
+      .padding(.vertical, Spacing.lg)
     }
-    .padding(.horizontal, Spacing.md)
-    .padding(.bottom, Spacing.md)
   }
 
-  private func anchorStat(_ count: Int?, label: String) -> some View {
-    HStack(spacing: Spacing.xs) {
-      Text("\(count ?? 0)")
+  private var authorHeader: some View {
+    Button {
+      onOpenAuthor(data.authorDid)
+    } label: {
+      HStack(spacing: Spacing.sm) {
+        ModerationMask(surface: data.moderation.avatar) {
+          Avatar(source: data.avatar, size: .lg, label: data.displayName)
+        }
+        VStack(alignment: .leading, spacing: 2) {
+          Text(data.displayName)
+            .font(TypeScale.md.font(weight: Scales.FontWeight.semiBold))
+            .foregroundStyle(theme.atomColors.text)
+            .lineLimit(1)
+          Text(data.handle)
+            .font(TypeScale.sm.font())
+            .foregroundStyle(theme.atomColors.textContrastMedium)
+            .lineLimit(1)
+        }
+        Spacer(minLength: 0)
+      }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .disabled(data.authorDid.isEmpty)
+  }
+
+  private var engagementSummary: some View {
+    HStack(spacing: Spacing.lg) {
+      stat(data.repostCount, singular: "repost", plural: "reposts")
+      stat(data.likeCount, singular: "like", plural: "likes")
+      stat(data.replyCount, singular: "reply", plural: "replies")
+      Spacer(minLength: 0)
+    }
+  }
+
+  private func stat(_ count: String?, singular: String, plural: String) -> some View {
+    let value = count ?? "0"
+    return HStack(spacing: Spacing.xs) {
+      Text(value)
         .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
         .foregroundStyle(theme.atomColors.text)
-      Text(label)
+      Text(value == "1" ? singular : plural)
         .font(TypeScale.sm.font())
         .foregroundStyle(theme.atomColors.textContrastMedium)
     }
   }
 
-  /// The context line above a row: an OP-liked reply is the case the data layer
-  /// flags explicitly, since RN labels it in the thread.
-  private var contextLine: String? {
-    content.hasOPLike ? strings.likedByAuthor : nil
+  private var absoluteDate: String? {
+    guard let createdAt,
+      let date = ISO8601DateFormatter().date(from: createdAt)
+    else { return nil }
+    return date.formatted(date: .long, time: .shortened)
   }
 }
 
