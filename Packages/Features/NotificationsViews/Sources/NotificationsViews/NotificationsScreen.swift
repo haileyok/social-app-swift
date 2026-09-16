@@ -29,7 +29,10 @@ public struct NotificationsScreen: View {
   private let isInitialLoading: Bool
   private let error: ListState.ListErrorState?
   private let showsFilterBar: Bool
+  private let hasMore: Bool
+  private let isLoadingMore: Bool
   private let onRefresh: () async -> Void
+  private let onLoadMore: () async -> Void
   private let onFilterChange: (NotificationsFilterTab) -> Void
   private let onOpen: (RichTextTarget) -> Void
 
@@ -42,7 +45,10 @@ public struct NotificationsScreen: View {
     isInitialLoading: Bool = false,
     error: ListState.ListErrorState? = nil,
     showsFilterBar: Bool = true,
+    hasMore: Bool = false,
+    isLoadingMore: Bool = false,
     onRefresh: @escaping () async -> Void = {},
+    onLoadMore: @escaping () async -> Void = {},
     onFilterChange: @escaping (NotificationsFilterTab) -> Void = { _ in },
     onOpen: @escaping (RichTextTarget) -> Void = { _ in }
   ) {
@@ -50,7 +56,10 @@ public struct NotificationsScreen: View {
     self.isInitialLoading = isInitialLoading
     self.error = error
     self.showsFilterBar = showsFilterBar
+    self.hasMore = hasMore
+    self.isLoadingMore = isLoadingMore
     self.onRefresh = onRefresh
+    self.onLoadMore = onLoadMore
     self.onFilterChange = onFilterChange
     self.onOpen = onOpen
   }
@@ -105,6 +114,12 @@ public struct NotificationsScreen: View {
           rowView(row)
           Divider()
             .foregroundStyle(theme.atomColors.borderContrastLow)
+        }
+        if hasMore || isLoadingMore {
+          ProgressView()
+            .frame(maxWidth: .infinity)
+            .padding(Spacing.lg)
+            .task { await onLoadMore() }
         }
       }
     }

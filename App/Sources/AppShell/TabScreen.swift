@@ -416,7 +416,10 @@ private struct NotificationsTabScreen: View {
 
     @State private var rows: [FeedNotification] = []
     @State private var selectedFilter = NotificationsFilterTab.all
+    @State private var activeQuery: NotificationFeedQuery?
+    @State private var hasMore = false
     @State private var isInitialLoading = true
+    @State private var isLoadingMore = false
     @State private var failed = false
 
     var body: some View {
@@ -424,10 +427,15 @@ private struct NotificationsTabScreen: View {
         rows: rows,
         isInitialLoading: isInitialLoading,
         error: notificationError,
+        hasMore: hasMore,
+        isLoadingMore: isLoadingMore,
         onRefresh: { await load(selectedFilter) },
+        onLoadMore: { await loadMore() },
         onFilterChange: { tab in
           selectedFilter = tab
           rows = []
+          activeQuery = nil
+          hasMore = false
           failed = false
           Task { await load(tab) }
         },
@@ -460,18 +468,30 @@ private struct NotificationsTabScreen: View {
         let loadedRows = await query.items()
         guard selectedFilter == tab else { return }
         rows = loadedRows
+        activeQuery = query
+        hasMore = await query.infinite.hasNextPage()
         failed = false
       } catch {
         guard selectedFilter == tab else { return }
         failed = true
       }
       isInitialLoading = false
-      // The screen takes the error through its list-state; a failed first
-      // load with no rows renders the error branch through `rows: []` plus
-      // this flag only when the package's surface exposes it. Until then a
-      // failed load shows the empty state, which is the RN behaviour for a
-      // notifications feed that errors *after* content is on screen.
-      _ = failed
+    }
+
+    private func loadMore() async {
+      guard !isLoadingMore, let query = activeQuery, hasMore else { return }
+      isLoadingMore = true
+      defer { isLoadingMore = false }
+      do {
+        _ = try await query.loadMore()
+        guard query.filter == selectedFilter.feedFilter,
+          query.priorityOnly == selectedFilter.priorityOnly
+        else { return }
+        rows = await query.items()
+        hasMore = await query.infinite.hasNextPage()
+      } catch {
+        // Keep the loaded rows visible. Scrolling back to the footer retries.
+      }
     }
   }
 }
