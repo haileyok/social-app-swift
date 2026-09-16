@@ -103,6 +103,8 @@ struct ThreadPostRow: View {
         ThreadAnchorPost(
           data: data,
           createdAt: content.record?.createdAt.rawValue,
+          quoteCount: content.post.quoteCount,
+          strings: strings,
           onOpen: onOpen,
           onOpenAuthor: { onOpen(.profile(did: $0)) },
           onReply: content.replyDisabled ? nil : { onReply(content) },
@@ -135,6 +137,8 @@ struct ThreadPostRow: View {
 struct ThreadAnchorPost: View {
   let data: FeedItemViewData
   let createdAt: String?
+  let quoteCount: Int?
+  let strings: PostThreadStrings
   let onOpen: (RichTextTarget) -> Void
   let onOpenAuthor: (String) -> Void
   let onReply: (() -> Void)?
@@ -213,16 +217,29 @@ struct ThreadAnchorPost: View {
 
   private var engagementSummary: some View {
     HStack(spacing: Spacing.lg) {
-      stat(data.repostCount, singular: "repost", plural: "reposts")
-      stat(data.likeCount, singular: "like", plural: "likes")
-      stat(data.replyCount, singular: "reply", plural: "replies")
+      if let repostCount = nonZero(data.repostCount) {
+        stat(repostCount, singular: strings.repost, plural: strings.reposts)
+      }
+      if let quoteCount, quoteCount > 0 {
+        stat(String(quoteCount), singular: strings.quote, plural: strings.quotes)
+      }
+      if let likeCount = nonZero(data.likeCount) {
+        stat(likeCount, singular: strings.like, plural: strings.likes)
+      }
+      if let replyCount = nonZero(data.replyCount) {
+        stat(replyCount, singular: strings.reply, plural: strings.replies)
+      }
       Spacer(minLength: 0)
     }
   }
 
-  private func stat(_ count: String?, singular: String, plural: String) -> some View {
-    let value = count ?? "0"
-    return HStack(spacing: Spacing.xs) {
+  private func nonZero(_ count: String?) -> String? {
+    guard let count, count != "0" else { return nil }
+    return count
+  }
+
+  private func stat(_ value: String, singular: String, plural: String) -> some View {
+    HStack(spacing: Spacing.xs) {
       Text(value)
         .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
         .foregroundStyle(theme.atomColors.text)

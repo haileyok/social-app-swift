@@ -40,6 +40,16 @@ public struct PostThreadStrings: Equatable, Sendable {
   /// The bottom composer affordance.
   public let replyPlaceholder: String
 
+  /// Singular/plural labels in the focused post's engagement summary.
+  public let repost: String
+  public let reposts: String
+  public let quote: String
+  public let quotes: String
+  public let like: String
+  public let likes: String
+  public let reply: String
+  public let replies: String
+
   /// The likes/reposts/quotes list titles.
   public let likedByTitle: String
   public let repostedByTitle: String
@@ -73,6 +83,14 @@ public struct PostThreadStrings: Equatable, Sendable {
     showMoreParents: String = "Show more",
     showMoreRepliesFormat: String = "Show %d more replies",
     replyPlaceholder: String = "Write a reply",
+    repost: String = "repost",
+    reposts: String = "reposts",
+    quote: String = "quote",
+    quotes: String = "quotes",
+    like: String = "like",
+    likes: String = "likes",
+    reply: String = "reply",
+    replies: String = "replies",
     likedByTitle: String = "Likes",
     repostedByTitle: String = "Reposts",
     quotesTitle: String = "Quotes",
@@ -97,6 +115,14 @@ public struct PostThreadStrings: Equatable, Sendable {
     self.showMoreParents = showMoreParents
     self.showMoreRepliesFormat = showMoreRepliesFormat
     self.replyPlaceholder = replyPlaceholder
+    self.repost = repost
+    self.reposts = reposts
+    self.quote = quote
+    self.quotes = quotes
+    self.like = like
+    self.likes = likes
+    self.reply = reply
+    self.replies = replies
     self.likedByTitle = likedByTitle
     self.repostedByTitle = repostedByTitle
     self.quotesTitle = quotesTitle
