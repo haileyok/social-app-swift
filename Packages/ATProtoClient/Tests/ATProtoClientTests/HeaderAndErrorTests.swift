@@ -132,7 +132,7 @@ final class ScriptedTransport: HTTPTransport, @unchecked Sendable {
       "description": "A historical external card",
       "thumb": {
         "$type": "blob",
-        "ref": {"$link": "bafyreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdbejg4lf4hwbpf3cli"},
+        "ref": {"$link": "bafkreibme22gw2h7y2h7tg2fhqotaqjucnbc24deqo72b6mkl2egezxhvy"},
         "mimeType": "image/jpeg",
         "size": 1000001
       },
