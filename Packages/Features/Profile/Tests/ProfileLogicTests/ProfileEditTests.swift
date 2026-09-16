@@ -208,8 +208,8 @@ import Testing
     #expect((avatar["ref"] as? [String: Any])?["$link"] is String)
   }
 
-  /// The upload is sent as multipart with the image bytes and its MIME type.
-  @Test func uploadIsMultipartWithTheImageBytes() async throws {
+  /// The upload sends the image bytes directly with their MIME type.
+  @Test func uploadUsesRawImageBodyAndMimeType() async throws {
     let bytes = Data("fake-jpeg".utf8)
     let transport = ScriptedTransport(script: [
       ScriptedTransport.json([
@@ -234,11 +234,8 @@ import Testing
     _ = try await manager.write(edit, repo: Self.repo)
 
     let upload = try #require(transport.received.first)
-    #expect(upload.headers["Content-Type"]?.hasPrefix("multipart/form-data") == true)
-    let body = try #require(upload.body)
-    #expect(body.range(of: bytes) != nil, "the raw bytes are in the body")
-    let bodyText = String(bytes: body, encoding: .utf8) ?? ""
-    #expect(bodyText.contains("image/jpeg"))
+    #expect(upload.headers["Content-Type"] == "image/jpeg")
+    #expect(upload.body == bytes)
   }
 
   /// When the appview never reflects the change, the last profile seen is

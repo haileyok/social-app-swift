@@ -256,31 +256,14 @@ public struct ProfileManager: Sendable {
 
   /// Uploads one image with `com.atproto.repo.uploadBlob`.
   ///
-  /// The request and the response decode are done here rather than through
-  /// ``XrpcClient/uploadBlob(_:mimeType:encoding:authorization:)`` because that
-  /// helper's ``XrpcClient/BlobRefLink`` decodes the link field as `link` while
-  /// the wire form - and the generated ``LexBlob`` - use `$link`. Going through
-  /// the raw call lets the `$link` be read correctly and the resulting blob be
-  /// decoded by the generated type, so the record body carries exactly the shape
-  /// the PDS expects.
-  ///
-  /// - Note: this is a workaround for a bug in `ATProtoClient`; once its blob
-  ///   link decoding is fixed, this can call the typed helper again.
+  /// The endpoint accepts the image bytes directly rather than multipart form
+  /// data. The response is decoded through the generated ``LexBlob`` shape so
+  /// its `$link` metadata survives when the profile record is written.
   func uploadBlob(_ upload: ProfileImageUpload, authorization: String?)
     async throws -> (blob: LexBlob, link: String) {
-    let boundary = "Boundary-\(UUID().uuidString)"
-    var body = Data()
-    body.append(contentsOf: Array("--\(boundary)\r\n".utf8))
-    body.append(
-      contentsOf: Array(
-        "Content-Disposition: form-data; name=\"blob\"; filename=\"blob\"\r\n".utf8))
-    body.append(contentsOf: Array("Content-Type: \(upload.mimeType)\r\n\r\n".utf8))
-    body.append(upload.data)
-    body.append(contentsOf: Array("\r\n--\(boundary)--\r\n".utf8))
-
     let response = try await client.rawPost(
-      "com.atproto.repo.uploadBlob", body: body,
-      contentType: "multipart/form-data; boundary=\(boundary)",
+      "com.atproto.repo.uploadBlob", body: upload.data,
+      contentType: upload.mimeType,
       authorization: authorization)
     guard 200..<300 ~= response.status else {
       throw XrpcError.from(status: response.status, headers: response.headers, data: response.body)

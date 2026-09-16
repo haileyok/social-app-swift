@@ -2,25 +2,15 @@ import Foundation
 
 extension XrpcClient {
 
-  /// `com.atproto.repo.uploadBlob` — multipart body with raw bytes.
+  /// `com.atproto.repo.uploadBlob` — the blob bytes are the request body.
   public func uploadBlob(
     _ data: Data, mimeType: String, encoding: String = "*/*",
     authorization: String? = nil
   ) async throws -> BlobUploadResponse {
-    let boundary = "Boundary-\(UUID().uuidString)"
-    var body = Data()
-    body.append(contentsOf: Array("--\(boundary)\r\n".utf8))
-    body.append(
-      contentsOf: Array(
-        "Content-Disposition: form-data; name=\"blob\"; filename=\"blob\"\r\n"
-          .utf8))
-    body.append(contentsOf: Array("Content-Type: \(mimeType)\r\n\r\n".utf8))
-    body.append(data)
-    body.append(contentsOf: Array("\r\n--\(boundary)--\r\n".utf8))
-
+    let contentType = mimeType.isEmpty ? encoding : mimeType
     let response = try await rawPost(
-      "com.atproto.repo.uploadBlob", body: body,
-      contentType: "multipart/form-data; boundary=\(boundary)",
+      "com.atproto.repo.uploadBlob", body: data,
+      contentType: contentType,
       authorization: authorization)
     return try Self.decode(response)
   }
