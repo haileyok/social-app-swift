@@ -459,6 +459,7 @@ private struct ProfileTabScreen: View {
 
     @State private var headerData: ProfileHeaderViewData?
     @State private var showsEdit = false
+    @State private var failed = false
 
     var body: some View {
       Group {
@@ -469,6 +470,8 @@ private struct ProfileTabScreen: View {
             // feed wiring the Home tab owns; the header renders alone until
             // the shell can share it.
             onAction: handle)
+        } else if failed {
+          RetryRow(message: "Could not load your profile.", retry: { Task { await load() } })
         } else {
           ListSkeleton()
         }
@@ -481,7 +484,14 @@ private struct ProfileTabScreen: View {
             onCancel: { showsEdit = false },
             onSave: { edit in
               showsEdit = false
-              Task { try? await ProfileEditor.save(clients: clients, edit: edit) }
+              Task {
+                do {
+                  _ = try await ProfileEditor.save(clients: clients, edit: edit)
+                  await load()
+                } catch {
+                  failed = true
+                }
+              }
             })
         }
       }
@@ -500,17 +510,20 @@ private struct ProfileTabScreen: View {
     }
 
     private func load() async {
-      guard
-        let profile = try? await ProfileClient(client: clients.appview)
+      do {
+        let profile = try await ProfileClient(client: clients.appview)
           .getProfile(actor: clients.did)
-      else { return }
-      headerData = ProfileHeaderViewData(
-        profile: .detailed(profile),
-        // TODO: moderation seam - default preferences until the shell
-        // hydrates the account's moderation prefs and label defs.
-        moderationOpts: ModerationOpts(userDid: clients.did, prefs: ModerationPrefs()),
-        viewerDid: clients.did,
-        hasSession: true)
+        headerData = ProfileHeaderViewData(
+          profile: .detailed(profile),
+          // TODO: moderation seam - default preferences until the shell
+          // hydrates the account's moderation prefs and label defs.
+          moderationOpts: ModerationOpts(userDid: clients.did, prefs: ModerationPrefs()),
+          viewerDid: clients.did,
+          hasSession: true)
+        failed = false
+      } catch {
+        if headerData == nil { failed = true }
+      }
     }
   }
 }
