@@ -204,7 +204,21 @@ private struct HomeTabScreen: View {
               model: model, presentation: .feeds, viewerDid: clients.did),
             onOpenRichText: { router.open($0) },
             onOpenPost: { router.open(.thread(uri: $0)) },
-            onReplyToPost: { router.open(.thread(uri: $0)) })
+            onReplyToPost: { router.open(.thread(uri: $0)) },
+            onLikePost: { target in
+              try? await clients.toggleReaction(
+                .like,
+                uri: target.uri,
+                cid: target.cid,
+                existingRecordURI: target.likeURI)
+            },
+            onRepostPost: { target in
+              try? await clients.toggleReaction(
+                .repost,
+                uri: target.uri,
+                cid: target.cid,
+                existingRecordURI: target.repostURI)
+            })
         } else {
           ListSkeleton()
         }

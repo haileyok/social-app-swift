@@ -75,4 +75,58 @@ final class AppSessionClients {
     self.chat = base.withProxy(BlueskyAPI.chatService)
     self.pds = base
   }
+
+  /// Creates or deletes a like/repost record for a hydrated post.
+  func toggleReaction(
+    _ kind: ShellPostReaction,
+    uri: String,
+    cid: String,
+    existingRecordURI: String?
+  ) async throws {
+    let collection = kind.collection
+    if let existingRecordURI,
+      let rkey = existingRecordURI.split(separator: "/").last.map(String.init)
+    {
+      _ = try await pds.deleteRecord(repo: did, collection: collection, rkey: rkey)
+      return
+    }
+
+    _ = try await pds.createRecord(
+      repo: did,
+      collection: collection,
+      record: ShellReactionRecord(
+        type: collection,
+        createdAt: ISO8601DateFormatter().string(from: Date()),
+        subject: ShellReactionSubject(uri: uri, cid: cid)))
+  }
+}
+
+/// The two repository-backed reactions exposed by post controls.
+enum ShellPostReaction {
+  case like
+  case repost
+
+  var collection: String {
+    switch self {
+    case .like: "app.bsky.feed.like"
+    case .repost: "app.bsky.feed.repost"
+    }
+  }
+}
+
+private struct ShellReactionRecord: Encodable, Sendable {
+  let type: String
+  let createdAt: String
+  let subject: ShellReactionSubject
+
+  enum CodingKeys: String, CodingKey {
+    case type = "$type"
+    case createdAt
+    case subject
+  }
+}
+
+private struct ShellReactionSubject: Encodable, Sendable {
+  let uri: String
+  let cid: String
 }

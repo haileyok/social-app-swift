@@ -35,6 +35,21 @@ public enum HomeFeedReasonLine: Equatable, Sendable {
   }
 }
 
+/// The record identity and viewer state required for post mutations.
+public struct HomeFeedPostInteraction: Sendable {
+  public let uri: String
+  public let cid: String
+  public let likeURI: String?
+  public let repostURI: String?
+
+  public init(uri: String, cid: String, likeURI: String?, repostURI: String?) {
+    self.uri = uri
+    self.cid = cid
+    self.likeURI = likeURI
+    self.repostURI = repostURI
+  }
+}
+
 /// One rendered post inside a row.
 public struct HomeFeedRowItem: Identifiable {
   /// The item's react key, which already carries the slice key and index.
@@ -44,14 +59,23 @@ public struct HomeFeedRowItem: Identifiable {
   public let uri: String
   /// The data `PostFeedItem` renders.
   public let data: FeedItemViewData
+  /// Mutation identity and current viewer records.
+  public let interaction: HomeFeedPostInteraction
   /// True when a reply connector should be drawn above this item - i.e. it is
   /// part of a merged thread and is not the slice's selected post.
   public let showsReplyLine: Bool
 
-  public init(id: String, uri: String, data: FeedItemViewData, showsReplyLine: Bool) {
+  public init(
+    id: String,
+    uri: String,
+    data: FeedItemViewData,
+    interaction: HomeFeedPostInteraction,
+    showsReplyLine: Bool
+  ) {
     self.id = id
     self.uri = uri
     self.data = data
+    self.interaction = interaction
     self.showsReplyLine = showsReplyLine
   }
 }
@@ -135,6 +159,11 @@ public enum HomeFeedViewData {
           showsContextLine: index == 0,
           moderationOpts: moderationOpts,
           options: options),
+        interaction: HomeFeedPostInteraction(
+          uri: item.post.uri.rawValue,
+          cid: item.post.cid.rawValue,
+          likeURI: item.post.viewer?.like?.rawValue,
+          repostURI: item.post.viewer?.repost?.rawValue),
         // The selected (last) post is the row's subject; earlier posts in a
         // merged thread are the reply chain above it.
         showsReplyLine: index < slice.items.count - 1)

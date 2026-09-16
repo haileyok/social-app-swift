@@ -30,6 +30,8 @@ public struct HomeFeedScreen: View {
   private let onOpenRichText: (RichTextTarget) -> Void
   private let onOpenPost: (String) -> Void
   private let onReplyToPost: (String) -> Void
+  private let onLikePost: (HomeFeedPostInteraction) async -> Void
+  private let onRepostPost: (HomeFeedPostInteraction) async -> Void
   private let onSignIn: (() -> Void)?
   private let onAddFeeds: (() -> Void)?
 
@@ -50,6 +52,8 @@ public struct HomeFeedScreen: View {
     onOpenRichText: @escaping (RichTextTarget) -> Void = { _ in },
     onOpenPost: @escaping (String) -> Void = { _ in },
     onReplyToPost: @escaping (String) -> Void = { _ in },
+    onLikePost: @escaping (HomeFeedPostInteraction) async -> Void = { _ in },
+    onRepostPost: @escaping (HomeFeedPostInteraction) async -> Void = { _ in },
     onSignIn: (() -> Void)? = nil,
     onAddFeeds: (() -> Void)? = nil
   ) {
@@ -57,6 +61,8 @@ public struct HomeFeedScreen: View {
     self.onOpenRichText = onOpenRichText
     self.onOpenPost = onOpenPost
     self.onReplyToPost = onReplyToPost
+    self.onLikePost = onLikePost
+    self.onRepostPost = onRepostPost
     self.onSignIn = onSignIn
     self.onAddFeeds = onAddFeeds
   }
@@ -152,7 +158,15 @@ public struct HomeFeedScreen: View {
           row: row,
           onOpenRichText: onOpenRichText,
           onOpenPost: onOpenPost,
-          onReplyToPost: onReplyToPost)
+          onReplyToPost: onReplyToPost,
+          onLikePost: { target in
+            await onLikePost(target)
+            await model.refresh()
+          },
+          onRepostPost: { target in
+            await onRepostPost(target)
+            await model.refresh()
+          })
           .listRowInsets(EdgeInsets())
           .listRowSeparator(.hidden)
           .listRowBackground(theme.atomColors.bg)
@@ -198,6 +212,8 @@ public struct HomeFeedRowView: View {
   private let onOpenRichText: (RichTextTarget) -> Void
   private let onOpenPost: (String) -> Void
   private let onReplyToPost: (String) -> Void
+  private let onLikePost: (HomeFeedPostInteraction) async -> Void
+  private let onRepostPost: (HomeFeedPostInteraction) async -> Void
 
   @Environment(\.alfTheme) private var theme
 
@@ -205,12 +221,16 @@ public struct HomeFeedRowView: View {
     row: HomeFeedRow,
     onOpenRichText: @escaping (RichTextTarget) -> Void = { _ in },
     onOpenPost: @escaping (String) -> Void = { _ in },
-    onReplyToPost: @escaping (String) -> Void = { _ in }
+    onReplyToPost: @escaping (String) -> Void = { _ in },
+    onLikePost: @escaping (HomeFeedPostInteraction) async -> Void = { _ in },
+    onRepostPost: @escaping (HomeFeedPostInteraction) async -> Void = { _ in }
   ) {
     self.row = row
     self.onOpenRichText = onOpenRichText
     self.onOpenPost = onOpenPost
     self.onReplyToPost = onReplyToPost
+    self.onLikePost = onLikePost
+    self.onRepostPost = onRepostPost
   }
 
   public var body: some View {
@@ -222,7 +242,9 @@ public struct HomeFeedRowView: View {
         PostFeedItem(
           data: item.data,
           onOpen: onOpenRichText,
-          onReply: { onReplyToPost(item.uri) })
+          onReply: { onReplyToPost(item.uri) },
+          onRepost: { Task { await onRepostPost(item.interaction) } },
+          onLike: { Task { await onLikePost(item.interaction) } })
           .contentShape(.rect)
           .onTapGesture { onOpenPost(item.uri) }
           .overlay(alignment: .topLeading) {
