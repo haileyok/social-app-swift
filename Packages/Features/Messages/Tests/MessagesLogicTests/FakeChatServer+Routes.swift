@@ -62,6 +62,8 @@ extension FakeChatServer {
       return json(try setMuted(body, muted: true))
     case Chat.Bsky.ConvoUnmuteConvo.id:
       return json(try setMuted(body, muted: false))
+    case Chat.Bsky.ConvoAcceptConvo.id:
+      return json(["rev": "accepted-1"])
     case Chat.Bsky.ConvoLeaveConvo.id:
       return json(try leaveConvo(body))
     case Chat.Bsky.ConvoDeleteMessageForSelf.id:

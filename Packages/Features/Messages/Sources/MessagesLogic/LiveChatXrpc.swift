@@ -161,6 +161,13 @@ public struct LiveChatXrpc: ChatXrpc {
     return output.convo
   }
 
+  public func acceptConvo(convoId: String) async throws {
+    let _: Chat.Bsky.ConvoAcceptConvo_Output = try await client.procedure(
+      Chat.Bsky.ConvoAcceptConvo.id,
+      body: Chat.Bsky.ConvoAcceptConvo_Input(convoId: convoId),
+      authorization: authorization)
+  }
+
   public func leaveConvo(convoId: String) async throws -> ConvoLeaveResult {
     let output: Chat.Bsky.ConvoLeaveConvo_Output = try await client.procedure(
       Chat.Bsky.ConvoLeaveConvo.id,

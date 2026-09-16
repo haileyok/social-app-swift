@@ -144,6 +144,12 @@ public final class InboxViewModel {
     }
   }
 
+  /// Removes a row after a server-confirmed accept/delete request mutation.
+  public func remove(convoId: String) {
+    convos.removeAll { $0.id == convoId }
+    state = .resolve(itemCount: convos.count, isInitialLoading: false)
+  }
+
   /// Re-reads the list from the store without a request.
   ///
   /// Used after a log batch has been applied through ``InboxReducer``: the

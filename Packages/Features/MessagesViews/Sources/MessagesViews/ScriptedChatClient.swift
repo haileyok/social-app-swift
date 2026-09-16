@@ -200,6 +200,8 @@ public actor ScriptedChatClient: ChatXrpc {
     return convo
   }
 
+  public func acceptConvo(convoId: String) async throws {}
+
   public func leaveConvo(convoId: String) async throws -> ConvoLeaveResult {
     calls.append("leaveConvo")
     convos.removeValue(forKey: convoId)

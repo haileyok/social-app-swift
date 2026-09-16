@@ -340,6 +340,7 @@ private struct MessagesTabScreen: View {
   private let clients: AppSessionClients?
 
   @Environment(ShellRouter.self) private var router
+  @State private var showsRequests = false
 
   init(clients: AppSessionClients?) {
     self.clients = clients
@@ -366,6 +367,56 @@ private struct MessagesTabScreen: View {
     }
     .navigationTitle(AppTab.messages.title)
     .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      if clients != nil {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button { showsRequests = true } label: {
+            Image(systemName: "tray")
+          }
+          .accessibilityLabel("Chat requests")
+        }
+      }
+    }
+    .sheet(isPresented: $showsRequests) {
+      if let clients {
+        NavigationStack {
+          let chat = LiveChatXrpc(client: clients.chat)
+          ChatRequestsScreen(
+            viewModel: InboxViewModel(
+              inbox: InboxQuery(
+                store: clients.store,
+                client: chat,
+                status: .request,
+                kind: .direct,
+                scope: clients.did),
+              currentAccountDid: clients.did),
+            onAccept: { convo in
+              do {
+                try await chat.acceptConvo(convoId: convo.id)
+                let accepted = try await chat.getConvo(convoId: convo.id)
+                showsRequests = false
+                router.open(.conversation(convoId: accepted.id, convo: accepted))
+                return true
+              } catch {
+                return false
+              }
+            },
+            onDelete: { convo in
+              do {
+                _ = try await chat.leaveConvo(convoId: convo.id)
+                return true
+              } catch {
+                return false
+              }
+            })
+          .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+              Button("Done") { showsRequests = false }
+            }
+          }
+        }
+      }
+    }
     .accessibilityIdentifier(ShellAccessibility.screen(AppTab.messages.routeName))
   }
 }

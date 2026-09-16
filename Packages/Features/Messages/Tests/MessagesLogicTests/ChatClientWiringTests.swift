@@ -257,6 +257,17 @@ struct ChatClientWiringTests {
     #expect(server.requests(for: Chat.Bsky.ConvoUnmuteConvo.id).count == 1)
   }
 
+  @Test func acceptConvoRoutesIdToProcedure() async throws {
+    let server = FakeChatServer()
+    server.addConvo(id: "convo-1", members: [Fixtures.selfDid, Fixtures.otherDid])
+    let (chat, _) = makeClient(server)
+
+    try await chat.acceptConvo(convoId: "convo-1")
+
+    let request = try #require(server.requests(for: Chat.Bsky.ConvoAcceptConvo.id).first)
+    #expect(request.json?["convoId"] as? String == "convo-1")
+  }
+
   @Test func leaveConvoReturnsIdAndRev() async throws {
     let server = FakeChatServer()
     server.addConvo(id: "convo-1", members: [Fixtures.selfDid, Fixtures.otherDid])

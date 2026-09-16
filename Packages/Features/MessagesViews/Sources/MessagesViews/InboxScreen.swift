@@ -84,6 +84,90 @@ public struct InboxScreen: View {
   }
 }
 
+/// Pending direct-message requests with explicit server-backed decisions.
+public struct ChatRequestsScreen: View {
+  @Environment(\.alfTheme) private var theme
+  @State private var viewModel: InboxViewModel
+  @State private var updating = Set<String>()
+
+  private let onAccept: (Chat.Bsky.ConvoDefs_ConvoView) async -> Bool
+  private let onDelete: (Chat.Bsky.ConvoDefs_ConvoView) async -> Bool
+
+  public init(
+    viewModel: InboxViewModel,
+    onAccept: @escaping (Chat.Bsky.ConvoDefs_ConvoView) async -> Bool,
+    onDelete: @escaping (Chat.Bsky.ConvoDefs_ConvoView) async -> Bool
+  ) {
+    _viewModel = State(initialValue: viewModel)
+    self.onAccept = onAccept
+    self.onDelete = onDelete
+  }
+
+  public var body: some View {
+    Group {
+      switch viewModel.state {
+      case .loading:
+        ListSkeleton()
+      case .empty:
+        EmptyStateView(
+          icon: "tray",
+          title: "No chat requests",
+          message: "New message requests will appear here.")
+      case .error(let error) where !error.hasContent:
+        ErrorStateView(error: error) { Task { await viewModel.load() } }
+      default:
+        list
+      }
+    }
+    .background(theme.atomColors.bg)
+    .navigationTitle("Chat requests")
+    .navigationBarTitleDisplayMode(.inline)
+    .task { await viewModel.runVisibleSync() }
+  }
+
+  private var list: some View {
+    ScrollView {
+      LazyVStack(spacing: 0) {
+        ForEach(viewModel.convos, id: \.id) { convo in
+          VStack(spacing: Spacing.sm) {
+            InboxRowView(
+              row: InboxRow.make(convo, currentAccountDid: viewModel.currentAccountDid))
+            HStack(spacing: Spacing.sm) {
+              Button("Delete", role: .destructive) {
+                Task { await decide(convo, accepting: false) }
+              }
+              .buttonStyle(.bordered)
+              Button("Accept") {
+                Task { await decide(convo, accepting: true) }
+              }
+              .buttonStyle(.borderedProminent)
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.horizontal, Spacing.lg)
+          }
+          .padding(.bottom, Spacing.sm)
+          .disabled(updating.contains(convo.id))
+          Divider().overlay(theme.atomColors.borderContrastLow)
+        }
+        if viewModel.hasMore {
+          LoadMoreSpinner().task { await viewModel.loadMoreIfNeeded() }
+        }
+      }
+    }
+    .refreshable { await viewModel.refresh() }
+  }
+
+  private func decide(
+    _ convo: Chat.Bsky.ConvoDefs_ConvoView,
+    accepting: Bool
+  ) async {
+    guard updating.insert(convo.id).inserted else { return }
+    defer { updating.remove(convo.id) }
+    let succeeded = accepting ? await onAccept(convo) : await onDelete(convo)
+    if succeeded { viewModel.remove(convoId: convo.id) }
+  }
+}
+
 /// One conversation row: avatar, name, preview, unread badge, muted indicator.
 public struct InboxRowView: View {
   @Environment(\.alfTheme) private var theme

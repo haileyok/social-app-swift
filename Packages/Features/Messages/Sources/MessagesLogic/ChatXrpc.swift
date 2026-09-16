@@ -74,6 +74,9 @@ public protocol ChatXrpc: Sendable {
   /// `chat.bsky.convo.unmuteConvo`. Port of `useMuteConvo`.
   func unmuteConvo(convoId: String) async throws -> Chat.Bsky.ConvoDefs_ConvoView
 
+  /// `chat.bsky.convo.acceptConvo`. Accepts a pending chat request.
+  func acceptConvo(convoId: String) async throws
+
   /// `chat.bsky.convo.leaveConvo`. Port of `useLeaveConvo`.
   func leaveConvo(convoId: String) async throws -> ConvoLeaveResult
 
