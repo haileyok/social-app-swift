@@ -37,6 +37,10 @@ public final class OnboardingWizardModel {
 
   /// The display name being edited on the profile step.
   public var displayName = ""
+  /// Selected avatar bytes, retained so a failed profile write can be retried.
+  public private(set) var avatarImageData: Data?
+  /// MIME type paired with ``avatarImageData``.
+  public private(set) var avatarMimeType: String?
   /// The interests selected on the interests step, not yet committed.
   public var selectedInterests: [String] = []
   /// The suggested accounts the user chose to follow.
@@ -206,10 +210,14 @@ public final class OnboardingWizardModel {
 
   // MARK: - Step execution
 
+  /// Retains a selected avatar for preview, submission, and retry.
+  public func setAvatar(imageData: Data?, mimeType: String?) {
+    avatarImageData = imageData
+    avatarMimeType = imageData == nil ? nil : mimeType
+  }
+
   /// Runs the profile step and advances on success.
-  public func submitProfile(
-    avatarImageData: Data? = nil, avatarMimeType: String? = nil
-  ) async {
+  public func submitProfile() async {
     clearFailure()
     let outcome = await flow.runProfileStep(
       displayName: displayName, avatarImageData: avatarImageData,

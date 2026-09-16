@@ -42,11 +42,10 @@ layer and get no skip affordance.
    adds the field because `ProfileStepResult` already carries one and
    `ProfileValidation` already has the rule; the limit and the UTF-16 counting
    match the RN `EditProfileDialog` text field.
-2. **The avatar picker is a placeholder.** The photo library, the image picker
-   sheet and the avatar creator all need app-level services (photo permission,
-   image loading, the creator's canvas) that are outside this package. The
-   control renders, carries the RN `onboardingAvatarCreator` identifier, and
-   reports; the wiring lands with the app integration.
+2. **The avatar creator is not ported.** The profile step now uses the native
+   photo library picker, previews the selected image, retains it across failed
+   submissions, and sends its bytes/MIME type through the tested logic upload.
+   RN's emoji-and-background avatar creator remains a separate enhancement.
 3. **Suggested accounts has no interest tab bar.** RN renders the user's
    interests as tabs over the suggestion list and re-queries per tab. Here the
    list is a single page ordered for the selection the user just made; the tabs
