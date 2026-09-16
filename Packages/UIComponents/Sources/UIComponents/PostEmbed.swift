@@ -94,6 +94,7 @@ public struct PostEmbed: View {
 public struct ImageGallery: View {
   private let images: [EmbedImage]
   private let layout: ImageGalleryLayout
+  @State private var viewerSelection: ImageViewerSelection?
 
   public init(images: [EmbedImage], layout: ImageGalleryLayout) {
     self.images = images
@@ -104,39 +105,42 @@ public struct ImageGallery: View {
     Group {
       switch layout {
       case .single:
-        cell(images.first, height: 180)
+        cell(images.first, index: 0, height: 180)
       case .twoUp:
         HStack(spacing: 2) {
-          cell(images.first, height: 140)
-          cell(images.dropFirst().first, height: 140)
+          cell(images.first, index: 0, height: 140)
+          cell(images.dropFirst().first, index: 1, height: 140)
         }
       case .threeUp:
         VStack(spacing: 2) {
-          cell(images.first, height: 160)
+          cell(images.first, index: 0, height: 160)
           HStack(spacing: 2) {
-            cell(images.dropFirst().first, height: 100)
-            cell(images.dropFirst(2).first, height: 100)
+            cell(images.dropFirst().first, index: 1, height: 100)
+            cell(images.dropFirst(2).first, index: 2, height: 100)
           }
         }
       case .grid:
         VStack(spacing: 2) {
           HStack(spacing: 2) {
-            cell(images.first, height: 130)
-            cell(images.dropFirst().first, height: 130)
+            cell(images.first, index: 0, height: 130)
+            cell(images.dropFirst().first, index: 1, height: 130)
           }
           HStack(spacing: 2) {
-            cell(images.dropFirst(2).first, height: 130)
-            cell(images.dropFirst(3).first, height: 130)
+            cell(images.dropFirst(2).first, index: 2, height: 130)
+            cell(images.dropFirst(3).first, index: 3, height: 130)
           }
         }
       }
     }
     .clipShape(.rect(cornerRadius: Radius.md, style: .continuous))
     .accessibilityElement(children: .contain)
+    .fullScreenCover(item: $viewerSelection) { selection in
+      ImageViewer(images: images, initialIndex: selection.index)
+    }
   }
 
   @ViewBuilder
-  private func cell(_ image: EmbedImage?, height: Double) -> some View {
+  private func cell(_ image: EmbedImage?, index: Int, height: Double) -> some View {
     if let image {
       RemoteImage(
         url: embedImageURL(image),
@@ -149,12 +153,86 @@ public struct ImageGallery: View {
       .frame(maxWidth: .infinity)
       .frame(height: height)
       .clipped()
+      .contentShape(Rectangle())
+      .highPriorityGesture(
+        TapGesture().onEnded { viewerSelection = ImageViewerSelection(index: index) })
       .accessibilityLabel(image.alt?.isEmpty == false ? image.alt! : "Image")
+      .accessibilityAddTraits(.isButton)
     }
   }
 
   @Environment(\.alfTheme) private var theme
   private var placeholderFill: Color { theme.atomColors.bgContrast100 }
+}
+
+private struct ImageViewerSelection: Identifiable {
+  let index: Int
+  var id: Int { index }
+}
+
+/// A paged full-screen image viewer shared by feeds, profiles, and threads.
+public struct ImageViewer: View {
+  private let images: [EmbedImage]
+  @State private var selectedIndex: Int
+  @Environment(\.dismiss) private var dismiss
+
+  public init(images: [EmbedImage], initialIndex: Int) {
+    self.images = images
+    _selectedIndex = State(initialValue: initialIndex)
+  }
+
+  public var body: some View {
+    ZStack(alignment: .topTrailing) {
+      Color.black.ignoresSafeArea()
+      TabView(selection: $selectedIndex) {
+        ForEach(Array(images.enumerated()), id: \.offset) { index, image in
+          ZoomableImagePage(image: image)
+            .tag(index)
+        }
+      }
+      .tabViewStyle(.page(indexDisplayMode: images.count > 1 ? .automatic : .never))
+
+      Button(action: { dismiss() }) {
+        Image(systemName: "xmark")
+          .font(.system(size: 17, weight: .bold))
+          .foregroundStyle(.white)
+          .padding(12)
+          .background(.black.opacity(0.55), in: Circle())
+      }
+      .padding()
+      .accessibilityLabel("Close image viewer")
+    }
+  }
+}
+
+private struct ZoomableImagePage: View {
+  let image: EmbedImage
+  @State private var scale = 1.0
+  @State private var lastScale = 1.0
+
+  var body: some View {
+    VStack(spacing: Spacing.md) {
+      RemoteImage(
+        url: embedImageURL(image),
+        contentMode: .fit,
+        placeholder: { ProgressView().tint(.white) })
+        .scaleEffect(scale)
+        .gesture(
+          MagnifyGesture()
+            .onChanged { value in scale = min(max(lastScale * value.magnification, 1), 5) }
+            .onEnded { _ in lastScale = scale })
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+      if let alt = image.alt, !alt.isEmpty {
+        Text(alt)
+          .font(TypeScale.sm.font())
+          .foregroundStyle(.white)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal, Spacing.lg)
+          .padding(.bottom, Spacing.lg)
+      }
+    }
+  }
 }
 
 /// The external link card.
