@@ -10,6 +10,7 @@ import RichText
 /// receives a value and draws it.
 public struct FeedItemViewData: Sendable {
   /// The author line.
+  public let authorDid: String
   public let displayName: String
   public let handle: String
   /// The relative timestamp, e.g. `2h`. Empty when the post has no timestamp.
@@ -46,8 +47,10 @@ public struct FeedItemViewData: Sendable {
     likeCount: String?,
     contextLine: String?,
     avatar: AvatarSource,
-    moderation: FeedItemModeration
+    moderation: FeedItemModeration,
+    authorDid: String = ""
   ) {
+    self.authorDid = authorDid
     self.displayName = displayName
     self.handle = handle
     self.relativeTime = relativeTime
@@ -151,7 +154,8 @@ public func feedItemViewData(
     contextLine: options.contextLine,
     avatar: AvatarSource.resolve(
       avatar: author.avatar, handle: author.handle, displayName: author.displayName),
-    moderation: FeedItemModeration.project(decision))
+    moderation: FeedItemModeration.project(decision),
+    authorDid: author.did)
 }
 
 /// Builds the view data for an already-hydrated engagement row.
@@ -180,7 +184,8 @@ public func feedItemViewData(
     likeCount: formatOptionalCount(counts.likeCount, locale: options.locale),
     contextLine: base.contextLine,
     avatar: base.avatar,
-    moderation: base.moderation)
+    moderation: base.moderation,
+    authorDid: base.authorDid)
 }
 
 /// The engagement counts for one post.

@@ -101,6 +101,7 @@ struct ThreadPostRow: View {
       PostFeedItem(
         data: data,
         onOpen: onOpen,
+        onOpenAuthor: { onOpen(.profile(did: $0)) },
         onReply: content.replyDisabled ? nil : { onReply(content) },
         onRepost: { onRepost(content) },
         onLike: { onLike(content) })

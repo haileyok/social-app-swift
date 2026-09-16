@@ -28,6 +28,12 @@ struct FeedItemViewDataTests {
       indexedAt: indexedAt)
   }
 
+  @Test("The adapter preserves author identity for profile navigation")
+  func authorIdentity() {
+    let data = feedItemViewData(post(), options: FeedItemRenderOptions(now: now))
+    #expect(data.authorDid == "did:plc:x")
+  }
+
   @Test("The author line falls back to the handle when there is no display name")
   func displayNameFallback() {
     let data = feedItemViewData(

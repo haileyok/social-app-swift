@@ -242,6 +242,7 @@ public struct HomeFeedRowView: View {
         PostFeedItem(
           data: item.data,
           onOpen: onOpenRichText,
+          onOpenAuthor: { onOpenRichText(.profile(did: $0)) },
           onReply: { onReplyToPost(item.uri) },
           onRepost: { Task { await onRepostPost(item.interaction) } },
           onLike: { Task { await onLikePost(item.interaction) } })

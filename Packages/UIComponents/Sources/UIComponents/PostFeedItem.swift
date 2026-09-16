@@ -20,6 +20,7 @@ import UIComponentsCore
 public struct PostFeedItem: View {
   private let data: FeedItemViewData
   private let onOpen: (RichTextTarget) -> Void
+  private let onOpenAuthor: ((String) -> Void)?
   private let onReply: (() -> Void)?
   private let onRepost: (() -> Void)?
   private let onLike: (() -> Void)?
@@ -27,12 +28,14 @@ public struct PostFeedItem: View {
   public init(
     data: FeedItemViewData,
     onOpen: @escaping (RichTextTarget) -> Void = { _ in },
+    onOpenAuthor: ((String) -> Void)? = nil,
     onReply: (() -> Void)? = nil,
     onRepost: (() -> Void)? = nil,
     onLike: (() -> Void)? = nil
   ) {
     self.data = data
     self.onOpen = onOpen
+    self.onOpenAuthor = onOpenAuthor
     self.onReply = onReply
     self.onRepost = onRepost
     self.onLike = onLike
@@ -45,14 +48,26 @@ public struct PostFeedItem: View {
           ContextLine(text: contextLine)
         }
         HStack(alignment: .top, spacing: Spacing.sm) {
-          ModerationMask(surface: data.moderation.avatar) {
-            Avatar(source: data.avatar, size: .md, label: data.displayName)
+          Button {
+            onOpenAuthor?(data.authorDid)
+          } label: {
+            ModerationMask(surface: data.moderation.avatar) {
+              Avatar(source: data.avatar, size: .md, label: data.displayName)
+            }
           }
+          .buttonStyle(.plain)
+          .disabled(onOpenAuthor == nil || data.authorDid.isEmpty)
           VStack(alignment: .leading, spacing: Spacing.xs) {
-            AuthorLine(
-              displayName: data.displayName,
-              handle: data.handle,
-              relativeTime: data.relativeTime)
+            Button {
+              onOpenAuthor?(data.authorDid)
+            } label: {
+              AuthorLine(
+                displayName: data.displayName,
+                handle: data.handle,
+                relativeTime: data.relativeTime)
+            }
+            .buttonStyle(.plain)
+            .disabled(onOpenAuthor == nil || data.authorDid.isEmpty)
             if !data.text.isEmpty {
               RichTextBody(segments: data.segments, onOpen: onOpen)
             }
