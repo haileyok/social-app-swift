@@ -55,7 +55,7 @@ public enum ComposerText {
     let text = publishText(richText.text)
     let result = RichText(text: text, cleanNewlines: true)
     result.detectFacetsWithoutResolution()
-    result.facets = result.facets?.map { facet in
+    let resolvedFacets = result.facets?.map { facet in
       var resolved = facet
       resolved.features = facet.features.map { feature in
         guard case .mention(let handle) = feature else { return feature }
@@ -63,6 +63,7 @@ public enum ComposerText {
       }
       return resolved
     }
-    return stripInvalidMentions(shortenLinks(result))
+    let resolved = RichText(text: result.text, facets: resolvedFacets)
+    return stripInvalidMentions(shortenLinks(resolved))
   }
 }
