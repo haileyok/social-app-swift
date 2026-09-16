@@ -132,7 +132,7 @@ public enum HomeFeedViewData {
         data: viewData(
           item,
           slice: slice,
-          isSelectedPost: index == slice.items.count - 1,
+          showsContextLine: index == 0,
           moderationOpts: moderationOpts,
           options: options),
         // The selected (last) post is the row's subject; earlier posts in a
@@ -166,7 +166,7 @@ public enum HomeFeedViewData {
   static func viewData(
     _ item: HomeFeedSliceItem,
     slice: HomeFeedSlice,
-    isSelectedPost: Bool,
+    showsContextLine: Bool,
     moderationOpts: ModerationOpts?,
     options: FeedItemRenderOptions
   ) -> FeedItemViewData {
@@ -182,22 +182,22 @@ public enum HomeFeedViewData {
       options: renderOptions(
         for: item,
         slice: slice,
-        isSelectedPost: isSelectedPost,
+        showsContextLine: showsContextLine,
         options: options))
   }
 
   /// The render options with this item's context line filled in.
   ///
-  /// The context line is the reply attribution the RN feed shows when a slice's
-  /// subject is a reply: `Replying to @handle`, or the parent's blocked/not-found
-  /// variants when the parent could not be resolved.
+  /// RN shows reply attribution only on the first visible item. Later items have
+  /// their parent rendered directly above them, so repeating the attribution
+  /// there makes a correctly ordered thread appear duplicated or reordered.
   static func renderOptions(
     for item: HomeFeedSliceItem,
     slice: HomeFeedSlice,
-    isSelectedPost: Bool,
+    showsContextLine: Bool,
     options: FeedItemRenderOptions
   ) -> FeedItemRenderOptions {
-    guard isSelectedPost, let contextLine = contextLine(item, slice: slice) else {
+    guard showsContextLine, let contextLine = contextLine(item, slice: slice) else {
       return options
     }
     return FeedItemRenderOptions(
