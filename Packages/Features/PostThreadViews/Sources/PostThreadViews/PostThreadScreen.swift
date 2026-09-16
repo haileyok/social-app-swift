@@ -51,7 +51,12 @@ public struct PostThreadScreen: View {
   public var body: some View {
     ScrollView {
       LazyVStack(alignment: .leading, spacing: 0) {
-        ForEach(current.items, id: \.id) { item in
+        ForEach(Array(current.items.enumerated()), id: \.element.id) { index, item in
+          if index > 0, item.connector?.showParentReplyLine != true {
+            Divider()
+              .foregroundStyle(theme.atomColors.borderContrastLow)
+          }
+
           ThreadRow(
             item: item,
             strings: strings,
@@ -59,20 +64,26 @@ public struct PostThreadScreen: View {
             locale: locale,
             onShowMoreReplies: handleShowMore,
             onOpen: onOpen)
-          Divider()
-            .foregroundStyle(theme.atomColors.borderContrastLow)
+
+          if item.isAnchor, canReply(to: item) {
+            ThreadComposerRow(strings: strings, onTap: onReply)
+          }
         }
 
         if current.thread.hasOtherReplies {
           ThreadOtherRepliesRow(strings: strings, count: current.thread.otherItems.count)
         }
-
-        ThreadComposerRow(strings: strings, onTap: onReply)
       }
     }
     .background(theme.atomColors.bg)
     .navigationTitle(strings.title)
     .navigationBarTitleDisplayMode(.inline)
+  }
+
+  /// The reply prompt belongs directly below a hydrated, replyable anchor.
+  private func canReply(to item: ThreadItem) -> Bool {
+    guard case .post(let content) = item.content else { return false }
+    return !content.replyDisabled
   }
 
   /// A "load more" tap: widen the window in the direction the row asked for.

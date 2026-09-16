@@ -1,5 +1,6 @@
 import DesignSystem
 import DesignTokens
+import Foundation
 import PostThreadLogic
 import SwiftUI
 import UIComponents
@@ -81,17 +82,48 @@ struct ThreadPostRow: View {
       now: now,
       locale: locale,
       contextLine: contextLine)
-    PostFeedItem(data: data, onOpen: onOpen)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(item.isAnchor ? theme.atomColors.bgContrast25 : .clear)
-      .overlay(alignment: .leading) {
-        if item.isAnchor {
-          Rectangle()
-            .fill(theme.atomColors.textLink)
-            .frame(width: 3)
-        }
+    VStack(alignment: .leading, spacing: 0) {
+      PostFeedItem(data: data, onOpen: onOpen)
+
+      if item.isAnchor {
+        anchorDetails
       }
-      .accessibilityElement(children: .contain)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .accessibilityElement(children: .contain)
+  }
+
+  /// Expanded context unique to the focused post, matching the RN anchor's
+  /// absolute timestamp and readable engagement summary.
+  private var anchorDetails: some View {
+    VStack(alignment: .leading, spacing: Spacing.sm) {
+      if let createdAt = content.record?.createdAt.rawValue,
+        let date = ISO8601DateFormatter().date(from: createdAt)
+      {
+        Text(date.formatted(date: .long, time: .shortened))
+          .font(TypeScale.sm.font())
+          .foregroundStyle(theme.atomColors.textContrastMedium)
+      }
+
+      HStack(spacing: Spacing.lg) {
+        anchorStat(content.post.repostCount, label: "reposts")
+        anchorStat(content.post.likeCount, label: "likes")
+        anchorStat(content.post.replyCount, label: "replies")
+      }
+    }
+    .padding(.horizontal, Spacing.md)
+    .padding(.bottom, Spacing.md)
+  }
+
+  private func anchorStat(_ count: Int?, label: String) -> some View {
+    HStack(spacing: Spacing.xs) {
+      Text("\(count ?? 0)")
+        .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
+        .foregroundStyle(theme.atomColors.text)
+      Text(label)
+        .font(TypeScale.sm.font())
+        .foregroundStyle(theme.atomColors.textContrastMedium)
+    }
   }
 
   /// The context line above a row: an OP-liked reply is the case the data layer
@@ -114,31 +146,21 @@ struct ThreadTombstoneRow: View {
       Image(systemName: icon)
         .font(TypeScale.md.font(weight: Scales.FontWeight.medium))
         .foregroundStyle(theme.atomColors.textContrastMedium)
-      VStack(alignment: .leading, spacing: Spacing.xxs) {
-        Text(strings.tombstone(tombstone.kind))
-          .font(TypeScale.sm.font(weight: Scales.FontWeight.medium))
-          .foregroundStyle(theme.atomColors.textContrastMedium)
-        Text(tombstone.uri)
-          .font(TypeScale.xs.font())
-          .foregroundStyle(theme.atomColors.textContrastLow)
-          .lineLimit(1)
-          .truncationMode(.middle)
-      }
+      Text(strings.tombstone(tombstone.kind))
+        .font(TypeScale.sm.font(weight: Scales.FontWeight.medium))
+        .foregroundStyle(theme.atomColors.textContrastMedium)
       Spacer(minLength: 0)
     }
-    .padding(Spacing.md)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background(theme.atomColors.bgContrast25)
-    .clipShape(RoundedRectangle(cornerRadius: Radius.sm))
     .padding(.horizontal, Spacing.md)
-    .padding(.vertical, Spacing.xs)
+    .padding(.vertical, Spacing.sm)
+    .frame(maxWidth: .infinity, alignment: .leading)
     .accessibilityElement(children: .combine)
   }
 
   private var icon: String {
     switch tombstone.kind {
-    case .deleted: "questionmark.circle"
-    case .blocked: "hand.raised"
+    case .deleted: "trash"
+    case .blocked: "person.crop.circle.badge.xmark"
     case .hiddenByModeration: "eye.slash"
     }
   }
