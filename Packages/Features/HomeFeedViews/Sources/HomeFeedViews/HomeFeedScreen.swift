@@ -27,6 +27,7 @@ public struct HomeFeedScreen: View {
   @State private var model: HomeFeedViewModel
   private let onOpenRichText: (RichTextTarget) -> Void
   private let onOpenPost: (String) -> Void
+  private let onReplyToPost: (String) -> Void
   private let onSignIn: (() -> Void)?
   private let onAddFeeds: (() -> Void)?
 
@@ -45,12 +46,14 @@ public struct HomeFeedScreen: View {
     model: HomeFeedViewModel,
     onOpenRichText: @escaping (RichTextTarget) -> Void = { _ in },
     onOpenPost: @escaping (String) -> Void = { _ in },
+    onReplyToPost: @escaping (String) -> Void = { _ in },
     onSignIn: (() -> Void)? = nil,
     onAddFeeds: (() -> Void)? = nil
   ) {
     _model = State(initialValue: model)
     self.onOpenRichText = onOpenRichText
     self.onOpenPost = onOpenPost
+    self.onReplyToPost = onReplyToPost
     self.onSignIn = onSignIn
     self.onAddFeeds = onAddFeeds
   }
@@ -138,7 +141,11 @@ public struct HomeFeedScreen: View {
   private var rowList: some View {
     List {
       ForEach(model.rows) { row in
-        HomeFeedRowView(row: row, onOpenRichText: onOpenRichText, onOpenPost: onOpenPost)
+        HomeFeedRowView(
+          row: row,
+          onOpenRichText: onOpenRichText,
+          onOpenPost: onOpenPost,
+          onReplyToPost: onReplyToPost)
           .listRowInsets(EdgeInsets())
           .listRowSeparator(.hidden)
           .listRowBackground(theme.atomColors.bg)
@@ -179,17 +186,20 @@ public struct HomeFeedRowView: View {
   private let row: HomeFeedRow
   private let onOpenRichText: (RichTextTarget) -> Void
   private let onOpenPost: (String) -> Void
+  private let onReplyToPost: (String) -> Void
 
   @Environment(\.alfTheme) private var theme
 
   public init(
     row: HomeFeedRow,
     onOpenRichText: @escaping (RichTextTarget) -> Void = { _ in },
-    onOpenPost: @escaping (String) -> Void = { _ in }
+    onOpenPost: @escaping (String) -> Void = { _ in },
+    onReplyToPost: @escaping (String) -> Void = { _ in }
   ) {
     self.row = row
     self.onOpenRichText = onOpenRichText
     self.onOpenPost = onOpenPost
+    self.onReplyToPost = onReplyToPost
   }
 
   public var body: some View {
@@ -198,7 +208,10 @@ public struct HomeFeedRowView: View {
         ReasonLine(reason: reason)
       }
       ForEach(row.items) { item in
-        PostFeedItem(data: item.data, onOpen: onOpenRichText)
+        PostFeedItem(
+          data: item.data,
+          onOpen: onOpenRichText,
+          onReply: { onReplyToPost(item.uri) })
           .contentShape(.rect)
           .onTapGesture { onOpenPost(item.uri) }
           .overlay(alignment: .topLeading) {

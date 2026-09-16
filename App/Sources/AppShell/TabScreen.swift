@@ -203,7 +203,8 @@ private struct HomeTabScreen: View {
             model: HomeFeedViewModel(
               model: model, presentation: .feeds, viewerDid: clients.did),
             onOpenRichText: { router.open($0) },
-            onOpenPost: { router.open(.thread(uri: $0)) })
+            onOpenPost: { router.open(.thread(uri: $0)) },
+            onReplyToPost: { router.open(.thread(uri: $0)) })
         } else {
           ListSkeleton()
         }
