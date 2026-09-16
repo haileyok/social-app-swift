@@ -123,15 +123,15 @@ final class TabSmokeUITests: XCTestCase {
 
     XCTAssertTrue(
       composerApp.descendants(matching: .any)
-        .matching(identifier: "composer.image.alt.image-0")
+        .matching(identifier: "composer.image.image-0")
         .firstMatch
         .waitForExistence(timeout: 30),
-      "image composer fixture did not expose its first alt-text field")
+      "image composer fixture did not expose its first attachment")
     XCTAssertTrue(
       composerApp.descendants(matching: .any)
-        .matching(identifier: "composer.image.alt.image-1")
+        .matching(identifier: "composer.image.image-1")
         .firstMatch.exists,
-      "second fixture image alt-text field is missing")
+      "second fixture image is missing")
     XCTAssertTrue(
       composerApp.descendants(matching: .any)
         .matching(identifier: "composer.image.altHelp")
