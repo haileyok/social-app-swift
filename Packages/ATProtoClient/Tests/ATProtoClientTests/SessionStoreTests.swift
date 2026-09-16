@@ -96,6 +96,42 @@ func sampleAccount(did: String, handle: String = "alice.example") -> PersistedAc
     #expect(try await tokens.token(kind: .refresh, for: "did:plc:alice") == "refresh-1")
   }
 
+  @Test func freshLoginHooksPersistRotatedTokens() async throws {
+    let harness = await SessionStoreHarness()
+    defer { harness.cleanUp() }
+    _ = await harness.store.hydrate()
+
+    let transport = ScriptedTransport(
+      ScriptedTransport.json([
+        "accessJwt": "access-1", "refreshJwt": "refresh-1",
+        "did": "did:plc:alice", "handle": "alice.example",
+      ]),
+      ScriptedTransport.json(["error": "ExpiredToken"], status: 400),
+      ScriptedTransport.json([
+        "accessJwt": "access-2", "refreshJwt": "refresh-2",
+        "did": "did:plc:alice", "handle": "alice.example",
+        "emailConfirmed": true, "didDoc": ["service": []],
+      ]),
+      ScriptedTransport.json(["ok": true])
+    )
+    let session = try await PasswordSession.login(
+      service: "https://bsky.social", identifier: "alice.example",
+      password: "hunter2", hooks: harness.store.sessionHooks(),
+      transport: transport)
+    _ = try await harness.store.addAccount(fromSession: session)
+
+    _ = try await session.request(
+      method: "app.bsky.feed.getTimeline", httpMethod: "GET")
+
+    #expect(
+      try await harness.tokens.token(kind: .access, for: "did:plc:alice")
+        == "access-2")
+    #expect(
+      try await harness.tokens.token(kind: .refresh, for: "did:plc:alice")
+        == "refresh-2")
+    #expect((await harness.store.snapshot()).currentAccount?.accessJwt == "access-2")
+  }
+
   @Test func hydrateWithNoDataIsEmpty() async {
     let harness = await SessionStoreHarness()
     defer { harness.cleanUp() }

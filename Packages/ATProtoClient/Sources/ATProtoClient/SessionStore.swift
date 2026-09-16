@@ -447,6 +447,24 @@ public actor SessionStore {
     listeners.forEach { $0(did, .networkError) }
   }
 
+  /// Hooks for a newly-created login session.
+  ///
+  /// Login happens outside this actor, so the returned closures hop back into
+  /// the store using the DID carried by each event. This keeps fresh sessions
+  /// equivalent to sessions reconstructed by ``resume(account:)``.
+  public nonisolated func sessionHooks() -> SessionHooks {
+    SessionHooks(
+      onUpdated: { [weak self] data in
+        await self?.handleUpdate(did: data.did, data: data)
+      },
+      onDeleted: { [weak self] data in
+        await self?.handleDeleted(did: data.did, data: data)
+      },
+      onUpdateFailure: { [weak self] data, _ in
+        await self?.handleUpdateFailure(did: data.did, data: data)
+      })
+  }
+
   /// Change listeners, invoked on every session event.
   private var listeners: [@Sendable (String, AtpSessionEvent) -> Void] = []
 

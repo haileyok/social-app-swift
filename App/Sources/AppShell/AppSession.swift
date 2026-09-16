@@ -211,6 +211,9 @@ public final class AppSession {
     LoginFlow(
       transport: transport,
       sessionStore: sessionStore,
+      sessionHooksFactory: { [sessionStore] _ in
+        sessionStore.sessionHooks()
+      },
       lookupHandle: { [transport] handle in
         try await HandleResolver.resolve(handle, transport: transport)
       })
