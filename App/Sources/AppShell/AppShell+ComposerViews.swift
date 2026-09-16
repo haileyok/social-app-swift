@@ -34,12 +34,19 @@ import SwiftUI
  callbacks; see the `ComposerScreen` initialiser.
  */
 public enum ComposerSurfaces {
+  /// Launch argument selecting a deterministic composer fixture for UI tests.
+  public static let variantArgument = "uiTestComposerSurface"
+
   /// The composer screen for a fixture surface, themed.
   ///
   /// This is the one function the app shell exposes: the debug button below is a
   /// thin presentation wrapper, and a real hosting screen can call this directly.
   public static func composerScreen(theme: ThemePreference = .system) -> some View {
-    ComposerDebugView(theme: theme)
+    let raw =
+      UserDefaults.standard.string(forKey: variantArgument)
+      ?? ProcessInfo.processInfo.environment["UI_TEST_COMPOSER_SURFACE"]
+    let surface = raw.flatMap(ComposerSurface.init(rawValue:))
+    return ComposerDebugView(surface: surface, theme: theme)
   }
 
   /// The composer screen pinned to one fixture surface.

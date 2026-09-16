@@ -111,6 +111,38 @@ final class TabSmokeUITests: XCTestCase {
     }
   }
 
+  /// The image-composer fixture exposes every attachment and missing-alt guidance.
+  func testImageComposerExposesAttachmentsAndAltTextGuidance() {
+    app.terminate()
+    app.launchArguments = [
+      "-\(ShellLaunchArgument.screen)", "composer",
+      "-\(ComposerSurfaces.variantArgument)", ComposerSurface.images.rawValue,
+    ]
+    app.launch()
+
+    XCTAssertTrue(
+      app.descendants(matching: .any)
+        .matching(identifier: ComposerAccessibility.screen)
+        .firstMatch
+        .waitForExistence(timeout: 30),
+      "image composer fixture did not launch")
+    XCTAssertTrue(
+      app.descendants(matching: .any)
+        .matching(identifier: ComposerAccessibility.imageRow("image-0"))
+        .firstMatch.exists,
+      "first fixture image is missing")
+    XCTAssertTrue(
+      app.descendants(matching: .any)
+        .matching(identifier: ComposerAccessibility.imageRow("image-1"))
+        .firstMatch.exists,
+      "second fixture image is missing")
+    XCTAssertTrue(
+      app.descendants(matching: .any)
+        .matching(identifier: ComposerAccessibility.imageAltHelp)
+        .firstMatch.exists,
+      "missing-alt guidance is not exposed")
+  }
+
   /// The token gallery stays reachable from the shell toolbar (AC.7 surface).
   func testTokenGalleryIsReachableFromTheHomeToolbar() {
     XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 30))
