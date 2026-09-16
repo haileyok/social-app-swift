@@ -30,6 +30,7 @@ let package = Package(
     .package(path: "../Packages/Features/LoginViews"),
     .package(path: "../Packages/Features/SettingsViews"),
     .package(path: "../Packages/Features/SearchViews"),
+    .package(path: "../Packages/Features/Search"),
     .package(path: "../Packages/Features/Login"),
     .package(path: "../Packages/Features/ComposerViews"),
     .package(path: "../Packages/Features/Composer"),
@@ -51,6 +52,7 @@ let package = Package(
     .package(path: "../Packages/Features/Messages"),
     .package(path: "../Packages/Features/Notifications"),
     .package(path: "../Packages/Features/Profile"),
+    .package(path: "../tools/lexicon-codegen/swift-atproto"),
   ],
   targets: [
     .target(
@@ -78,6 +80,7 @@ let package = Package(
         .product(name: "LoginViews", package: "LoginViews"),
         .product(name: "SettingsViews", package: "SettingsViews"),
         .product(name: "SearchViews", package: "SearchViews"),
+        .product(name: "SearchLogic", package: "Search"),
         .product(name: "LoginLogic", package: "Login"),
         .product(name: "ComposerViews", package: "ComposerViews"),
         .product(name: "ComposerLogic", package: "Composer"),
@@ -99,6 +102,7 @@ let package = Package(
         .product(name: "NotificationsLogic", package: "Notifications"),
         .product(name: "ProfileLogic", package: "Profile"),
         .product(name: "UIComponentsCore", package: "UIComponents"),
+        .product(name: "SwiftAtproto", package: "swift-atproto"),
       ],
       path: "Sources/AppShell"
     )
