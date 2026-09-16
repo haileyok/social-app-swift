@@ -35,8 +35,8 @@ struct PostLikesRouteView: View {
   private func load() async {
     guard let clients = router.clients else { failed = true; return }
     do {
-      let output: App.Bsky.FeedGetLikes_Output = try await clients.appview.get(
-        App.Bsky.FeedGetLikes.id,
+      let output: Lexicons.App.Bsky.FeedGetLikes_Output = try await clients.appview.get(
+        Lexicons.App.Bsky.FeedGetLikes.id,
         params: [("uri", uri), ("limit", String(PostThreadList.pageSize))])
       likes = output.likes.map {
         PostLike(
@@ -52,7 +52,7 @@ struct PostLikesRouteView: View {
 struct PostRepostsRouteView: View {
   let uri: String
   @Environment(ShellRouter.self) private var router
-  @State private var profiles: [App.Bsky.ActorDefs_ProfileView]?
+  @State private var profiles: [Lexicons.App.Bsky.ActorDefs_ProfileView]?
   @State private var failed = false
 
   var body: some View {
@@ -76,8 +76,8 @@ struct PostRepostsRouteView: View {
   private func load() async {
     guard let clients = router.clients else { failed = true; return }
     do {
-      let output: App.Bsky.FeedGetRepostedBy_Output = try await clients.appview.get(
-        App.Bsky.FeedGetRepostedBy.id,
+      let output: Lexicons.App.Bsky.FeedGetRepostedBy_Output = try await clients.appview.get(
+        Lexicons.App.Bsky.FeedGetRepostedBy.id,
         params: [("uri", uri), ("limit", String(PostThreadList.pageSize))])
       profiles = output.repostedBy
       failed = false
@@ -113,8 +113,8 @@ struct PostQuotesRouteView: View {
   private func load() async {
     guard let clients = router.clients else { failed = true; return }
     do {
-      let output: App.Bsky.FeedGetQuotes_Output = try await clients.appview.get(
-        App.Bsky.FeedGetQuotes.id,
+      let output: Lexicons.App.Bsky.FeedGetQuotes_Output = try await clients.appview.get(
+        Lexicons.App.Bsky.FeedGetQuotes.id,
         params: [("uri", uri), ("limit", String(PostThreadList.pageSize))])
       quotes = output.posts.map(PostQuote.init)
       failed = false
