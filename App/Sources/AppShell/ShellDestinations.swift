@@ -355,7 +355,7 @@ private struct FeedRouteView: View {
               uri: target.uri,
               cid: target.cid,
               existingRecordURI: target.likeURI)
-            await model.refresh()
+            try? await model.selectedQuery?.refresh()
           },
           onRepostPost: { target in
             guard let clients = router.clients else { return }
@@ -364,7 +364,7 @@ private struct FeedRouteView: View {
               uri: target.uri,
               cid: target.cid,
               existingRecordURI: target.repostURI)
-            await model.refresh()
+            try? await model.selectedQuery?.refresh()
           })
       } else {
         ListSkeleton()
