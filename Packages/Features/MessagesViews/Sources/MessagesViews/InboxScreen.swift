@@ -1,5 +1,6 @@
 import DesignSystem
 import DesignTokens
+import Foundation
 import Lexicons
 import MessagesLogic
 import SwiftUI
@@ -165,6 +166,191 @@ public struct ChatRequestsScreen: View {
     defer { updating.remove(convo.id) }
     let succeeded = accepting ? await onAccept(convo) : await onDelete(convo)
     if succeeded { viewModel.remove(convoId: convo.id) }
+  }
+}
+
+/// Full-height account search for starting a direct conversation.
+public struct NewConversationScreen: View {
+  @Environment(\.alfTheme) private var theme
+  @State private var query = ""
+  @State private var actors: [App.Bsky.ActorDefs_ProfileViewBasic] = []
+  @State private var isSearching = false
+  @State private var startingDid: String?
+  @State private var errorMessage: String?
+
+  private let currentAccountDid: String
+  private let search: @Sendable (String) async throws -> [App.Bsky.ActorDefs_ProfileViewBasic]
+  private let start: @Sendable (String) async throws -> Chat.Bsky.ConvoDefs_ConvoView
+  private let onOpen: (Chat.Bsky.ConvoDefs_ConvoView) -> Void
+
+  public init(
+    currentAccountDid: String,
+    search: @escaping @Sendable (String) async throws
+      -> [App.Bsky.ActorDefs_ProfileViewBasic],
+    start: @escaping @Sendable (String) async throws -> Chat.Bsky.ConvoDefs_ConvoView,
+    onOpen: @escaping (Chat.Bsky.ConvoDefs_ConvoView) -> Void
+  ) {
+    self.currentAccountDid = currentAccountDid
+    self.search = search
+    self.start = start
+    self.onOpen = onOpen
+  }
+
+  public var body: some View {
+    VStack(spacing: 0) {
+      searchField
+      Divider().overlay(theme.atomColors.borderContrastLow)
+      content
+    }
+    .background(theme.atomColors.bg)
+    .navigationTitle("New chat")
+    .navigationBarTitleDisplayMode(.inline)
+    .task(id: query) { await searchIfNeeded() }
+  }
+
+  private var searchField: some View {
+    HStack(spacing: Spacing.sm) {
+      Image(systemName: "magnifyingglass")
+        .foregroundStyle(theme.atomColors.textContrastMedium)
+      TextField("Search people", text: $query)
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+        .submitLabel(.search)
+      if !query.isEmpty {
+        Button { query = "" } label: {
+          Image(systemName: "xmark.circle.fill")
+            .foregroundStyle(theme.atomColors.textContrastMedium)
+        }
+        .accessibilityLabel("Clear search")
+      }
+    }
+    .padding(.horizontal, Spacing.md)
+    .frame(minHeight: 46)
+    .background(theme.atomColors.bgContrast25)
+    .clipShape(.rect(cornerRadius: 12))
+    .padding(Spacing.md)
+  }
+
+  @ViewBuilder private var content: some View {
+    if let errorMessage {
+      VStack(spacing: Spacing.md) {
+        Image(systemName: "exclamationmark.circle")
+          .font(.system(size: 30))
+          .foregroundStyle(theme.atomColors.textContrastMedium)
+        AlfText(errorMessage, scale: .sm, color: theme.atomColors.textContrastMedium)
+          .multilineTextAlignment(.center)
+        Button("Try again") { Task { await performSearch() } }
+          .buttonStyle(.borderedProminent)
+      }
+      .padding(Spacing.xl)
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } else if isSearching {
+      ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+    } else if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      EmptyStateView(
+        icon: "person.crop.circle.badge.plus",
+        title: "Start a new chat",
+        message: "Search for someone by their name or handle.")
+    } else if actors.isEmpty {
+      EmptyStateView(
+        icon: "person.slash",
+        title: "No people found",
+        message: "Try another name or handle.")
+    } else {
+      ScrollView {
+        LazyVStack(spacing: 0) {
+          ForEach(actors, id: \.did.rawValue) { actor in
+            Button { Task { await open(actor) } } label: {
+              actorRow(actor)
+            }
+            .buttonStyle(.plain)
+            .disabled(startingDid != nil)
+            Divider().overlay(theme.atomColors.borderContrastLow)
+          }
+        }
+      }
+    }
+  }
+
+  private func actorRow(_ actor: App.Bsky.ActorDefs_ProfileViewBasic) -> some View {
+    HStack(spacing: Spacing.md) {
+      Avatar(
+        avatar: actor.avatar?.rawValue,
+        handle: actor.handle.rawValue,
+        displayName: actor.displayName,
+        size: .lg)
+      VStack(alignment: .leading, spacing: 2) {
+        AlfText(
+          actor.displayName?.isEmpty == false ? actor.displayName! : actor.handle.rawValue,
+          scale: .md,
+          weight: Scales.FontWeight.semiBold)
+          .lineLimit(1)
+        AlfText(
+          "@\(actor.handle.rawValue)", scale: .sm,
+          color: theme.atomColors.textContrastMedium)
+          .lineLimit(1)
+      }
+      Spacer()
+      if startingDid == actor.did.rawValue {
+        ProgressView()
+      } else {
+        Image(systemName: "chevron.right")
+          .font(.caption.weight(.semibold))
+          .foregroundStyle(theme.atomColors.textContrastMedium)
+      }
+    }
+    .padding(.horizontal, Spacing.lg)
+    .padding(.vertical, Spacing.md)
+    .contentShape(.rect)
+  }
+
+  private func searchIfNeeded() async {
+    do {
+      try await Task.sleep(for: .milliseconds(250))
+    } catch { return }
+    guard !Task.isCancelled else { return }
+    await performSearch()
+  }
+
+  private func performSearch() async {
+    let term = query.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !term.isEmpty else {
+      actors = []
+      errorMessage = nil
+      isSearching = false
+      return
+    }
+    isSearching = true
+    errorMessage = nil
+    do {
+      let found = try await search(term)
+      guard term == query.trimmingCharacters(in: .whitespacesAndNewlines) else { return }
+      actors = found.filter { $0.did.rawValue != currentAccountDid }
+      isSearching = false
+    } catch is CancellationError {
+      return
+    } catch {
+      guard term == query.trimmingCharacters(in: .whitespacesAndNewlines) else { return }
+      actors = []
+      isSearching = false
+      errorMessage = "We couldn't search for people. Check your connection and try again."
+    }
+  }
+
+  private func open(_ actor: App.Bsky.ActorDefs_ProfileViewBasic) async {
+    guard startingDid == nil else { return }
+    startingDid = actor.did.rawValue
+    errorMessage = nil
+    do {
+      let convo = try await start(actor.did.rawValue)
+      onOpen(convo)
+    } catch let failure as NewConversationFailure {
+      errorMessage = failure.message
+      startingDid = nil
+    } catch {
+      errorMessage = NewConversationFailure.unknown.message
+      startingDid = nil
+    }
   }
 }
 

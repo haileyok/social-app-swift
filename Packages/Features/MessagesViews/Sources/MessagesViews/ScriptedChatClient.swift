@@ -74,6 +74,26 @@ public actor ScriptedChatClient: ChatXrpc {
     return convo
   }
 
+  public func getConvoAvailability(
+    members: [String]
+  ) async throws -> Chat.Bsky.ConvoGetConvoAvailability_Output {
+    calls.append("getConvoAvailability")
+    let convo = convos.values.first { value in
+      members.allSatisfy { member in value.members.contains { $0.did.rawValue == member } }
+    }
+    return Chat.Bsky.ConvoGetConvoAvailability_Output(canChat: true, convo: convo)
+  }
+
+  public func getConvoForMembers(
+    members: [String]
+  ) async throws -> Chat.Bsky.ConvoDefs_ConvoView {
+    calls.append("getConvoForMembers")
+    guard let convo = convos.values.first(where: { value in
+      members.allSatisfy { member in value.members.contains { $0.did.rawValue == member } }
+    }) else { throw ScriptedError.notFound }
+    return convo
+  }
+
   public func getMessages(
     convoId: String, limit: Int, cursor: String?
   ) async throws -> ConvoMessagesPage {

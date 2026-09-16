@@ -1,3 +1,4 @@
+import ATProtoClient
 import Foundation
 import Lexicons
 
@@ -28,6 +29,16 @@ public protocol ChatXrpc: Sendable {
 
   /// `chat.bsky.convo.getConvo`. Port of `useConvoQuery`.
   func getConvo(convoId: String) async throws -> Chat.Bsky.ConvoDefs_ConvoView
+
+  /// `chat.bsky.convo.getConvoAvailability`. Checks whether a direct chat may start.
+  func getConvoAvailability(
+    members: [String]
+  ) async throws -> Chat.Bsky.ConvoGetConvoAvailability_Output
+
+  /// `chat.bsky.convo.getConvoForMembers`. Gets or creates the stable direct chat.
+  func getConvoForMembers(
+    members: [String]
+  ) async throws -> Chat.Bsky.ConvoDefs_ConvoView
 
   /// `chat.bsky.convo.getMessages`. Port of `fetchMessageHistory`.
   func getMessages(
@@ -91,6 +102,78 @@ public protocol ChatXrpc: Sendable {
 ///
 /// `request` is a real value on the wire; the 1:1 scope lists accepted convos,
 /// but the type is open so request-inbox reads stay expressible.
+/// Starts a direct conversation while enforcing the same eligibility gate as RN.
+public struct NewConversationService: Sendable {
+  private let client: any ChatXrpc
+  private let currentAccountDid: String
+
+  public init(client: any ChatXrpc, currentAccountDid: String) {
+    self.client = client
+    self.currentAccountDid = currentAccountDid
+  }
+
+  /// Returns an existing conversation when availability includes one; otherwise
+  /// asks chat for the stable direct conversation. The signed-in account cannot
+  /// be selected as its own recipient.
+  public func start(with recipientDid: String) async throws
+    -> Chat.Bsky.ConvoDefs_ConvoView {
+    guard recipientDid != currentAccountDid else { throw NewConversationFailure.cannotMessageSelf }
+    do {
+      let availability = try await client.getConvoAvailability(members: [recipientDid])
+      if let existing = availability.convo { return existing }
+      guard availability.canChat else { throw NewConversationFailure.recipientUnavailable }
+      return try await client.getConvoForMembers(members: [recipientDid])
+    } catch let failure as NewConversationFailure {
+      throw failure
+    } catch let error as XrpcError {
+      throw NewConversationFailure(xrpcCode: error.rawCode, status: error.status)
+    } catch {
+      throw NewConversationFailure.network
+    }
+  }
+}
+
+/// Stable, localized-ready failure reasons for starting a direct chat.
+public enum NewConversationFailure: Error, Sendable, Equatable {
+  case cannotMessageSelf
+  case recipientUnavailable
+  case accountSuspended
+  case blockedActor
+  case blockedSubject
+  case messagesDisabled
+  case notFollowedBySender
+  case recipientNotFound
+  case network
+  case unknown
+
+  public init(xrpcCode: String?, status: Int) {
+    switch xrpcCode {
+    case "AccountSuspended": self = .accountSuspended
+    case "BlockedActor": self = .blockedActor
+    case "BlockedSubject": self = .blockedSubject
+    case "MessagesDisabled": self = .messagesDisabled
+    case "NotFollowedBySender": self = .notFollowedBySender
+    case "RecipientNotFound": self = .recipientNotFound
+    default: self = status == 0 || status >= 500 ? .network : .unknown
+    }
+  }
+
+  public var message: String {
+    switch self {
+    case .cannotMessageSelf: "You can't start a chat with yourself."
+    case .recipientUnavailable: "This user can't be messaged."
+    case .accountSuspended: "Suspended accounts cannot participate in chat."
+    case .blockedActor: "This user has blocked you and cannot be messaged."
+    case .blockedSubject: "You have blocked this user. Unblock them to start a chat."
+    case .messagesDisabled: "This user has disabled chat and cannot be messaged."
+    case .notFollowedBySender: "Chat recipient is not followed by the sender."
+    case .recipientNotFound: "Unable to find the selected recipient."
+    case .network: "A network error occurred. Please check your internet connection."
+    case .unknown: "An issue occurred starting the chat. Please try again."
+    }
+  }
+}
+
 public enum ConvoStatusFilter: String, Sendable, Hashable, CaseIterable {
   case request
   case accepted

@@ -47,6 +47,25 @@ public struct LiveChatXrpc: ChatXrpc {
     return output.convo
   }
 
+  public func getConvoAvailability(
+    members: [String]
+  ) async throws -> Chat.Bsky.ConvoGetConvoAvailability_Output {
+    try await client.get(
+      Chat.Bsky.ConvoGetConvoAvailability.id,
+      params: members.map { ("members", Optional($0)) },
+      authorization: authorization)
+  }
+
+  public func getConvoForMembers(
+    members: [String]
+  ) async throws -> Chat.Bsky.ConvoDefs_ConvoView {
+    let output: Chat.Bsky.ConvoGetConvoForMembers_Output = try await client.get(
+      Chat.Bsky.ConvoGetConvoForMembers.id,
+      params: members.map { ("members", Optional($0)) },
+      authorization: authorization)
+    return output.convo
+  }
+
   public func getMessages(
     convoId: String, limit: Int, cursor: String?
   ) async throws -> ConvoMessagesPage {

@@ -341,6 +341,7 @@ private struct MessagesTabScreen: View {
 
   @Environment(ShellRouter.self) private var router
   @State private var showsRequests = false
+  @State private var showsNewChat = false
 
   init(clients: AppSessionClients?) {
     self.clients = clients
@@ -369,11 +370,15 @@ private struct MessagesTabScreen: View {
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if clients != nil {
-        ToolbarItem(placement: .topBarTrailing) {
+        ToolbarItemGroup(placement: .topBarTrailing) {
           Button { showsRequests = true } label: {
             Image(systemName: "tray")
           }
           .accessibilityLabel("Chat requests")
+          Button { showsNewChat = true } label: {
+            Image(systemName: "square.and.pencil")
+          }
+          .accessibilityLabel("New chat")
         }
       }
     }
@@ -412,6 +417,32 @@ private struct MessagesTabScreen: View {
           .toolbar {
             ToolbarItem(placement: .confirmationAction) {
               Button("Done") { showsRequests = false }
+            }
+          }
+        }
+      }
+    }
+    .sheet(isPresented: $showsNewChat) {
+      if let clients {
+        let search = SearchFetchers(client: clients.appview)
+        let conversation = NewConversationService(
+          client: LiveChatXrpc(client: clients.chat),
+          currentAccountDid: clients.did)
+        NavigationStack {
+          NewConversationScreen(
+            currentAccountDid: clients.did,
+            search: { term in
+              let output = try await search.searchActorsTypeahead(prefix: term, limit: 20)
+              return ActorAutocomplete.suggestions(prefix: term, searched: output.actors)
+            },
+            start: { did in try await conversation.start(with: did) },
+            onOpen: { convo in
+              showsNewChat = false
+              router.open(.conversation(convoId: convo.id, convo: convo))
+            })
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              Button("Cancel") { showsNewChat = false }
             }
           }
         }

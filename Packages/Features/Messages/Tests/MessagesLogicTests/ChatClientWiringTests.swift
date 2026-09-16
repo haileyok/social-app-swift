@@ -296,6 +296,66 @@ struct ChatClientWiringTests {
     #expect(body["messageId"] as? String == message.id)
   }
 
+  @Test func newConversationUsesAvailabilityThenStableDirectLookup() async throws {
+    let server = FakeChatServer()
+    let (chat, _) = makeClient(server)
+    let service = NewConversationService(client: chat, currentAccountDid: Fixtures.selfDid)
+
+    let created = try await service.start(with: Fixtures.otherDid)
+
+    #expect(created.members.contains { $0.did.rawValue == Fixtures.otherDid })
+    let availability = try #require(
+      server.requests(for: Chat.Bsky.ConvoGetConvoAvailability.id).first)
+    #expect(availability.method == "GET")
+    #expect(availability.params["members"] == [Fixtures.otherDid])
+    let lookup = try #require(
+      server.requests(for: Chat.Bsky.ConvoGetConvoForMembers.id).first)
+    #expect(lookup.method == "GET")
+    #expect(lookup.params["members"] == [Fixtures.otherDid])
+  }
+
+  @Test func newConversationReturnsExistingAvailabilityWithoutCreatingAgain() async throws {
+    let server = FakeChatServer()
+    let existing = server.addConvo(
+      id: "existing", members: [Fixtures.selfDid, Fixtures.otherDid])
+    let (chat, _) = makeClient(server)
+    let service = NewConversationService(client: chat, currentAccountDid: Fixtures.selfDid)
+
+    let opened = try await service.start(with: Fixtures.otherDid)
+
+    #expect(opened.id == existing.id)
+    #expect(server.requests(for: Chat.Bsky.ConvoGetConvoForMembers.id).isEmpty)
+  }
+
+  @Test func newConversationRejectsSelfWithoutNetwork() async throws {
+    let server = FakeChatServer()
+    let (chat, _) = makeClient(server)
+    let service = NewConversationService(client: chat, currentAccountDid: Fixtures.selfDid)
+
+    await #expect(throws: NewConversationFailure.cannotMessageSelf) {
+      _ = try await service.start(with: Fixtures.selfDid)
+    }
+    #expect(server.requests.isEmpty)
+  }
+
+  @Test func newConversationFailuresMatchRNMessages() {
+    let cases: [(String?, Int, NewConversationFailure)] = [
+      ("AccountSuspended", 400, .accountSuspended),
+      ("BlockedActor", 400, .blockedActor),
+      ("BlockedSubject", 400, .blockedSubject),
+      ("MessagesDisabled", 400, .messagesDisabled),
+      ("NotFollowedBySender", 400, .notFollowedBySender),
+      ("RecipientNotFound", 400, .recipientNotFound),
+      (nil, 503, .network),
+      ("Other", 400, .unknown),
+    ]
+    for (code, status, expected) in cases {
+      let actual = NewConversationFailure(xrpcCode: code, status: status)
+      #expect(actual == expected)
+      #expect(!actual.message.isEmpty)
+    }
+  }
+
   @Test func serviceErrorsSurfaceAsXrpcErrors() async throws {
     let server = FakeChatServer()
     server.fail(

@@ -29,6 +29,8 @@ subject of the `ToleranceTests` suite.
 |---|---|---|
 | `chat.bsky.convo.listConvos` | `LiveChatXrpc.listConvos`, `InboxQuery` | `ChatClientWiringTests.listConvosEncodesQueryParams`, `InboxTests.loadsFirstPageInRevOrder` |
 | `chat.bsky.convo.getConvo` | `LiveChatXrpc.getConvo`, `ConvoQuery` | `ChatClientWiringTests.chatProxyHeaderIsEmittedOnEveryCall`, `InboxTests.convoQueryPrecachesWithoutARequest` |
+| `chat.bsky.convo.getConvoAvailability` | `LiveChatXrpc.getConvoAvailability`, `NewConversationService` | `ChatClientWiringTests.newConversationUsesAvailabilityThenStableDirectLookup`, `newConversationReturnsExistingAvailabilityWithoutCreatingAgain` |
+| `chat.bsky.convo.getConvoForMembers` | `LiveChatXrpc.getConvoForMembers`, `NewConversationService` | `ChatClientWiringTests.newConversationUsesAvailabilityThenStableDirectLookup`, `newConversationFailuresMatchRNMessages` |
 | `chat.bsky.convo.getMessages` | `LiveChatXrpc.getMessages` | `ChatClientWiringTests.getMessagesEncodesConvoIdLimitCursor`, `ConversationTests.fetchesInitialHistoryChronologically` |
 | `chat.bsky.convo.getLog` | `LiveChatXrpc.getLog`, `LogSync` | `ChatClientWiringTests.getLogEncodesCursorOnly`, `LogSyncTests.initializeSeedsTheCursorWithoutEvents` |
 | `chat.bsky.convo.sendMessage` | `LiveChatXrpc.sendMessage` | `ChatClientWiringTests.sendMessagePostsExactInputBody`, `ConversationTests.sendReconcilesViaTheResponse` |

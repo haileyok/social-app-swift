@@ -40,6 +40,10 @@ extension FakeChatServer {
       return json(listConvos(params))
     case Chat.Bsky.ConvoGetConvo.id:
       return json(getConvo(params))
+    case Chat.Bsky.ConvoGetConvoAvailability.id:
+      return json(getConvoAvailability(params))
+    case Chat.Bsky.ConvoGetConvoForMembers.id:
+      return json(getConvoForMembers(params))
     case Chat.Bsky.ConvoGetMessages.id:
       return json(getMessages(params))
     case Chat.Bsky.ConvoGetLog.id:
@@ -109,6 +113,36 @@ extension FakeChatServer {
       return ["convo": NSNull()]
     }
     return ["convo": Self.encode(convo)]
+  }
+
+  private func getConvoAvailability(_ params: [String: [String]]) -> [String: Any] {
+    let members = Set(params["members"] ?? [])
+    var output: [String: Any] = ["canChat": !members.isEmpty]
+    if let convo = directConvo(containing: members) {
+      output["convo"] = Self.encode(convo)
+    }
+    return output
+  }
+
+  private func getConvoForMembers(_ params: [String: [String]]) -> [String: Any] {
+    let members = Set(params["members"] ?? [])
+    if let convo = directConvo(containing: members) {
+      return ["convo": Self.encode(convo)]
+    }
+    let id = "convo-created-\(lock.withLock { convoOrder.count + 1 })"
+    let convo = addConvo(id: id, members: [Fixtures.selfDid] + members.sorted())
+    return ["convo": Self.encode(convo)]
+  }
+
+  private func directConvo(
+    containing members: Set<String>
+  ) -> Chat.Bsky.ConvoDefs_ConvoView? {
+    lock.withLock {
+      convos.values.first { convo in
+        Self.matchesKind(convo, kind: "direct")
+          && members.isSubset(of: Set(convo.members.map { $0.did.rawValue }))
+      }
+    }
   }
 
   private func getMessages(_ params: [String: [String]]) -> [String: Any] {
