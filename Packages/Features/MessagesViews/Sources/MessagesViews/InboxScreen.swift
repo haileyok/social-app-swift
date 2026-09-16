@@ -173,20 +173,21 @@ public struct ChatRequestsScreen: View {
 public struct NewConversationScreen: View {
   @Environment(\.alfTheme) private var theme
   @State private var query = ""
-  @State private var actors: [App.Bsky.ActorDefs_ProfileViewBasic] = []
+  @State private var actors: [Lexicons.App.Bsky.ActorDefs_ProfileViewBasic] = []
   @State private var isSearching = false
   @State private var startingDid: String?
   @State private var errorMessage: String?
 
   private let currentAccountDid: String
-  private let search: @Sendable (String) async throws -> [App.Bsky.ActorDefs_ProfileViewBasic]
+  private let search: @Sendable (String) async throws
+    -> [Lexicons.App.Bsky.ActorDefs_ProfileViewBasic]
   private let start: @Sendable (String) async throws -> Chat.Bsky.ConvoDefs_ConvoView
   private let onOpen: (Chat.Bsky.ConvoDefs_ConvoView) -> Void
 
   public init(
     currentAccountDid: String,
     search: @escaping @Sendable (String) async throws
-      -> [App.Bsky.ActorDefs_ProfileViewBasic],
+      -> [Lexicons.App.Bsky.ActorDefs_ProfileViewBasic],
     start: @escaping @Sendable (String) async throws -> Chat.Bsky.ConvoDefs_ConvoView,
     onOpen: @escaping (Chat.Bsky.ConvoDefs_ConvoView) -> Void
   ) {
@@ -272,7 +273,9 @@ public struct NewConversationScreen: View {
     }
   }
 
-  private func actorRow(_ actor: App.Bsky.ActorDefs_ProfileViewBasic) -> some View {
+  private func actorRow(
+    _ actor: Lexicons.App.Bsky.ActorDefs_ProfileViewBasic
+  ) -> some View {
     HStack(spacing: Spacing.md) {
       Avatar(
         avatar: actor.avatar?.rawValue,
@@ -337,7 +340,7 @@ public struct NewConversationScreen: View {
     }
   }
 
-  private func open(_ actor: App.Bsky.ActorDefs_ProfileViewBasic) async {
+  private func open(_ actor: Lexicons.App.Bsky.ActorDefs_ProfileViewBasic) async {
     guard startingDid == nil else { return }
     startingDid = actor.did.rawValue
     errorMessage = nil
