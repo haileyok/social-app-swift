@@ -87,6 +87,19 @@ struct FeedItemViewDataTests {
     #expect(data.likeCount == "1.2M")
   }
 
+  @Test("Viewer reaction state survives the render adapter")
+  func viewerReactionState() {
+    let active = feedItemViewData(
+      post(),
+      options: FeedItemRenderOptions(now: now, isReposted: true, isLiked: true))
+    #expect(active.isReposted)
+    #expect(active.isLiked)
+
+    let inactive = feedItemViewData(post(), options: FeedItemRenderOptions(now: now))
+    #expect(!inactive.isReposted)
+    #expect(!inactive.isLiked)
+  }
+
   @Test("A zero count renders as no label, matching the RN control")
   func zeroCount() {
     #expect(formatOptionalCount(0) == nil)

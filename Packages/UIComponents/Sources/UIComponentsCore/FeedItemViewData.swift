@@ -27,6 +27,8 @@ public struct FeedItemViewData: Sendable {
   public let replyCount: String?
   public let repostCount: String?
   public let likeCount: String?
+  public let isReposted: Bool
+  public let isLiked: Bool
   /// A repost/context header, e.g. "Reposted by Alice".
   public let contextLine: String?
   /// The author's avatar source.
@@ -45,6 +47,8 @@ public struct FeedItemViewData: Sendable {
     replyCount: String?,
     repostCount: String?,
     likeCount: String?,
+    isReposted: Bool = false,
+    isLiked: Bool = false,
     contextLine: String?,
     avatar: AvatarSource,
     moderation: FeedItemModeration,
@@ -61,6 +65,8 @@ public struct FeedItemViewData: Sendable {
     self.replyCount = replyCount
     self.repostCount = repostCount
     self.likeCount = likeCount
+    self.isReposted = isReposted
+    self.isLiked = isLiked
     self.contextLine = contextLine
     self.avatar = avatar
     self.moderation = moderation
@@ -118,11 +124,21 @@ public struct FeedItemRenderOptions: Sendable {
   /// "replying to" line). The caller knows the feed's semantics; the component
   /// only renders the string it is given.
   public let contextLine: String?
+  public let isReposted: Bool
+  public let isLiked: Bool
 
-  public init(now: Date = Date(), locale: Locale = Locale(identifier: "en_US"), contextLine: String? = nil) {
+  public init(
+    now: Date = Date(),
+    locale: Locale = Locale(identifier: "en_US"),
+    contextLine: String? = nil,
+    isReposted: Bool = false,
+    isLiked: Bool = false
+  ) {
     self.now = now
     self.locale = locale
     self.contextLine = contextLine
+    self.isReposted = isReposted
+    self.isLiked = isLiked
   }
 }
 
@@ -151,6 +167,8 @@ public func feedItemViewData(
     replyCount: nil,
     repostCount: nil,
     likeCount: nil,
+    isReposted: options.isReposted,
+    isLiked: options.isLiked,
     contextLine: options.contextLine,
     avatar: AvatarSource.resolve(
       avatar: author.avatar, handle: author.handle, displayName: author.displayName),
@@ -182,6 +200,8 @@ public func feedItemViewData(
     replyCount: formatOptionalCount(counts.replyCount, locale: options.locale),
     repostCount: formatOptionalCount(counts.repostCount, locale: options.locale),
     likeCount: formatOptionalCount(counts.likeCount, locale: options.locale),
+    isReposted: base.isReposted,
+    isLiked: base.isLiked,
     contextLine: base.contextLine,
     avatar: base.avatar,
     moderation: base.moderation,

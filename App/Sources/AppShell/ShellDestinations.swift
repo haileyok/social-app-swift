@@ -524,7 +524,9 @@ enum ProfileContentLoader {
             decision: moderatePost(
               subject,
               opts: ModerationOpts(userDid: clients.did, prefs: ModerationPrefs())),
-            options: FeedItemRenderOptions())
+            options: FeedItemRenderOptions(
+              isReposted: item.post.viewer?.repost != nil,
+              isLiked: item.post.viewer?.like != nil))
         }
         items[tab] = rows
         interactions[tab] = page.items.map { item in

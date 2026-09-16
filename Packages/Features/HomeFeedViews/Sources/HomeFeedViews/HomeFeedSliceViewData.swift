@@ -226,11 +226,13 @@ public enum HomeFeedViewData {
     showsContextLine: Bool,
     options: FeedItemRenderOptions
   ) -> FeedItemRenderOptions {
-    guard showsContextLine, let contextLine = contextLine(item, slice: slice) else {
-      return options
-    }
+    let line = showsContextLine ? contextLine(item, slice: slice) : nil
     return FeedItemRenderOptions(
-      now: options.now, locale: options.locale, contextLine: contextLine)
+      now: options.now,
+      locale: options.locale,
+      contextLine: line ?? options.contextLine,
+      isReposted: item.post.viewer?.repost != nil,
+      isLiked: item.post.viewer?.like != nil)
   }
 
   /// The reply context line for an item, or `nil` when the post is not a reply.

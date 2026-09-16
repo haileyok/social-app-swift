@@ -78,6 +78,8 @@ public struct PostFeedItem: View {
               replyCount: data.replyCount,
               repostCount: data.repostCount,
               likeCount: data.likeCount,
+              isReposted: data.isReposted,
+              isLiked: data.isLiked,
               onReply: onReply,
               onRepost: onRepost,
               onLike: onLike)
@@ -169,6 +171,8 @@ public struct EngagementRow: View {
   private let replyCount: String?
   private let repostCount: String?
   private let likeCount: String?
+  private let isReposted: Bool
+  private let isLiked: Bool
   private let onReply: (() -> Void)?
   private let onRepost: (() -> Void)?
   private let onLike: (() -> Void)?
@@ -179,6 +183,8 @@ public struct EngagementRow: View {
     replyCount: String?,
     repostCount: String?,
     likeCount: String?,
+    isReposted: Bool = false,
+    isLiked: Bool = false,
     onReply: (() -> Void)? = nil,
     onRepost: (() -> Void)? = nil,
     onLike: (() -> Void)? = nil
@@ -186,6 +192,8 @@ public struct EngagementRow: View {
     self.replyCount = replyCount
     self.repostCount = repostCount
     self.likeCount = likeCount
+    self.isReposted = isReposted
+    self.isLiked = isLiked
     self.onReply = onReply
     self.onRepost = onRepost
     self.onLike = onLike
@@ -196,9 +204,19 @@ public struct EngagementRow: View {
       EngagementButton(
         systemImage: "bubble.left", count: replyCount, label: "Reply", action: onReply)
       EngagementButton(
-        systemImage: "arrow.2.squarepath", count: repostCount, label: "Repost", action: onRepost)
+        systemImage: "arrow.2.squarepath",
+        count: repostCount,
+        label: "Repost",
+        isActive: isReposted,
+        activeColor: theme.colors.positive500,
+        action: onRepost)
       EngagementButton(
-        systemImage: "heart", count: likeCount, label: "Like", action: onLike)
+        systemImage: isLiked ? "heart.fill" : "heart",
+        count: likeCount,
+        label: "Like",
+        isActive: isLiked,
+        activeColor: theme.colors.like,
+        action: onLike)
       Spacer(minLength: 0)
     }
     .padding(.top, Spacing.xs)
@@ -210,14 +228,25 @@ public struct EngagementButton: View {
   private let systemImage: String
   private let count: String?
   private let label: String
+  private let isActive: Bool
+  private let activeColor: Color?
   private let action: (() -> Void)?
 
   @Environment(\.alfTheme) private var theme
 
-  public init(systemImage: String, count: String?, label: String, action: (() -> Void)?) {
+  public init(
+    systemImage: String,
+    count: String?,
+    label: String,
+    isActive: Bool = false,
+    activeColor: Color? = nil,
+    action: (() -> Void)?
+  ) {
     self.systemImage = systemImage
     self.count = count
     self.label = label
+    self.isActive = isActive
+    self.activeColor = activeColor
     self.action = action
   }
 
@@ -233,11 +262,12 @@ public struct EngagementButton: View {
             .font(TypeScale.xs.font())
         }
       }
-      .foregroundStyle(theme.atomColors.textContrastMedium)
+      .foregroundStyle(isActive ? (activeColor ?? theme.atomColors.textLink) : theme.atomColors.textContrastMedium)
     }
     .buttonStyle(.plain)
     .disabled(action == nil)
     .accessibilityLabel(count.map { "\(label), \($0)" } ?? label)
+    .accessibilityValue(isActive ? "On" : "Off")
   }
 }
 

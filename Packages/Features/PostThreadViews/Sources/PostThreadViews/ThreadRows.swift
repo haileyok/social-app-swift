@@ -174,6 +174,8 @@ struct ThreadAnchorPost: View {
           replyCount: nil,
           repostCount: nil,
           likeCount: nil,
+          isReposted: data.isReposted,
+          isLiked: data.isLiked,
           onReply: onReply,
           onRepost: onRepost,
           onLike: onLike)

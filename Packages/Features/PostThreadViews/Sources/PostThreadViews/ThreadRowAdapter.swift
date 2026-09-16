@@ -37,7 +37,12 @@ enum ThreadRowAdapter {
       PostModerationAdapter.subject(post),
       counts: counts,
       decision: decision,
-      options: FeedItemRenderOptions(now: now, locale: locale, contextLine: contextLine))
+      options: FeedItemRenderOptions(
+        now: now,
+        locale: locale,
+        contextLine: contextLine,
+        isReposted: post.viewer?.repost != nil,
+        isLiked: post.viewer?.like != nil))
   }
 
   /// The blended indent width for a row at `depth`, matching the RN thread's
