@@ -1,5 +1,8 @@
+import ATProtoClient
+import ComposerLogic
 import DesignSystem
 import DesignSystemCore
+import Foundation
 import SwiftUI
 
 // Re-exported so the app and its test targets reach `ComposerAccessibility` (and
@@ -106,6 +109,137 @@ public struct ComposerDebugSheet: View {
   /// The stored preference, falling back to `.system` for an unknown value.
   private var resolvedTheme: ThemePreference {
     ThemePreference(rawValue: themePreference) ?? .system
+  }
+}
+
+/// A hydrated target used to seed a reply composer.
+struct ComposerReplyTarget: Identifiable {
+  let parent: RecordReference
+  let root: RecordReference
+  let display: ComposerReplyContext
+
+  var id: String { parent.uri }
+}
+
+/// Production composer button backed by the signed-in account's PDS client.
+struct LiveComposerButton: View {
+  let clients: AppSessionClients
+  var replyTarget: ComposerReplyTarget?
+  var onPublished: () async -> Void = {}
+
+  @State private var isPresented = false
+
+  var body: some View {
+    Button {
+      isPresented = true
+    } label: {
+      Image(systemName: replyTarget == nil ? "square.and.pencil" : "arrowshape.turn.up.left")
+    }
+    .accessibilityLabel(replyTarget == nil ? "New post" : "Reply")
+    .sheet(isPresented: $isPresented) {
+      LiveComposerSheet(
+        clients: clients,
+        replyTarget: replyTarget,
+        onPublished: onPublished)
+    }
+  }
+}
+
+/// App-owned state and network host for a text post or reply.
+struct LiveComposerSheet: View {
+  let clients: AppSessionClients
+  let replyTarget: ComposerReplyTarget?
+  let onPublished: () async -> Void
+
+  @Environment(\.dismiss) private var dismiss
+  @State private var state: ComposerState
+  @State private var languages = LanguageSelection(languages: [])
+  @State private var phase: ComposerPublishPhase?
+
+  init(
+    clients: AppSessionClients,
+    replyTarget: ComposerReplyTarget?,
+    onPublished: @escaping () async -> Void
+  ) {
+    self.clients = clients
+    self.replyTarget = replyTarget
+    self.onPublished = onPublished
+    _state = State(
+      initialValue: ComposerReducer.createState(
+        ComposerInit(firstPostId: UUID().uuidString.lowercased())))
+  }
+
+  var body: some View {
+    NavigationStack {
+      ComposerScreen(
+        state: state,
+        replyContext: replyTarget?.display,
+        publishPhase: phase,
+        languages: languages,
+        onReduce: reduce,
+        onLanguagesChange: { languages = $0 },
+        onPublish: { Task { await publish() } },
+        onCancel: { dismiss() })
+        .navigationTitle(replyTarget == nil ? "New post" : "Reply")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+    .interactiveDismissDisabled(isPosting)
+  }
+
+  private var isPosting: Bool {
+    if case .posting = phase { return true }
+    return false
+  }
+
+  private func reduce(_ action: ComposerAction) {
+    // Multi-post publishing still needs local DAG-CBOR CID generation. Keep the
+    // production surface honest for now: text posts and replies are supported,
+    // while the add-post control is inert instead of publishing a broken chain.
+    if case .addPost = action { return }
+    state = ComposerReducer.reduce(state, action)
+  }
+
+  @MainActor
+  private func publish() async {
+    guard !isPosting, state.thread.posts.count == 1 else { return }
+    phase = .posting(detail: replyTarget == nil ? "Publishing post…" : "Publishing reply…")
+
+    do {
+      let post = state.thread.posts[0]
+      let rkey = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+      let inputs = PublishInputs(
+        thread: state.thread,
+        langs: languages.codes,
+        reply: replyTarget.map { ReplyContext(root: $0.root, parent: $0.parent) },
+        rkeys: [post.id: rkey],
+        did: clients.did)
+      let built = try ComposerRecordBuilder.build(inputs) { _ in
+        throw LiveComposerError.unexpectedCIDRequest
+      }
+      guard let record = built.first else { throw LiveComposerError.emptyPost }
+
+      _ = try await clients.pds.createRecord(
+        repo: clients.did,
+        collection: record.collection,
+        record: record.record.typed,
+        rkey: record.rkey)
+      await onPublished()
+      dismiss()
+    } catch {
+      phase = .failed(message: error.localizedDescription)
+    }
+  }
+}
+
+private enum LiveComposerError: LocalizedError {
+  case emptyPost
+  case unexpectedCIDRequest
+
+  var errorDescription: String? {
+    switch self {
+    case .emptyPost: "There is no post to publish."
+    case .unexpectedCIDRequest: "This post requires unsupported local CID generation."
+    }
   }
 }
 

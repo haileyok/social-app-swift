@@ -54,6 +54,45 @@ struct ComposerThreadAssemblyTests {
     #expect(records[1].record.reply?.root.uri.rawValue == root.uri)
   }
 
+  @Test("a single post does not require a locally computed CID")
+  func singlePostSkipsCIDProvider() throws {
+    let inputs = PublishInputs(
+      thread: Fixtures.thread(posts: [Fixtures.post(id: "p0", text: "one")]),
+      rkeys: ["p0": "k0"],
+      did: Fixtures.did,
+      createdAt: Fixtures.fixedDate)
+    var invocationCount = 0
+
+    let records = try ComposerRecordBuilder.build(inputs) { _ in
+      invocationCount += 1
+      return "unused"
+    }
+
+    #expect(records.count == 1)
+    #expect(invocationCount == 0)
+  }
+
+  @Test("a thread computes the first post CID for the second post parent")
+  func threadComputesParentCID() throws {
+    let inputs = PublishInputs(
+      thread: Fixtures.thread(posts: [
+        Fixtures.post(id: "p0", text: "one"),
+        Fixtures.post(id: "p1", text: "two"),
+      ]),
+      rkeys: ["p0": "k0", "p1": "k1"],
+      did: Fixtures.did,
+      createdAt: Fixtures.fixedDate)
+    var invocationCount = 0
+
+    let records = try ComposerRecordBuilder.build(inputs) { _ in
+      invocationCount += 1
+      return "bafy-parent"
+    }
+
+    #expect(invocationCount == 1)
+    #expect(records[1].record.reply?.parent.cid.rawValue == "bafy-parent")
+  }
+
   @Test("createdAt increments by one millisecond per post")
   func createdAtIncrements() throws {
     let inputs = PublishInputs(

@@ -1,4 +1,6 @@
 import ATProtoClient
+import ComposerLogic
+import ComposerViews
 import DesignSystem
 import Foundation
 import HomeFeedLogic
@@ -73,6 +75,7 @@ private struct ThreadRouteView: View {
   @Environment(ShellRouter.self) private var router
   @State private var thread: FlattenedThread?
   @State private var failed = false
+  @State private var showsReplyComposer = false
 
   var body: some View {
     Group {
@@ -80,7 +83,7 @@ private struct ThreadRouteView: View {
         PostThreadScreen(
           thread: thread,
           onOpen: { router.open($0) },
-          onReply: {})
+          onReply: { showsReplyComposer = true })
       } else if failed {
         RetryRow(message: "Could not load this post.", retry: { Task { await load() } })
       } else {
@@ -90,6 +93,39 @@ private struct ThreadRouteView: View {
     .navigationTitle("Post")
     .navigationBarTitleDisplayMode(.inline)
     .task { await load() }
+    .sheet(isPresented: $showsReplyComposer) {
+      if let clients = router.clients, let replyTarget {
+        LiveComposerSheet(
+          clients: clients,
+          replyTarget: replyTarget,
+          onPublished: { await load() })
+      }
+    }
+  }
+
+  private var replyTarget: ComposerReplyTarget? {
+    guard
+      let item = thread?.items.first(where: \.isAnchor),
+      case .post(let content) = item.content
+    else { return nil }
+
+    let parent = RecordReference(
+      uri: content.post.uri.rawValue,
+      cid: content.post.cid.rawValue)
+    let root: RecordReference
+    if let rootRef = content.record?.reply?.root {
+      root = RecordReference(uri: rootRef.uri.rawValue, cid: rootRef.cid.rawValue)
+    } else {
+      root = parent
+    }
+    let handle = content.post.author.handle.rawValue
+    return ComposerReplyTarget(
+      parent: parent,
+      root: root,
+      display: ComposerReplyContext(
+        displayName: content.post.author.displayName ?? handle,
+        handle: handle,
+        text: content.record?.text ?? ""))
   }
 
   private func load() async {

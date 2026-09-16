@@ -314,10 +314,13 @@ public enum ComposerRecordBuilder {
           threadgate: try threadgate(forPostAt: index, inputs: inputs, uri: uri, createdAt: now),
           postgate: try postgate(inputs: inputs, uri: uri, createdAt: now)))
 
-      // The next post replies to this one, rooted at the original root (or at
-      // this post when the thread is not itself a reply).
-      let ref = RecordReference(uri: uri, cid: try cidProvider(record))
-      replyContext = ReplyContext(root: replyContext?.root ?? ref, parent: ref)
+      // Only another post in this batch needs this record's CID for its parent
+      // reference. A single post/reply can publish without a local DAG-CBOR CID
+      // implementation because the PDS computes its CID during createRecord.
+      if index < inputs.thread.posts.count - 1 {
+        let ref = RecordReference(uri: uri, cid: try cidProvider(record))
+        replyContext = ReplyContext(root: replyContext?.root ?? ref, parent: ref)
+      }
     }
 
     return results

@@ -163,7 +163,13 @@ private struct HomeTabScreen: View {
     ThemePreference(rawValue: themePreferenceRaw) ?? .system
   }
 
+  @ToolbarContentBuilder
   private var toolbar: some ToolbarContent {
+    if let clients {
+      ToolbarItem(placement: .topBarTrailing) {
+        LiveComposerButton(clients: clients)
+      }
+    }
     ToolbarItem(placement: .topBarTrailing) {
       NavigationLink {
         TokenGallery(theme: theme)
