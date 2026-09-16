@@ -165,6 +165,9 @@ private struct HomeTabScreen: View {
 
   @ToolbarContentBuilder
   private var toolbar: some ToolbarContent {
+    ToolbarItem(placement: .topBarLeading) {
+      ShellAccountControl(session: session)
+    }
     if let clients {
       ToolbarItem(placement: .topBarTrailing) {
         LiveComposerButton(clients: clients)
@@ -357,6 +360,8 @@ private struct MessagesTabScreen: View {
         MessagesFixtureSurfaces.inboxScreen()
       }
     }
+    .navigationTitle(AppTab.messages.title)
+    .navigationBarTitleDisplayMode(.inline)
     .accessibilityIdentifier(ShellAccessibility.screen(AppTab.messages.routeName))
   }
 }
