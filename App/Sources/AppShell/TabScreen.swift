@@ -479,7 +479,7 @@ private struct ProfileTabScreen: View {
         LiveProfile(clients: clients)
       } else {
         // The demo path: the fixture profile the screenshot loop captures.
-        ProfileFixtureSurface()
+        ProfileFixtureSurface(embedsInNavigationStack: false)
       }
     }
     .navigationTitle(AppTab.profile.title)

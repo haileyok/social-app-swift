@@ -21,7 +21,16 @@ public struct ProfileFixtureSurface: View {
   @AppStorage("profileFixtureVariant") private var storedVariant = Variant.standard.rawValue
   @State private var selection: Variant = .standard
 
-  public init() {}
+  private let embedsInNavigationStack: Bool
+
+  /// Creates a fixture surface.
+  ///
+  /// Standalone captures own their navigation stack by default. Containers that
+  /// already own navigation, such as AppShell tabs, pass `false` so the fixture
+  /// cannot mask the container's title or navigation path.
+  public init(embedsInNavigationStack: Bool = true) {
+    self.embedsInNavigationStack = embedsInNavigationStack
+  }
 
   /// One reviewable profile variant.
   public enum Variant: String, CaseIterable, Sendable {
@@ -50,24 +59,15 @@ public struct ProfileFixtureSurface: View {
   }
 
   public var body: some View {
-    NavigationStack {
-      ProfileScreen(
-        headerData: headerData,
-        labeler: labelerData,
-        content: ProfileScreenContent(feedItems: feedItems),
-        onAction: { _ in })
-        .navigationTitle("Profile Views")
-        .background(theme.atomColors.bg)
-        .toolbar {
-          ToolbarItem(placement: .topBarTrailing) {
-            Picker("Variant", selection: $selection) {
-              ForEach(Variant.allCases, id: \.self) { variant in
-                Text(variant.title).tag(variant)
-              }
-            }
-            .pickerStyle(.menu)
-          }
+    Group {
+      if embedsInNavigationStack {
+        NavigationStack {
+          fixtureContent
+            .navigationTitle("Profile Views")
         }
+      } else {
+        fixtureContent
+      }
     }
     .onAppear {
       selection = Variant(rawValue: storedVariant) ?? .standard
@@ -75,6 +75,25 @@ public struct ProfileFixtureSurface: View {
     .onChange(of: selection) { _, value in
       storedVariant = value.rawValue
     }
+  }
+
+  private var fixtureContent: some View {
+    ProfileScreen(
+      headerData: headerData,
+      labeler: labelerData,
+      content: ProfileScreenContent(feedItems: feedItems),
+      onAction: { _ in })
+      .background(theme.atomColors.bg)
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Picker("Variant", selection: $selection) {
+            ForEach(Variant.allCases, id: \.self) { variant in
+              Text(variant.title).tag(variant)
+            }
+          }
+          .pickerStyle(.menu)
+        }
+      }
   }
 
   @Environment(\.alfTheme) private var theme
