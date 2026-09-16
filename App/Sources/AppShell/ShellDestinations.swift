@@ -83,7 +83,9 @@ private struct ThreadRouteView: View {
         PostThreadScreen(
           thread: thread,
           onOpen: { router.open($0) },
-          onReply: { content in replyTarget = makeReplyTarget(for: content) })
+          onReply: { content in replyTarget = makeReplyTarget(for: content) },
+          onLike: { content in Task { await toggleLike(content) } },
+          onRepost: { content in Task { await toggleRepost(content) } })
       } else if failed {
         RetryRow(message: "Could not load this post.", retry: { Task { await load() } })
       } else {
@@ -121,6 +123,52 @@ private struct ThreadRouteView: View {
         displayName: content.post.author.displayName ?? handle,
         handle: handle,
         text: content.record?.text ?? ""))
+  }
+
+  private func toggleLike(_ content: ThreadPostContent) async {
+    guard let clients = router.clients else { return }
+    do {
+      if let uri = content.post.viewer?.like?.rawValue, let rkey = recordKey(uri) {
+        _ = try await clients.pds.deleteRecord(
+          repo: clients.did, collection: App.Bsky.FeedLike.nsId, rkey: rkey)
+      } else {
+        _ = try await clients.pds.createRecord(
+          repo: clients.did,
+          collection: App.Bsky.FeedLike.nsId,
+          record: App.Bsky.FeedLike(
+            createdAt: FormatString<Date>(rawValue: ISO8601DateFormatter().string(from: Date())),
+            subject: strongRef(content)))
+      }
+      await load()
+    } catch {}
+  }
+
+  private func toggleRepost(_ content: ThreadPostContent) async {
+    guard let clients = router.clients else { return }
+    do {
+      if let uri = content.post.viewer?.repost?.rawValue, let rkey = recordKey(uri) {
+        _ = try await clients.pds.deleteRecord(
+          repo: clients.did, collection: App.Bsky.FeedRepost.nsId, rkey: rkey)
+      } else {
+        _ = try await clients.pds.createRecord(
+          repo: clients.did,
+          collection: App.Bsky.FeedRepost.nsId,
+          record: App.Bsky.FeedRepost(
+            createdAt: FormatString<Date>(rawValue: ISO8601DateFormatter().string(from: Date())),
+            subject: strongRef(content)))
+      }
+      await load()
+    } catch {}
+  }
+
+  private func strongRef(_ content: ThreadPostContent) -> Com.Atproto.RepoStrongRef {
+    Com.Atproto.RepoStrongRef(
+      cid: FormatString<LexLink>(rawValue: content.post.cid.rawValue),
+      uri: FormatString<ATURI>(rawValue: content.post.uri.rawValue))
+  }
+
+  private func recordKey(_ uri: String) -> String? {
+    uri.split(separator: "/").last.map(String.init)
   }
 
   private func load() async {

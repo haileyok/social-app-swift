@@ -18,6 +18,8 @@ struct ThreadRow: View {
   let onShowMoreReplies: (ThreadItem) -> Void
   let onOpen: (RichTextTarget) -> Void
   let onReply: (ThreadPostContent) -> Void
+  let onLike: (ThreadPostContent) -> Void
+  let onRepost: (ThreadPostContent) -> Void
 
   @Environment(\.alfTheme) private var theme
 
@@ -39,7 +41,9 @@ struct ThreadRow: View {
         locale: locale,
         strings: strings,
         onOpen: onOpen,
-        onReply: onReply)
+        onReply: onReply,
+        onLike: onLike,
+        onRepost: onRepost)
     case .tombstone(let tombstone):
       ThreadTombstoneRow(tombstone: tombstone, strings: strings)
     case .readMore(let readMore):
@@ -60,6 +64,8 @@ struct ThreadPostRow: View {
   let strings: PostThreadStrings
   let onOpen: (RichTextTarget) -> Void
   let onReply: (ThreadPostContent) -> Void
+  let onLike: (ThreadPostContent) -> Void
+  let onRepost: (ThreadPostContent) -> Void
 
   @Environment(\.alfTheme) private var theme
 
@@ -70,7 +76,9 @@ struct ThreadPostRow: View {
     locale: Locale,
     strings: PostThreadStrings,
     onOpen: @escaping (RichTextTarget) -> Void,
-    onReply: @escaping (ThreadPostContent) -> Void
+    onReply: @escaping (ThreadPostContent) -> Void,
+    onLike: @escaping (ThreadPostContent) -> Void,
+    onRepost: @escaping (ThreadPostContent) -> Void
   ) {
     self.item = item
     self.content = content
@@ -79,6 +87,8 @@ struct ThreadPostRow: View {
     self.strings = strings
     self.onOpen = onOpen
     self.onReply = onReply
+    self.onLike = onLike
+    self.onRepost = onRepost
   }
 
   var body: some View {
@@ -91,7 +101,9 @@ struct ThreadPostRow: View {
       PostFeedItem(
         data: data,
         onOpen: onOpen,
-        onReply: content.replyDisabled ? nil : { onReply(content) })
+        onReply: content.replyDisabled ? nil : { onReply(content) },
+        onRepost: { onRepost(content) },
+        onLike: { onLike(content) })
 
       if item.isAnchor {
         anchorDetails

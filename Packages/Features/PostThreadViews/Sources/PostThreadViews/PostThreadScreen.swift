@@ -24,6 +24,8 @@ public struct PostThreadScreen: View {
   private let locale: Locale
   private let onOpen: (RichTextTarget) -> Void
   private let onReply: (ThreadPostContent) -> Void
+  private let onLike: (ThreadPostContent) -> Void
+  private let onRepost: (ThreadPostContent) -> Void
 
   /// The window the caller handed us, and the one the UI widens. Local state so
   /// a "load more" tap is immediate; the parent's value is the starting point.
@@ -37,7 +39,9 @@ public struct PostThreadScreen: View {
     now: Date = Date(),
     locale: Locale = Locale(identifier: "en_US"),
     onOpen: @escaping (RichTextTarget) -> Void = { _ in },
-    onReply: @escaping (ThreadPostContent) -> Void = { _ in }
+    onReply: @escaping (ThreadPostContent) -> Void = { _ in },
+    onLike: @escaping (ThreadPostContent) -> Void = { _ in },
+    onRepost: @escaping (ThreadPostContent) -> Void = { _ in }
   ) {
     self.window = ThreadWindow(thread: thread, showMore: showMore)
     self.strings = strings
@@ -45,6 +49,8 @@ public struct PostThreadScreen: View {
     self.locale = locale
     self.onOpen = onOpen
     self.onReply = onReply
+    self.onLike = onLike
+    self.onRepost = onRepost
     _current = State(initialValue: ThreadWindow(thread: thread, showMore: showMore))
   }
 
@@ -64,7 +70,9 @@ public struct PostThreadScreen: View {
             locale: locale,
             onShowMoreReplies: handleShowMore,
             onOpen: onOpen,
-            onReply: onReply)
+            onReply: onReply,
+            onLike: onLike,
+            onRepost: onRepost)
 
           if item.isAnchor, case .post(let content) = item.content, !content.replyDisabled {
             ThreadComposerRow(strings: strings, onTap: { onReply(content) })
