@@ -117,7 +117,7 @@ public struct NotificationsScreen: View {
     } else {
       NotificationSentenceRow(
         row: row,
-        onOpenAuthor: { handle in onOpen(.profile(handle)) })
+        onOpenAuthor: { handle in onOpen(.profile(did: handle)) })
     }
   }
 
