@@ -30,6 +30,11 @@ public final class InboxViewModel {
   public let currentAccountDid: String?
 
   private var hasLoaded = false
+  private let logSync: LogSync
+  private let inboxReducer: InboxReducer
+
+  /// RN requests the fast Messages-screen cadence while the inbox is visible.
+  public static let syncInterval: Duration = .seconds(10)
 
   /// Creates an adapter over an inbox query.
   ///
@@ -39,6 +44,10 @@ public final class InboxViewModel {
   public init(inbox: InboxQuery, currentAccountDid: String?) {
     self.inbox = inbox
     self.currentAccountDid = currentAccountDid
+    self.logSync = LogSync(client: inbox.client)
+    self.inboxReducer = InboxReducer(
+      store: inbox.store,
+      currentAccountDid: currentAccountDid)
   }
 
   /// Loads the first page if it has not been loaded yet.
@@ -46,6 +55,41 @@ public final class InboxViewModel {
     guard !hasLoaded else { return }
     hasLoaded = true
     await load()
+  }
+
+  /// Loads the inbox, seeds chat-log position, then applies incremental events
+  /// while this screen task remains active. Cancellation stops the loop when the
+  /// tab disappears; failures retain the cursor and retry on the next cadence.
+  public func runVisibleSync() async {
+    await loadIfNeeded()
+    do {
+      _ = try await logSync.initialize()
+    } catch {
+      // An unseeded sync retries initialization below without hiding the inbox.
+    }
+
+    while !Task.isCancelled {
+      do {
+        try await Task.sleep(for: Self.syncInterval)
+      } catch {
+        return
+      }
+      guard !Task.isCancelled else { return }
+
+      do {
+        let batch = try await logSync.recover()
+        guard batch.hasNewEvents else { continue }
+        let needsRefetch = await inboxReducer.apply(batch.events)
+        if needsRefetch {
+          await inboxReducer.clearRefetch()
+          await refresh()
+        } else {
+          await reloadFromCache()
+        }
+      } catch {
+        // Cursor state is preserved by LogSync; the next tick resumes safely.
+      }
+    }
   }
 
   /// Loads the first page, replacing the rendered list.

@@ -52,7 +52,7 @@ public struct InboxScreen: View {
     }
     .background(theme.atomColors.bg)
     .accessibilityIdentifier(MessagesAccessibility.inbox)
-    .task { await viewModel.loadIfNeeded() }
+    .task { await viewModel.runVisibleSync() }
   }
 
   private var list: some View {
