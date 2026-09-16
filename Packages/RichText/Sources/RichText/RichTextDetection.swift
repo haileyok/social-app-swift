@@ -159,7 +159,8 @@ private func detectMentions(_ string: NSString, _ text: UnicodeString, _ facets:
     guard let handle = match.group(3, in: string) else { continue }
     // Anything outside the TLD list is probably not a handle; ".test" is
     // accepted explicitly for development and tests.
-    guard isValidDomain(handle) || handle.hasSuffix(".test") else { continue }
+    let normalizedHandle = handle.lowercased()
+    guard isValidDomain(normalizedHandle) || normalizedHandle.hasSuffix(".test") else { continue }
     let leading = match.group(1, in: string) ?? ""
     // The match absorbs the separator before the "@", so the facet starts at the
     // "@" itself: match start + separator length. (The original re-finds the
