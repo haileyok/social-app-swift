@@ -182,6 +182,7 @@ public struct XrpcClient: Sendable {
       }
     }
     let decoder = JSONDecoder()
+    decoder.dataDecodingStrategy = .xrpc
     // Appview responses can contain historical records that predate or exceed
     // current authoring constraints. They remain valid display data; strict
     // validation is reserved for records created by this client.

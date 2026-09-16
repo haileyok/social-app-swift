@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 import Lexicons
+import SwiftAtproto
 @testable import ATProtoClient
 
 /// A transport that plays a scripted sequence of responses, recording every
@@ -131,7 +132,7 @@ final class ScriptedTransport: HTTPTransport, @unchecked Sendable {
       "description": "A historical external card",
       "thumb": {
         "$type": "blob",
-        "ref": "bafyreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdbejg4lf4hwbpf3cli",
+        "ref": {"$link": "bafyreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdbejg4lf4hwbpf3cli"},
         "mimeType": "image/jpeg",
         "size": 1000001
       },
@@ -155,7 +156,9 @@ final class ScriptedTransport: HTTPTransport, @unchecked Sendable {
 
   @Test func standaloneDecodingStillEnforcesAuthoringLimit() {
     #expect(throws: DecodingError.self) {
-      try JSONDecoder().decode(
+      let decoder = JSONDecoder()
+      decoder.dataDecodingStrategy = .xrpc
+      try decoder.decode(
         App.Bsky.EmbedExternal.self,
         from: Data(oversizedExternal.utf8))
     }

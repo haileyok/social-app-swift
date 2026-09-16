@@ -23,6 +23,11 @@ let package = Package(
       ]),
     .testTarget(
       name: "ATProtoClientTests",
-      dependencies: ["ATProtoClient", "Lexicons", "Persistence"]),
+      dependencies: [
+        "ATProtoClient",
+        "Lexicons",
+        "Persistence",
+        .product(name: "SwiftAtproto", package: "swift-atproto"),
+      ]),
   ]
 )
