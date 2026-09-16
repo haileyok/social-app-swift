@@ -5,6 +5,7 @@ import DesignTokens
 import Moderation
 import SwiftUI
 import UIComponents
+import UIKit
 import UIComponentsCore
 
 /// One attached image, with its alt-text field and its remove control.
@@ -55,21 +56,26 @@ struct ComposerImageAttachRow: View {
     .accessibilityIdentifier(ComposerAccessibility.imageRow(image.id))
   }
 
-  /// The thumbnail.
-  ///
-  /// Attached media is a local file (`image.sourcePath`), not a remote URL; the
-  /// composer has no local-file image loader yet, so this is the themed
-  /// placeholder the RN composer shows while a picked image decodes, and it
-  /// reports the image's own aspect ratio.
+  /// The local thumbnail, falling back to a themed placeholder when decoding fails.
+  @ViewBuilder
   private var thumbnail: some View {
-    RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
-      .fill(theme.atomColors.bgContrast100)
-      .frame(width: 56, height: 56 * aspectRatio)
-      .overlay {
-        Image(systemName: "photo")
-          .foregroundStyle(theme.atomColors.textContrastLow)
-      }
-      .accessibilityLabel(image.alt.isEmpty ? "Image without a description" : image.alt)
+    if let platformImage = UIImage(contentsOfFile: image.sourcePath) {
+      Image(uiImage: platformImage)
+        .resizable()
+        .scaledToFill()
+        .frame(width: 72, height: 72)
+        .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
+        .accessibilityLabel(image.alt.isEmpty ? "Image without a description" : image.alt)
+    } else {
+      RoundedRectangle(cornerRadius: Radius.sm, style: .continuous)
+        .fill(theme.atomColors.bgContrast100)
+        .frame(width: 72, height: 72 * aspectRatio)
+        .overlay {
+          Image(systemName: "photo")
+            .foregroundStyle(theme.atomColors.textContrastLow)
+        }
+        .accessibilityLabel(image.alt.isEmpty ? "Image without a description" : image.alt)
+    }
   }
 
   /// The image's height/width ratio, clamped so a panorama cannot blow up the row.

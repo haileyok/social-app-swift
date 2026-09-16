@@ -5,6 +5,7 @@ import DesignSystemCore
 import Foundation
 import Lexicons
 import RichText
+import SwiftAtproto
 import SwiftUI
 
 // Re-exported so the app and its test targets reach `ComposerAccessibility` (and
@@ -222,11 +223,13 @@ struct LiveComposerSheet: View {
       let post = state.thread.posts[0]
       let rkey = UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
       let resolvedMentions = await resolveMentions(in: post.richText)
+      let resolvedMedia = try await resolveMedia(for: post)
       let inputs = PublishInputs(
         thread: state.thread,
         langs: languages.codes,
         reply: replyTarget.map { ReplyContext(root: $0.root, parent: $0.parent) },
         resolvedMentions: resolvedMentions,
+        media: resolvedMedia.map { [post.id: $0] } ?? [:],
         rkeys: [post.id: rkey],
         did: clients.did)
       let built = try ComposerRecordBuilder.build(inputs) { _ in
@@ -242,6 +245,36 @@ struct LiveComposerSheet: View {
       dismiss()
     } catch {
       phase = .failed(message: error.localizedDescription)
+    }
+  }
+
+  private func resolveMedia(for post: PostDraft) async throws -> ResolvedEmbedMedia? {
+    guard case .images(let media) = post.embed.media else { return nil }
+    var resolved: [ResolvedImage] = []
+    for image in media.images {
+      let data = try Data(contentsOf: URL(fileURLWithPath: image.sourcePath))
+      let uploaded = try await clients.pds.uploadBlob(data, mimeType: image.mime)
+      guard let link = uploaded.blob.ref?.link else { throw LiveComposerError.invalidBlobResponse }
+      let blobJSON: [String: Any] = [
+        "$type": "blob",
+        "ref": ["$link": link],
+        "mimeType": uploaded.blob.mimeType ?? image.mime,
+        "size": uploaded.blob.size ?? data.count,
+      ]
+      let blobData = try JSONSerialization.data(withJSONObject: blobJSON)
+      let blob = try JSONDecoder().decode(LexBlob.self, from: blobData)
+      resolved.append(
+        ResolvedImage(
+          blob: blob,
+          alt: image.alt,
+          width: image.width,
+          height: image.height))
+    }
+    switch ImagesMedia.variant(for: media.images) {
+    case .images:
+      return .images(resolved)
+    case .gallery:
+      return .gallery(resolved)
     }
   }
 
@@ -327,11 +360,13 @@ private struct IgnoreApplyWritesOutput: Decodable {
 
 private enum LiveComposerError: LocalizedError {
   case emptyPost
+  case invalidBlobResponse
   case unexpectedCIDRequest
 
   var errorDescription: String? {
     switch self {
     case .emptyPost: "There is no post to publish."
+    case .invalidBlobResponse: "The server did not return a valid image reference."
     case .unexpectedCIDRequest: "This post requires unsupported local CID generation."
     }
   }

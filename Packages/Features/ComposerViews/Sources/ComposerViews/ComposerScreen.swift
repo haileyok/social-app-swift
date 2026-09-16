@@ -4,8 +4,11 @@ import DesignSystem
 import DesignSystemCore
 import DesignTokens
 import Lexicons
+import PhotosUI
 import SwiftUI
 import UIComponents
+import UIKit
+import UniformTypeIdentifiers
 import UIComponentsCore
 
 /// The composer screen.
@@ -65,6 +68,7 @@ public struct ComposerScreen: View {
   @State private var isLabelsPresented = false
   @State private var isThreadgatePresented = false
   @State private var isDraftsPresented = false
+  @State private var pickedPhotos: [PhotosPickerItem] = []
   @FocusState private var isEditorFocused: Bool
   @Environment(\.alfTheme) private var theme
 
@@ -282,19 +286,25 @@ public struct ComposerScreen: View {
         .foregroundStyle(theme.colors.primary500)
         .accessibilityIdentifier(ComposerAccessibility.cancelButton)
 
-      // Media attach is a picker the host owns `onReduce` has no case for
-      // (images arrive as a `.updatePost(..., .addImages(...))` action once
-      // picked). The control is present so the layout matches the RN composer;
-      // it becomes live when the host injects its picker.
-      AlfIconButton(
-        systemImage: "photo.on.rectangle",
-        label: ComposerCopy.addMediaAction,
-        color: .secondary,
-        size: .small,
-        shape: .round,
-        action: {}
-      )
+      PhotosPicker(
+        selection: $pickedPhotos,
+        maxSelectionCount: max(1, remainingImageCapacity),
+        matching: .images
+      ) {
+        Image(systemName: "photo.on.rectangle")
+          .font(.system(size: 18, weight: .semibold))
+          .foregroundStyle(theme.colors.primary500)
+          .frame(width: 36, height: 36)
+          .background(theme.colors.primary50)
+          .clipShape(Circle())
+      }
+      .disabled(!canAttachImages)
+      .accessibilityLabel(ComposerCopy.addMediaAction)
       .accessibilityIdentifier(ComposerAccessibility.addMediaButton)
+      .onChange(of: pickedPhotos) { _, items in
+        guard !items.isEmpty else { return }
+        Task { await importPhotos(items) }
+      }
 
       AlfIconButton(
         systemImage: "plus.circle",
@@ -337,6 +347,48 @@ public struct ComposerScreen: View {
         .fill(theme.atomColors.borderContrastLow)
         .frame(height: 1)
     }
+  }
+
+  // MARK: - Photo import
+
+  private var remainingImageCapacity: Int {
+    max(0, ComposerConstants.maxGalleryImages - (activePost.embed.media?.images?.count ?? 0))
+  }
+
+  private var canAttachImages: Bool {
+    remainingImageCapacity > 0
+      && (activePost.embed.media == nil || activePost.embed.media?.images != nil)
+  }
+
+  @MainActor
+  private func importPhotos(_ items: [PhotosPickerItem]) async {
+    defer { pickedPhotos = [] }
+    var images: [ComposerImage] = []
+    for item in items.prefix(remainingImageCapacity) {
+      guard let data = try? await item.loadTransferable(type: Data.self),
+        let platformImage = UIImage(data: data)
+      else { continue }
+      let contentType = item.supportedContentTypes.first ?? .jpeg
+      let mime = contentType.preferredMIMEType ?? "image/jpeg"
+      let ext = contentType.preferredFilenameExtension ?? "jpg"
+      let id = UUID().uuidString.lowercased()
+      let url = FileManager.default.temporaryDirectory
+        .appendingPathComponent("composer-\(id).\(ext)")
+      do {
+        try data.write(to: url, options: .atomic)
+        images.append(
+          ComposerImage(
+            id: id,
+            path: url.path,
+            width: platformImage.size.width * platformImage.scale,
+            height: platformImage.size.height * platformImage.scale,
+            mime: mime))
+      } catch {
+        continue
+      }
+    }
+    guard !images.isEmpty else { return }
+    onReduce(.updatePost(postId: activePost.id, action: .addImages(images)))
   }
 
   // MARK: - Derivations from the logic layer
