@@ -44,10 +44,7 @@ public enum PostModerationAdapter {
     case .embedVideoView:
       return .unknown(type: "app.bsky.embed.video#view")
     case .embedRecordView(let view):
-      guard let decoded: Moderation.EmbedRecordView = decode(view) else {
-        return .unknown(type: "app.bsky.embed.record#view")
-      }
-      return .record(decoded)
+      return .record(recordView(view))
     case .embedRecordWithMediaView(let view):
       guard let decoded: Moderation.EmbedRecordWithMediaView = decode(view) else {
         return .unknown(type: "app.bsky.embed.recordWithMedia#view")
@@ -56,6 +53,40 @@ public enum PostModerationAdapter {
     case ._other(let record):
       return .unknown(type: record.type)
     }
+  }
+
+  static func recordView(_ view: App.Bsky.EmbedRecord_View) -> Moderation.EmbedRecordView {
+    let bridgedRecord: Moderation.EmbedRecordViewUnion
+    switch view.record {
+    case .embedRecordViewRecord(let quoted):
+      bridgedRecord = .viewRecord(
+        Moderation.EmbedViewRecord(
+          uri: quoted.uri.rawValue,
+          cid: quoted.cid.rawValue,
+          author: author(quoted.author),
+          value: record(quoted.value),
+          labels: quoted.labels?.map(label),
+          indexedAt: quoted.indexedAt.rawValue))
+    case .embedRecordViewBlocked(let blocked):
+      bridgedRecord = .viewBlocked(
+        Moderation.EmbedViewBlocked(
+          uri: blocked.uri.rawValue,
+          blocked: blocked.blocked,
+          author: nil))
+    case .embedRecordViewNotFound, .embedRecordViewDetached:
+      bridgedRecord = .viewNotFound
+    case .feedDefsGeneratorView:
+      bridgedRecord = .unknown(type: "app.bsky.feed.defs#generatorView")
+    case .graphDefsListView:
+      bridgedRecord = .unknown(type: "app.bsky.graph.defs#listView")
+    case .labelerDefsLabelerView:
+      bridgedRecord = .unknown(type: "app.bsky.labeler.defs#labelerView")
+    case .graphDefsStarterPackViewBasic:
+      bridgedRecord = .unknown(type: "app.bsky.graph.defs#starterPackViewBasic")
+    case ._other(let unknown):
+      bridgedRecord = .unknown(type: unknown.type)
+    }
+    return Moderation.EmbedRecordView(record: bridgedRecord)
   }
 
   static func image(_ image: App.Bsky.EmbedImages_ViewImage) -> Moderation.EmbedImage {

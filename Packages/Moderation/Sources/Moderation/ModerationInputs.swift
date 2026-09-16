@@ -326,6 +326,22 @@ public struct EmbedViewRecord: Sendable, Codable, Hashable {
   public var value: FeedPostRecord?
   public var labels: [Label]?
   public var indexedAt: String?
+
+  public init(
+    uri: String? = nil,
+    cid: String? = nil,
+    author: ProfileViewBasic? = nil,
+    value: FeedPostRecord? = nil,
+    labels: [Label]? = nil,
+    indexedAt: String? = nil
+  ) {
+    self.uri = uri
+    self.cid = cid
+    self.author = author
+    self.value = value
+    self.labels = labels
+    self.indexedAt = indexedAt
+  }
 }
 
 /// `app.bsky.embed.record#viewBlocked`
@@ -333,6 +349,12 @@ public struct EmbedViewBlocked: Sendable, Codable, Hashable {
   public var uri: String?
   public var blocked: Bool?
   public var author: ProfileViewBasic?
+
+  public init(uri: String? = nil, blocked: Bool? = nil, author: ProfileViewBasic? = nil) {
+    self.uri = uri
+    self.blocked = blocked
+    self.author = author
+  }
 }
 
 /// A raw (non-view) post embed on a post record: `app.bsky.embed.*` main types.
@@ -520,6 +542,10 @@ public enum PostViewEmbed: Sendable, Codable, Hashable {
 /// `app.bsky.embed.record#view`
 public struct EmbedRecordView: Sendable, Codable, Hashable {
   public var record: EmbedRecordViewUnion?
+
+  public init(record: EmbedRecordViewUnion? = nil) {
+    self.record = record
+  }
 }
 
 /// The `media` field of an `app.bsky.embed.recordWithMedia#view`.
