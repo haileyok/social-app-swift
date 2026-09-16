@@ -603,7 +603,7 @@ private struct ActivitySubscriptionsScreen: View {
               .lineLimit(1)
             Text("@\(profile.handle.rawValue)")
               .font(TypeScale.sm.font())
-              .foregroundStyle(theme.atomColors.textSecondary)
+              .foregroundStyle(theme.atomColors.textContrastMedium)
               .lineLimit(1)
           }
           Spacer(minLength: 0)
