@@ -9,14 +9,20 @@ let package = Package(
   ],
   dependencies: [
     .package(path: "../ATSyntax"),
+    .package(path: "../Lexicons"),
     .package(path: "../Persistence"),
+    .package(path: "../../tools/lexicon-codegen/swift-atproto"),
   ],
   targets: [
     .target(
       name: "ATProtoClient",
-      dependencies: ["ATSyntax", "Persistence"]),
+      dependencies: [
+        "ATSyntax",
+        "Persistence",
+        .product(name: "SwiftAtproto", package: "swift-atproto"),
+      ]),
     .testTarget(
       name: "ATProtoClientTests",
-      dependencies: ["ATProtoClient", "Persistence"]),
+      dependencies: ["ATProtoClient", "Lexicons", "Persistence"]),
   ]
 )

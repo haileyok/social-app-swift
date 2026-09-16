@@ -1,4 +1,5 @@
 import Foundation
+import SwiftAtproto
 
 /// XRPC client: GET with query params + POST procedures, JSON bodies, typed
 /// errors, proxy/labeler header emission.
@@ -180,7 +181,12 @@ public struct XrpcClient: Sendable {
         return fromObject
       }
     }
-    return try JSONDecoder().decode(Output.self, from: response.body)
+    let decoder = JSONDecoder()
+    // Appview responses can contain historical records that predate or exceed
+    // current authoring constraints. They remain valid display data; strict
+    // validation is reserved for records created by this client.
+    decoder.userInfo[.atprotoLexiconDecodingMode] = LexiconDecodingMode.permissive
+    return try decoder.decode(Output.self, from: response.body)
   }
 
   /// Sentinel used when a body-less output is acceptable.

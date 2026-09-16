@@ -1,5 +1,6 @@
 import Testing
 import Foundation
+import Lexicons
 @testable import ATProtoClient
 
 /// A transport that plays a scripted sequence of responses, recording every
@@ -120,6 +121,44 @@ final class ScriptedTransport: HTTPTransport, @unchecked Sendable {
     #expect(
       client.url(method: "com.atproto.server.getSession")
         == "https://pds.example/xrpc/com.atproto.server.getSession")
+  }
+}
+
+@Suite struct XrpcResponseDecodingTests {
+  private let oversizedExternal = """
+  {
+    "external": {
+      "description": "A historical external card",
+      "thumb": {
+        "$type": "blob",
+        "ref": {"$link": "bafyreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdbejg4lf4hwbpf3cli"},
+        "mimeType": "image/jpeg",
+        "size": 1000001
+      },
+      "title": "External card",
+      "uri": "https://example.com/article"
+    }
+  }
+  """
+
+  @Test func acceptsHistoricalBlobOverCurrentAuthoringLimit() throws {
+    let response = HTTPResponse(
+      status: 200,
+      headers: ["Content-Type": "application/json"],
+      body: Data(oversizedExternal.utf8))
+
+    let decoded: App.Bsky.EmbedExternal = try XrpcClient.decode(response)
+
+    #expect(decoded.external.thumb?.size == 1_000_001)
+    #expect(decoded.external.title == "External card")
+  }
+
+  @Test func standaloneDecodingStillEnforcesAuthoringLimit() {
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(
+        App.Bsky.EmbedExternal.self,
+        from: Data(oversizedExternal.utf8))
+    }
   }
 }
 
