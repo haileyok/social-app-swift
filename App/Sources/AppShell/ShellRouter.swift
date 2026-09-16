@@ -1,4 +1,5 @@
 import SwiftUI
+import Lexicons
 import UIComponents
 
 /**
@@ -37,7 +38,10 @@ final class ShellRouter {
     /** A committed search (trending topics arrive here). */
     case search(query: String)
     /** A chat conversation, by convo id. */
-    case conversation(convoId: String)
+    case conversation(
+      convoId: String,
+      convo: Chat.Bsky.ConvoDefs_ConvoView
+    )
   }
 
   /// The tab whose stack receives ``open(_:)`` pushes; kept in sync by the

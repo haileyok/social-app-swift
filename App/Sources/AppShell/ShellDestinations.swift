@@ -63,8 +63,8 @@ struct ShellDestinationView: View {
       StarterPackRouteView(uri: uri, name: name)
     case .search(let query):
       SearchRouteView(query: query)
-    case .conversation(let convoId):
-      ConversationRouteView(convoId: convoId)
+    case .conversation(let convoId, let convo):
+      ConversationRouteView(convoId: convoId, convo: convo)
     }
   }
 }
@@ -496,6 +496,7 @@ private struct SearchRouteView: View {
 /** A pushed chat conversation. */
 private struct ConversationRouteView: View {
   let convoId: String
+  let convo: Chat.Bsky.ConvoDefs_ConvoView
 
   @Environment(ShellRouter.self) private var router
 
@@ -507,7 +508,8 @@ private struct ConversationRouteView: View {
             model: ConversationModel(
               convoId: convoId,
               client: LiveChatXrpc(client: clients.chat),
-              senderDid: clients.did),
+              senderDid: clients.did,
+              convo: convo),
             currentAccountDid: clients.did),
           showsBackButton: false)
       } else {

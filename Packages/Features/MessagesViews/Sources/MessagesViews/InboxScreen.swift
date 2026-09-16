@@ -16,14 +16,17 @@ public struct InboxScreen: View {
 
   @State private var viewModel: InboxViewModel
 
-  private let onSelect: (String) -> Void
+  private let onSelect: (Chat.Bsky.ConvoDefs_ConvoView) -> Void
 
   /// Creates the inbox screen.
   ///
   /// - Parameters:
   ///   - viewModel: the adapter over ``InboxQuery``.
   ///   - onSelect: invoked with a conversation id when a row is tapped.
-  public init(viewModel: InboxViewModel, onSelect: @escaping (String) -> Void) {
+  public init(
+    viewModel: InboxViewModel,
+    onSelect: @escaping (Chat.Bsky.ConvoDefs_ConvoView) -> Void
+  ) {
     _viewModel = State(initialValue: viewModel)
     self.onSelect = onSelect
   }
@@ -58,7 +61,7 @@ public struct InboxScreen: View {
         ForEach(viewModel.convos, id: \.id) { convo in
           let row = InboxRow.make(convo, currentAccountDid: viewModel.currentAccountDid)
           Button {
-            onSelect(convo.id)
+            onSelect(convo)
           } label: {
             InboxRowView(row: row)
           }

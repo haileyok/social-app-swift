@@ -355,7 +355,9 @@ private struct MessagesTabScreen: View {
               client: LiveChatXrpc(client: clients.chat),
               scope: clients.did),
             currentAccountDid: clients.did),
-          onSelect: { router.open(.conversation(convoId: $0)) })
+          onSelect: { convo in
+            router.open(.conversation(convoId: convo.id, convo: convo))
+          })
       } else {
         // The demo path: the scripted fixture inbox the screenshot loop
         // captures.
