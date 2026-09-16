@@ -598,11 +598,11 @@ private struct ActivitySubscriptionsScreen: View {
             size: .md)
           VStack(alignment: .leading, spacing: Spacing.xs) {
             Text(profile.displayName ?? profile.handle.rawValue)
-              .font(TypeScale.body.weight(.semibold))
+              .font(TypeScale.md.font(weight: Scales.FontWeight.semiBold))
               .foregroundStyle(theme.atomColors.text)
               .lineLimit(1)
             Text("@\(profile.handle.rawValue)")
-              .font(TypeScale.caption)
+              .font(TypeScale.sm.font())
               .foregroundStyle(theme.atomColors.textSecondary)
               .lineLimit(1)
           }
