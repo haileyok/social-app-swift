@@ -3,6 +3,7 @@ import ComposerLogic
 import DesignSystem
 import DesignSystemCore
 import Foundation
+import Lexicons
 import RichText
 import SwiftUI
 
@@ -233,25 +234,10 @@ struct LiveComposerSheet: View {
       }
       guard let record = built.first else { throw LiveComposerError.emptyPost }
 
-      _ = try await clients.pds.createRecord(
-        repo: clients.did,
-        collection: record.collection,
-        record: record.record.typed,
-        rkey: record.rkey)
-      if let threadgate = record.threadgate {
-        _ = try await clients.pds.createRecord(
-          repo: clients.did,
-          collection: ComposerGates.threadgateCollection,
-          record: threadgate.typed,
-          rkey: record.rkey)
-      }
-      if let postgate = record.postgate {
-        _ = try await clients.pds.createRecord(
-          repo: clients.did,
-          collection: ComposerGates.postgateCollection,
-          record: postgate.typed,
-          rkey: record.rkey)
-      }
+      let writes = ComposerRecordBuilder.writes(from: [record]).map(ComposerApplyWrite.init)
+      let _: IgnoreApplyWritesOutput = try await clients.pds.procedure(
+        "com.atproto.repo.applyWrites",
+        body: ComposerApplyWritesBody(repo: clients.did, writes: writes, validate: true))
       await onPublished()
       dismiss()
     } catch {
@@ -280,6 +266,63 @@ struct LiveComposerSheet: View {
 
 private struct ResolveHandleOutput: Decodable {
   let did: String
+}
+
+/// One atomic repo transaction, matching RN's composer `applyWrites` request.
+private struct ComposerApplyWritesBody: Encodable, Sendable {
+  let repo: String
+  let writes: [ComposerApplyWrite]
+  let validate: Bool
+}
+
+private enum ComposerApplyWrite: Encodable, Sendable {
+  case post(collection: String, rkey: String, value: App.Bsky.FeedPost)
+  case threadgate(collection: String, rkey: String, value: App.Bsky.FeedThreadgate)
+  case postgate(collection: String, rkey: String, value: App.Bsky.FeedPostgate)
+
+  init(_ write: ComposerWrite) {
+    switch write {
+    case .create(let collection, let rkey, let value):
+      self = .post(collection: collection, rkey: rkey, value: value)
+    case .createThreadgate(let collection, let rkey, let value):
+      self = .threadgate(collection: collection, rkey: rkey, value: value)
+    case .createPostgate(let collection, let rkey, let value):
+      self = .postgate(collection: collection, rkey: rkey, value: value)
+    }
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case type = "$type"
+    case collection
+    case rkey
+    case value
+  }
+
+  func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode("com.atproto.repo.applyWrites#create", forKey: .type)
+    switch self {
+    case .post(let collection, let rkey, let value):
+      try container.encode(collection, forKey: .collection)
+      try container.encode(rkey, forKey: .rkey)
+      try container.encode(value.typed, forKey: .value)
+    case .threadgate(let collection, let rkey, let value):
+      try container.encode(collection, forKey: .collection)
+      try container.encode(rkey, forKey: .rkey)
+      try container.encode(value.typed, forKey: .value)
+    case .postgate(let collection, let rkey, let value):
+      try container.encode(collection, forKey: .collection)
+      try container.encode(rkey, forKey: .rkey)
+      try container.encode(value.typed, forKey: .value)
+    }
+  }
+}
+
+/// `applyWrites` returns commit metadata that the composer does not consume.
+private struct IgnoreApplyWritesOutput: Decodable {
+  init(from decoder: any Decoder) throws {
+    _ = try decoder.singleValueContainer()
+  }
 }
 
 private enum LiveComposerError: LocalizedError {
