@@ -15,6 +15,38 @@ public enum LoginOutcome: Sendable, Equatable {
   case invalid(String)
 }
 
+/// A resolved login attempt that is ready to authenticate.
+///
+/// The password is deliberately not exposed. Callers can inspect only the
+/// resolved provider context needed for confirmation, then pass this value back
+/// to ``LoginFlow/authenticate(_:)`` unchanged.
+public struct PreparedLogin: Sendable {
+  /// The normalized PDS service that will receive the credentials.
+  public let service: String
+  /// The DID resolved from the submitted handle, when resolution returned one.
+  public let did: String?
+
+  fileprivate let fullIdentifier: String
+  fileprivate let password: String
+  fileprivate let serviceOverride: String?
+
+  /// Whether this resolved provider requires explicit confirmation.
+  public func requiresHostingProviderConfirmation(knownDIDs: [String]) -> Bool {
+    LoginFlow.requiresHostingProviderConfirmation(
+      service: service, override: serviceOverride, did: did, knownDIDs: knownDIDs)
+  }
+}
+
+/// The result of validating and resolving a fresh login without authenticating.
+public enum LoginPreparationOutcome: Sendable {
+  /// Resolution succeeded; no password has been sent yet.
+  case ready(PreparedLogin)
+  /// Resolution failed with a mapped, user-presentable error.
+  case failure(LoginError)
+  /// Input validation failed before any network request.
+  case invalid(String)
+}
+
 /// Whether a stored account can be resumed as-is.
 ///
 /// Port of the branch in `ChooseAccountForm.tsx`: an account with no access
@@ -252,11 +284,10 @@ public final class LoginFlow: @unchecked Sendable {
 
   // MARK: - Sign in
 
-  /// Signs in with a fresh identifier and password.
-  ///
-  /// Field validation happens first and never touches the network; failures
-  /// after that are mapped through ``LoginErrorMapper``.
-  public func signIn(identifier: String, password: String) async -> LoginOutcome {
+  /// Validates and resolves a fresh login without sending the password.
+  public func prepareSignIn(
+    identifier: String, password: String
+  ) async -> LoginPreparationOutcome {
     setIdentifier(identifier)
     // A fresh submission supersedes whatever the last attempt left behind, so
     // the failure step is cleared up front and the count is preserved.
@@ -270,10 +301,11 @@ public final class LoginFlow: @unchecked Sendable {
       return .invalid(LoginStrings.pleaseEnterPassword)
     }
 
+    let serviceOverride = state.serviceOverride
     let selection = ServiceSelection(
       identifier: normalized,
       defaultService: LoginConstants.defaultService,
-      override: state.serviceOverride,
+      override: serviceOverride,
       isDebounceSettled: true)
     let domains = state.availableUserDomains
     let fullIdentifier = LoginIdentifier.fullIdentifier(
@@ -281,19 +313,52 @@ public final class LoginFlow: @unchecked Sendable {
 
     update { $0.move(to: .signingIn) }
 
-    let resolution: ServiceResolution
     do {
-      resolution = try await selection.resolveService(
+      let resolution = try await selection.resolveService(
         identifier: normalized, lookupHandle: lookup)
+      return .ready(PreparedLogin(
+        service: resolution.service,
+        did: resolution.did,
+        fullIdentifier: fullIdentifier,
+        password: password,
+        serviceOverride: serviceOverride))
     } catch {
-      return fail(with: error)
+      let outcome = fail(with: error)
+      if case .failure(let loginError) = outcome {
+        return .failure(loginError)
+      }
+      return .failure(.unexpected(message: LoginStrings.unableToContactService, underlying: nil))
     }
+  }
 
-    return await attempt(
-      service: resolution.service,
-      fullIdentifier: fullIdentifier,
-      password: password,
+  /// Authenticates an already resolved login context.
+  public func authenticate(_ prepared: PreparedLogin) async -> LoginOutcome {
+    await attempt(
+      service: prepared.service,
+      fullIdentifier: prepared.fullIdentifier,
+      password: prepared.password,
       authFactorToken: nil)
+  }
+
+  /// Cancels a prepared login before credentials have been sent.
+  public func cancelPreparedSignIn() {
+    update { $0.move(to: .enteringCredentials) }
+  }
+
+  /// Signs in with a fresh identifier and password.
+  ///
+  /// Compatibility wrapper for callers that do not need to pause after service
+  /// resolution. New UI should call ``prepareSignIn(identifier:password:)`` and
+  /// then ``authenticate(_:)`` after any required confirmation.
+  public func signIn(identifier: String, password: String) async -> LoginOutcome {
+    switch await prepareSignIn(identifier: identifier, password: password) {
+    case .ready(let prepared):
+      return await authenticate(prepared)
+    case .invalid(let message):
+      return .invalid(message)
+    case .failure(let error):
+      return .failure(error)
+    }
   }
 
   /// Retries the in-flight attempt with an emailed confirmation code.

@@ -438,6 +438,59 @@ import Testing
         == "https://pds.example.com/xrpc/com.atproto.server.createSession")
   }
 
+  @Test func preparingResolvedLoginDoesNotSendThePassword() async {
+    let transport = ScriptedTransport(ScriptedTransport.createSession())
+    let flow = LoginFlow(
+      transport: transport,
+      lookupHandle: { _ in
+        ResolvedPDSEndpoint(did: "did:plc:alice", pdsUrl: "https://pds.example.com")
+      })
+
+    let preparation = await flow.prepareSignIn(
+      identifier: "alice.example.com", password: "hunter2")
+    guard case .ready(let prepared) = preparation else {
+      Issue.record("expected a prepared login")
+      return
+    }
+
+    #expect(transport.received.isEmpty)
+    #expect(prepared.service == "https://pds.example.com")
+    #expect(prepared.did == "did:plc:alice")
+    #expect(prepared.requiresHostingProviderConfirmation(knownDIDs: []))
+
+    let outcome = await flow.authenticate(prepared)
+    guard case .success = outcome else {
+      Issue.record("expected authentication to succeed")
+      return
+    }
+    #expect(transport.received.count == 1)
+    #expect(
+      transport.lastRequest?.url
+        == "https://pds.example.com/xrpc/com.atproto.server.createSession")
+  }
+
+  @Test func cancellingPreparedLoginReturnsToCredentialsWithoutARequest() async {
+    let transport = ScriptedTransport(ScriptedTransport.createSession())
+    let flow = LoginFlow(
+      transport: transport,
+      lookupHandle: { _ in
+        ResolvedPDSEndpoint(did: "did:plc:alice", pdsUrl: "https://pds.example.com")
+      })
+
+    let preparation = await flow.prepareSignIn(
+      identifier: "alice.example.com", password: "hunter2")
+    guard case .ready = preparation else {
+      Issue.record("expected a prepared login")
+      return
+    }
+    #expect(flow.state.step == .signingIn)
+
+    flow.cancelPreparedSignIn()
+
+    #expect(flow.state.step == .enteringCredentials)
+    #expect(transport.received.isEmpty)
+  }
+
   @Test func theHostingProviderConfirmationRule() {
     // A non-Bluesky, auto-detected host needs confirmation.
     #expect(

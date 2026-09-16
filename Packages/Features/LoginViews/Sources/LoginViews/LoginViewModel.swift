@@ -42,6 +42,12 @@ public final class LoginViewModel {
   /// e.g. a failed "forget account".
   public private(set) var accountActionError: String?
 
+  /// The auto-discovered hosting provider awaiting explicit approval.
+  public private(set) var hostingProviderConfirmation: String?
+
+  /// The resolved attempt retained while the confirmation is visible.
+  private var preparedLogin: PreparedLogin?
+
   /// The flow this adapter renders.
   public let flow: LoginFlow
 
@@ -122,12 +128,43 @@ public final class LoginViewModel {
 
   // MARK: - Sign in
 
-  /// Submits the form.
+  /// Resolves and submits the form, pausing before authentication when the
+  /// handle points at an unfamiliar non-Bluesky hosting provider.
   public func signIn() async {
     validationMessage = nil
     accountActionError = nil
-    let outcome = await flow.signIn(identifier: state.identifier, password: password)
-    apply(outcome)
+    hostingProviderConfirmation = nil
+    preparedLogin = nil
+
+    switch await flow.prepareSignIn(identifier: state.identifier, password: password) {
+    case .invalid(let message):
+      validationMessage = message
+    case .failure(let error):
+      apply(.failure(error))
+    case .ready(let prepared):
+      let knownDIDs = storedAccounts.map(\.did)
+      if prepared.requiresHostingProviderConfirmation(knownDIDs: knownDIDs) {
+        preparedLogin = prepared
+        hostingProviderConfirmation = URL(string: prepared.service)?.host ?? prepared.service
+      } else {
+        apply(await flow.authenticate(prepared))
+      }
+    }
+  }
+
+  /// Continues an explicitly approved prepared login.
+  public func confirmHostingProvider() async {
+    guard let preparedLogin else { return }
+    self.preparedLogin = nil
+    hostingProviderConfirmation = nil
+    apply(await flow.authenticate(preparedLogin))
+  }
+
+  /// Cancels before credentials are sent to the resolved provider.
+  public func cancelHostingProvider() {
+    preparedLogin = nil
+    hostingProviderConfirmation = nil
+    flow.cancelPreparedSignIn()
   }
 
   /// Retries the retained attempt with an emailed confirmation code.
@@ -211,6 +248,8 @@ public final class LoginViewModel {
     password = ""
     validationMessage = nil
     accountActionError = nil
+    preparedLogin = nil
+    hostingProviderConfirmation = nil
   }
 }
 
