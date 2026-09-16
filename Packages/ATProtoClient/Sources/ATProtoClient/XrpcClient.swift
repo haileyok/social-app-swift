@@ -83,7 +83,8 @@ public struct XrpcClient: Sendable {
   public func url(
     method: String, params: [(String, String?)] = []
   ) -> String {
-    var url = baseURL + "/xrpc/" + method
+    let base = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
+    var url = base + "/xrpc/" + method
     var queryItems: [String] = []
     for (name, value) in params {
       guard let value else { continue }

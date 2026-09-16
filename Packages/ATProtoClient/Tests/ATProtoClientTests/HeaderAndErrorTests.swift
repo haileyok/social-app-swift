@@ -114,6 +114,13 @@ final class ScriptedTransport: HTTPTransport, @unchecked Sendable {
     #expect(
       url == "https://pds.example/xrpc/app.bsky.feed.getTimeline?limit=10&cursor=abc%2Fdef")
   }
+
+  @Test func trailingBaseSlashDoesNotCreateDoubleSlash() {
+    let client = XrpcClient(baseURL: "https://pds.example/", transport: ScriptedTransport())
+    #expect(
+      client.url(method: "com.atproto.server.getSession")
+        == "https://pds.example/xrpc/com.atproto.server.getSession")
+  }
 }
 
 @Suite struct XrpcErrorTests {
