@@ -384,6 +384,7 @@ private struct NotificationsTabScreen: View {
   private let clients: AppSessionClients?
 
   @Environment(\.alfTheme) private var theme
+  @State private var showsNotificationPreferences = false
   @State private var showsActivitySubscriptions = false
 
   init(clients: AppSessionClients?) {
@@ -405,6 +406,9 @@ private struct NotificationsTabScreen: View {
       if clients != nil {
         ToolbarItem(placement: .topBarTrailing) {
           Menu {
+            Button("Notification preferences", systemImage: "slider.horizontal.3") {
+              showsNotificationPreferences = true
+            }
             Button("Activity notifications", systemImage: "bell.badge") {
               showsActivitySubscriptions = true
             }
@@ -413,6 +417,11 @@ private struct NotificationsTabScreen: View {
           }
           .accessibilityLabel("Notification settings")
         }
+      }
+    }
+    .sheet(isPresented: $showsNotificationPreferences) {
+      if let clients {
+        NotificationPreferencesScreen(clients: clients)
       }
     }
     .sheet(isPresented: $showsActivitySubscriptions) {
@@ -522,6 +531,203 @@ private struct NotificationsTabScreen: View {
         // Keep the loaded rows visible. Scrolling back to the footer retries.
       }
     }
+  }
+}
+
+private enum NotificationPreferenceCategory: String, CaseIterable, Identifiable {
+  case like = "Likes"
+  case follow = "New followers"
+  case reply = "Replies"
+  case mention = "Mentions"
+  case quote = "Quotes"
+  case repost = "Reposts"
+  case likeViaRepost = "Likes of your reposts"
+  case repostViaRepost = "Reposts of your reposts"
+
+  var id: String { rawValue }
+
+  func value(
+    from settings: Lexicons.App.Bsky.NotificationDefs_Preferences
+  ) -> Lexicons.App.Bsky.NotificationDefs_FilterablePreference {
+    switch self {
+    case .like: settings.like
+    case .follow: settings.follow
+    case .reply: settings.reply
+    case .mention: settings.mention
+    case .quote: settings.quote
+    case .repost: settings.repost
+    case .likeViaRepost: settings.likeViaRepost
+    case .repostViaRepost: settings.repostViaRepost
+    }
+  }
+
+  func patch(
+    _ value: Lexicons.App.Bsky.NotificationDefs_FilterablePreference
+  ) -> NotificationSettingsPatch {
+    switch self {
+    case .like: NotificationSettingsPatch(like: value)
+    case .follow: NotificationSettingsPatch(follow: value)
+    case .reply: NotificationSettingsPatch(reply: value)
+    case .mention: NotificationSettingsPatch(mention: value)
+    case .quote: NotificationSettingsPatch(quote: value)
+    case .repost: NotificationSettingsPatch(repost: value)
+    case .likeViaRepost: NotificationSettingsPatch(likeViaRepost: value)
+    case .repostViaRepost: NotificationSettingsPatch(repostViaRepost: value)
+    }
+  }
+}
+
+private struct NotificationPreferencesScreen: View {
+  let clients: AppSessionClients
+
+  @Environment(\.dismiss) private var dismiss
+  @State private var settings: Lexicons.App.Bsky.NotificationDefs_Preferences?
+  @State private var failed = false
+
+  var body: some View {
+    NavigationStack {
+      Group {
+        if let settings {
+          List(NotificationPreferenceCategory.allCases) { category in
+            NavigationLink {
+              NotificationPreferenceEditor(
+                clients: clients,
+                category: category,
+                preference: category.value(from: settings),
+                onUpdated: { self.settings = $0 })
+            } label: {
+              VStack(alignment: .leading, spacing: Spacing.xs) {
+                Text(category.rawValue)
+                Text(summary(category.value(from: settings)))
+                  .font(TypeScale.sm.font())
+                  .foregroundStyle(.secondary)
+              }
+              .padding(.vertical, Spacing.xs)
+            }
+          }
+          .listStyle(.insetGrouped)
+          .refreshable { await load() }
+        } else if failed {
+          ContentUnavailableView {
+            Label("Couldn't load notification preferences", systemImage: "exclamationmark.triangle")
+          } actions: {
+            Button("Try again") { Task { await load() } }
+          }
+        } else {
+          ProgressView().controlSize(.large)
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .navigationTitle("Notification preferences")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Done") { dismiss() }
+        }
+      }
+      .task { await load() }
+    }
+  }
+
+  private func summary(
+    _ preference: Lexicons.App.Bsky.NotificationDefs_FilterablePreference
+  ) -> String {
+    let channels = [preference.list ? "In-app" : nil, preference.push ? "Push" : nil]
+      .compactMap { $0 }
+      .joined(separator: " and ")
+    let audience = preference.include == .follows ? "people you follow" : "everyone"
+    return channels.isEmpty ? "Off" : "\(channels) · From \(audience)"
+  }
+
+  private func load() async {
+    do {
+      settings = try await api.fetch(store: clients.store)
+      failed = false
+    } catch {
+      failed = true
+    }
+  }
+
+  private var api: NotificationSettingsAPI {
+    NotificationSettingsAPI(
+      client: XRPCNotificationClient(client: clients.appview), scope: clients.did)
+  }
+}
+
+private struct NotificationPreferenceEditor: View {
+  let clients: AppSessionClients
+  let category: NotificationPreferenceCategory
+  let onUpdated: (Lexicons.App.Bsky.NotificationDefs_Preferences) -> Void
+
+  @Environment(\.dismiss) private var dismiss
+  @State private var inApp: Bool
+  @State private var push: Bool
+  @State private var include: Lexicons.App.Bsky.NotificationDefs_FilterablePreference_Include
+  @State private var isSaving = false
+  @State private var failed = false
+
+  init(
+    clients: AppSessionClients,
+    category: NotificationPreferenceCategory,
+    preference: Lexicons.App.Bsky.NotificationDefs_FilterablePreference,
+    onUpdated: @escaping (Lexicons.App.Bsky.NotificationDefs_Preferences) -> Void
+  ) {
+    self.clients = clients
+    self.category = category
+    self.onUpdated = onUpdated
+    _inApp = State(initialValue: preference.list)
+    _push = State(initialValue: preference.push)
+    _include = State(initialValue: preference.include)
+  }
+
+  var body: some View {
+    Form {
+      Section("Channels") {
+        Toggle("In-app notifications", isOn: $inApp)
+        Toggle("Push notifications", isOn: $push)
+      }
+      Section("From") {
+        Picker("Audience", selection: $include) {
+          Text("Everyone").tag(Lexicons.App.Bsky.NotificationDefs_FilterablePreference_Include.all)
+          Text("People you follow").tag(
+            Lexicons.App.Bsky.NotificationDefs_FilterablePreference_Include.follows)
+        }
+        .pickerStyle(.inline)
+        .labelsHidden()
+      }
+      if failed {
+        Text("Couldn't save this preference. Your previous setting is still active.")
+          .foregroundStyle(.red)
+      }
+    }
+    .navigationTitle(category.rawValue)
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Save") { Task { await save() } }
+          .disabled(isSaving)
+      }
+    }
+  }
+
+  private func save() async {
+    guard !isSaving else { return }
+    isSaving = true
+    defer { isSaving = false }
+    let value = Lexicons.App.Bsky.NotificationDefs_FilterablePreference(
+      include: include, list: inApp, push: push)
+    do {
+      let updated = try await api.update(store: clients.store, category.patch(value))
+      onUpdated(updated)
+      dismiss()
+    } catch {
+      failed = true
+    }
+  }
+
+  private var api: NotificationSettingsAPI {
+    NotificationSettingsAPI(
+      client: XRPCNotificationClient(client: clients.appview), scope: clients.did)
   }
 }
 
