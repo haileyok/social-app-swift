@@ -285,7 +285,11 @@ private struct SearchTabScreen: View {
         isLoadingExplore: isLoadingExplore,
         onSelectProfile: { router.open(.profile(actor: "\($0.did)")) },
         onSelectFeed: { router.open(.feed(uri: "\($0.uri)", name: $0.displayName ?? "Feed")) },
-        onSelectStarterPack: { _ in },
+        onSelectStarterPack: {
+          router.open(.starterPack(
+            uri: $0.uri.rawValue,
+            name: $0.record.starterPackRecord?.name ?? "Starter Pack"))
+        },
         onSelectTrendingTopic: { router.open(.search(query: $0)) })
         .task { await loadExplore() }
     }

@@ -18,6 +18,8 @@ import QueryStore
 import RichText
 import SearchLogic
 import SearchViews
+import StarterPacksLogic
+import StarterPacksViews
 import SwiftUI
 import UIComponents
 import UIComponentsCore
@@ -51,6 +53,8 @@ struct ShellDestinationView: View {
       ProfileRouteView(actor: actor)
     case .feed(let uri, let name):
       FeedRouteView(uri: uri, name: name)
+    case .starterPack(let uri, let name):
+      StarterPackRouteView(uri: uri, name: name)
     case .search(let query):
       SearchRouteView(query: query)
     case .conversation(let convoId):
@@ -344,6 +348,54 @@ private struct FeedRouteView: View {
   }
 }
 
+// MARK: - Starter pack
+
+/** A pushed starter pack hydrated from the shared query store. */
+private struct StarterPackRouteView: View {
+  let uri: String
+  let name: String
+
+  @Environment(ShellRouter.self) private var router
+  @State private var detail: StarterPackDetail?
+  @State private var failed = false
+
+  var body: some View {
+    Group {
+      if let detail {
+        StarterPackScreen(detail: detail)
+      } else if failed {
+        RetryRow(message: "Could not load this starter pack.", retry: { Task { await load() } })
+      } else {
+        ListSkeleton()
+      }
+    }
+    .navigationTitle(name)
+    .navigationBarTitleDisplayMode(.inline)
+    .task { await load() }
+  }
+
+  private func load() async {
+    guard let clients = router.clients else { return }
+    failed = false
+    do {
+      let query = StarterPackQuery(
+        store: clients.store,
+        xrpc: LiveStarterPackXrpc(appview: clients.appview, pds: clients.pds),
+        target: .uri(uri),
+        scope: clients.did)
+      guard let view = try await query.load(),
+        StarterPackViewBuilder.isValid(view, viewerDID: clients.did)
+      else {
+        failed = true
+        return
+      }
+      detail = StarterPackViewBuilder.detail(view, viewerDID: clients.did)
+    } catch {
+      failed = true
+    }
+  }
+}
+
 // MARK: - Search
 
 /** A committed search: the topic or query typed into a trending row. */
@@ -360,7 +412,9 @@ private struct SearchRouteView: View {
           viewModel: viewModel,
           onSelectProfile: { router.open(.profile(actor: $0.did.rawValue)) },
           onSelectFeed: { router.open(.feed(uri: $0.uri.rawValue, name: $0.displayName ?? "Feed")) },
-          onSelectStarterPack: { _ in })
+          onSelectStarterPack: {
+            router.open(.starterPack(uri: $0.uri.rawValue, name: $0.record.starterPackRecord?.name ?? "Starter Pack"))
+          })
       } else {
         ListSkeleton()
       }

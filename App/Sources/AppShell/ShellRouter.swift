@@ -26,6 +26,8 @@ final class ShellRouter {
     case profile(actor: String)
     /** A custom feed, by generator URI. */
     case feed(uri: String, name: String)
+    /** A starter pack, by record URI. */
+    case starterPack(uri: String, name: String)
     /** A committed search (trending topics arrive here). */
     case search(query: String)
     /** A chat conversation, by convo id. */
