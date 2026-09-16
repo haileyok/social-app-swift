@@ -46,12 +46,10 @@ layer and get no skip affordance.
    photo library picker, previews the selected image, retains it across failed
    submissions, and sends its bytes/MIME type through the tested logic upload.
    RN's emoji-and-background avatar creator remains a separate enhancement.
-3. **Suggested accounts has no interest tab bar.** RN renders the user's
-   interests as tabs over the suggestion list and re-queries per tab. Here the
-   list is a single page ordered for the selection the user just made; the tabs
-   are a second navigation axis inside a step that already owns its footer
-   controls, and the suggestion service's `category` parameter is passed as
-   `nil` for the default tab.
+3. **Suggested-account pagination is not ported.** The screen now matches RN's
+   “All” plus selected-interest tab bar and refetches with the chosen category,
+   while preserving follow selections across tabs. Each tab currently loads the
+   service's first 25 recommendations rather than infinite paging.
 4. **Find-contacts defers its work to the app.** RN's `StepFindContacts` is a
    whole contacts flow (permission, hashing, upload) owned by the app's contacts
    component. This package renders the step's chrome and its two transitions

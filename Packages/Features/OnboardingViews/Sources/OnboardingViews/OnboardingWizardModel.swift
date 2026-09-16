@@ -45,6 +45,8 @@ public final class OnboardingWizardModel {
   public var selectedInterests: [String] = []
   /// The suggested accounts the user chose to follow.
   public var selectedSuggestedDIDs: Set<String> = []
+  /// The active suggested-account category; `nil` is RN's default “All” tab.
+  public private(set) var suggestedAccountsCategory: String?
   /// The suggested starter pack the user chose to join.
   public var selectedStarterPackURI: String?
   /// The failure on screen, when a step write failed.
@@ -187,6 +189,13 @@ public final class OnboardingWizardModel {
     }
   }
 
+  /// Selects an interest tab and loads that category's recommendations.
+  public func selectSuggestedAccountsCategory(_ category: String?) {
+    guard category != suggestedAccountsCategory else { return }
+    suggestedAccountsCategory = category
+    Task { await loadSuggestedUsers() }
+  }
+
   /// Selects every suggested account that is neither blocked nor muted.
   public func selectAllSuggestedAccounts() {
     selectedSuggestedDIDs = Set(
@@ -275,18 +284,22 @@ public final class OnboardingWizardModel {
 
   // MARK: - Internals
 
-  /// Fetches the suggested accounts for the current interests.
+  /// Fetches the suggested accounts for the active interest tab.
   private func loadSuggestedUsers() async {
+    let category = suggestedAccountsCategory
     isLoadingSuggestions = true
     suggestionsFailed = false
-    defer { isLoadingSuggestions = false }
     do {
       let page = try await dependencies.suggestionService.suggestedUsers(
-        category: nil, limit: 25, interests: selectedInterests)
+        category: category, limit: 25, interests: selectedInterests)
+      guard category == suggestedAccountsCategory else { return }
       suggestedUsers = page.actors
+      isLoadingSuggestions = false
     } catch {
+      guard category == suggestedAccountsCategory else { return }
       suggestedUsers = []
       suggestionsFailed = true
+      isLoadingSuggestions = false
     }
   }
 

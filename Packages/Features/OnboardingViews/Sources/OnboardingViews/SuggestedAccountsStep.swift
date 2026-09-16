@@ -10,10 +10,8 @@ import UIComponentsCore
 /// from ``OnboardingSuggestionService`` (supplied by the app or the fixtures),
 /// not from the flow: the flow owns the follow write, the view owns the fetch.
 ///
-/// RN renders a tab bar over the user's interests; the tabs are modelled here as
-/// a single list ordered with the popular interests' suggestions first, which is
-/// the same content without a second navigation axis inside a step that already
-/// has its own footer controls.
+/// The horizontal interest tabs issue category-scoped requests through the
+/// existing suggestion service, while selections remain shared across tabs.
 public struct SuggestedAccountsStep: View {
   private let model: OnboardingWizardModel
 
@@ -26,12 +24,46 @@ public struct SuggestedAccountsStep: View {
     VStack(alignment: .leading, spacing: Spacing.lg) {
       OnboardingHeading(OnboardingCopy.suggestedAccountsTitle)
 
+      interestTabs
+
       listBody
 
       footerControls
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .accessibilityIdentifier(OnboardingAccessibility.suggestedAccountsStep)
+  }
+
+  /// RN's “All” tab followed by the interests selected in the prior step.
+  private var interestTabs: some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      HStack(spacing: Spacing.sm) {
+        interestTab(title: "All", category: nil)
+        ForEach(model.selectedInterests, id: \.self) { interest in
+          interestTab(title: interest.replacingOccurrences(of: "-", with: " ").capitalized,
+                      category: interest)
+        }
+      }
+      .padding(.horizontal, 1)
+    }
+    .accessibilityLabel("Suggestion categories")
+  }
+
+  private func interestTab(title: String, category: String?) -> some View {
+    let selected = model.suggestedAccountsCategory == category
+    return Button {
+      model.selectSuggestedAccountsCategory(category)
+    } label: {
+      Text(title)
+        .font(TypeScale.sm.font(weight: Scales.FontWeight.semiBold))
+        .foregroundStyle(selected ? theme.atomColors.textInverted : theme.atomColors.text)
+        .padding(.horizontal, Spacing.md)
+        .padding(.vertical, Spacing.sm)
+        .background(selected ? theme.colors.primary500 : theme.atomColors.bgContrast50)
+        .clipShape(.capsule)
+    }
+    .buttonStyle(.plain)
+    .accessibilityAddTraits(selected ? .isSelected : [])
   }
 
   /// The list, its loading state, or its empty/error state.
