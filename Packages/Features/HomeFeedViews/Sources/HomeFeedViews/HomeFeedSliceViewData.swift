@@ -1,4 +1,5 @@
 import HomeFeedLogic
+import Foundation
 import Lexicons
 import Moderation
 import RichText
