@@ -62,11 +62,14 @@ final class AppSessionClients {
    awaits identity resolution at init too - the shell does the same here
    rather than on the render path, since the session has already resolved it).
    */
-  init(session: PasswordSession, transport: HTTPTransport) async throws {
-    let base = try await session.client()
-    let did = try await session.sessionData().did
+  init(session: PasswordSession) async throws {
+    let data = try await session.sessionData()
+    let sessionTransport = PasswordSessionTransport(session: session)
+    let base = XrpcClient(
+      baseURL: data.pdsEndpoint ?? data.service,
+      transport: sessionTransport)
 
-    self.did = did
+    self.did = data.did
     self.store = QueryStore()
     self.appview = base.withProxy(BlueskyAPI.appService)
     self.chat = base.withProxy(BlueskyAPI.chatService)

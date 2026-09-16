@@ -99,6 +99,33 @@ final class Box<T>: @unchecked Sendable {
       transport.received[2].headers["Authorization"] == "Bearer a2")
   }
 
+  @Test func sessionTransportRefreshesFeatureClientsAndPreservesProxy() async throws {
+    let transport = ScriptedTransport(
+      ScriptedTransport.json(
+        ["error": "ExpiredToken", "message": "token expired"], status: 400),
+      ScriptedTransport.json([
+        "accessJwt": "a2", "refreshJwt": "r2", "did": "did:plc:abc",
+        "handle": "alice.example", "emailConfirmed": true,
+        "didDoc": ["service": []],
+      ]),
+      ScriptedTransport.json(["feed": []])
+    )
+    let session = PasswordSession(data: Self.makeData(), transport: transport)
+    let client = XrpcClient(
+      baseURL: "https://pds.example",
+      proxyService: "did:web:api.bsky.app#bsky_appview",
+      transport: PasswordSessionTransport(session: session))
+
+    let _: EmptyBody = try await client.get("app.bsky.feed.getTimeline")
+
+    #expect(transport.received.count == 3)
+    #expect(transport.received[0].headers["Authorization"] == "Bearer acc1")
+    #expect(transport.received[2].headers["Authorization"] == "Bearer a2")
+    #expect(
+      transport.received[2].headers["atproto-proxy"]
+        == "did:web:api.bsky.app#bsky_appview")
+  }
+
   @Test func refreshSchemaErrorDestroysSession() async throws {
     let transport = ScriptedTransport(
       ScriptedTransport.json(

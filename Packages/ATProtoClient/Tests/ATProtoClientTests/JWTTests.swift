@@ -154,6 +154,17 @@ func makeJWT(payload: [String: Any]) -> String {
     #expect(data.active == true)
   }
 
+  @Test func persistedPdsEndpointSurvivesSessionRestoration() {
+    let account = PersistedAccount(
+      service: "https://entryway.example/", did: "did:plc:alice",
+      handle: "alice.example", refreshJwt: "r", accessJwt: "a",
+      pdsUrl: "https://pds.example/")
+
+    let data = SessionAccountMapping.sessionData(from: account)
+
+    #expect(data.pdsEndpoint == "https://pds.example/")
+  }
+
   @Test func missingTokensCountAsExpired() {
     let account = PersistedAccount(
       service: "https://bsky.social/", did: "did:plc:alice", handle: "alice.example")

@@ -43,6 +43,12 @@ public struct DidDocument: Codable, Sendable, Equatable {
     public let id: String?
     public let type: String?
     public let serviceEndpoint: String?
+
+    public init(id: String?, type: String?, serviceEndpoint: String?) {
+      self.id = id
+      self.type = type
+      self.serviceEndpoint = serviceEndpoint
+    }
   }
 
   /// `service` may arrive as an array or (malformed servers) other shapes;
@@ -171,15 +177,28 @@ public actor PasswordSession {
     method: String, httpMethod: String, params: [(String, String?)] = [],
     body: Data? = nil, contentType: String? = nil
   ) async throws -> HTTPResponse {
-    guard let current = data else { throw LoggedOutError() }
-    let sessionData = await currentSessionOrRefresh()
-    var h: [String: String] = ["Authorization": "Bearer \(sessionData.accessJwt)"]
-    if let contentType { h["Content-Type"] = contentType }
-
+    var headers: [String: String] = [:]
+    if let contentType { headers["Content-Type"] = contentType }
     let url = XrpcClient(baseURL: requestBase, transport: transport)
       .url(method: method, params: params)
+    return try await authenticatedSend(
+      method: httpMethod, url: url, headers: headers, body: body)
+  }
+
+  /// Sends an already-built request through the live session.
+  ///
+  /// This is the transport seam used by feature `XrpcClient`s. It preserves
+  /// proxy and labeler headers while replacing any frozen Authorization value
+  /// with the current token, and retries once after a successful rotation.
+  public func authenticatedSend(
+    method: String, url: String, headers: [String: String], body: Data?
+  ) async throws -> HTTPResponse {
+    guard data != nil else { throw LoggedOutError() }
+    let sessionData = await currentSessionOrRefresh()
+    var h = headers
+    h["Authorization"] = "Bearer \(sessionData.accessJwt)"
     let initial = try await transport.send(
-      method: httpMethod, url: url, headers: h, body: body)
+      method: method, url: url, headers: h, body: body)
 
     let refreshNeeded: Bool
     if initial.status == 401 {
@@ -206,7 +225,7 @@ public actor PasswordSession {
     }
     h["Authorization"] = "Bearer \(newSession.accessJwt)"
     return try await transport.send(
-      method: httpMethod, url: url, headers: h, body: body)
+      method: method, url: url, headers: h, body: body)
   }
 
   /// The session to use for a request; used to capture the "awaited an
@@ -408,5 +427,22 @@ public actor PasswordSession {
     let session = PasswordSession(data: data, hooks: hooks, transport: transport)
     _ = try await session.refresh()
     return session
+  }
+}
+
+/// Adapts a live ``PasswordSession`` to ``HTTPTransport`` so ordinary
+/// ``XrpcClient`` consumers inherit token refresh and retry behavior.
+public struct PasswordSessionTransport: HTTPTransport {
+  public let session: PasswordSession
+
+  public init(session: PasswordSession) {
+    self.session = session
+  }
+
+  public func send(
+    method: String, url: String, headers: [String: String], body: Data?
+  ) async throws -> HTTPResponse {
+    try await session.authenticatedSend(
+      method: method, url: url, headers: headers, body: body)
   }
 }

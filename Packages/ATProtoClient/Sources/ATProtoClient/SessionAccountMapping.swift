@@ -44,7 +44,14 @@ public enum SessionAccountMapping {
   /// Empty tokens (rather than nil) match the RN behavior; `PasswordSession`
   /// treats them as expired and takes the refresh path.
   public static func sessionData(from account: PersistedAccount) -> SessionData {
-    SessionData(
+    let didDoc = account.pdsUrl.map { endpoint in
+      DidDocument(service: [
+        DidDocument.ServiceEntry(
+          id: "#atproto_pds", type: "AtprotoPersonalDataServer",
+          serviceEndpoint: endpoint)
+      ])
+    }
+    return SessionData(
       service: account.service,
       did: account.did,
       handle: account.handle,
@@ -54,7 +61,7 @@ public enum SessionAccountMapping {
       emailConfirmed: account.emailConfirmed,
       emailAuthFactor: account.emailAuthFactor,
       active: account.active ?? true,
-      didDoc: nil)
+      didDoc: didDoc)
   }
 
   /// Whether the account's access token is missing or expired.
