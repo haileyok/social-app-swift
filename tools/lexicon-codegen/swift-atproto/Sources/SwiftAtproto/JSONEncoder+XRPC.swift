@@ -5,7 +5,7 @@ private enum XRPCDataCodingKeys: String, CodingKey {
 }
 
 extension JSONEncoder.DataEncodingStrategy {
-  internal static var xrpc: Self {
+  public static var xrpc: Self {
     .custom { data, encoder in
       do {
         if !data.isEmpty, data[0] == 0 {
@@ -23,7 +23,7 @@ extension JSONEncoder.DataEncodingStrategy {
 }
 
 extension JSONDecoder.DataDecodingStrategy {
-  internal static var xrpc: Self {
+  public static var xrpc: Self {
     .custom { decoder in
       let encoded: String
       if let container = try? decoder.container(keyedBy: XRPCDataCodingKeys.self) {
