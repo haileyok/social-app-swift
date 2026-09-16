@@ -155,6 +155,7 @@ struct LiveComposerSheet: View {
   @Environment(\.dismiss) private var dismiss
   @State private var state: ComposerState
   @State private var languages = LanguageSelection(languages: [])
+  @State private var allowQuotes = true
   @State private var phase: ComposerPublishPhase?
 
   init(
@@ -177,8 +178,10 @@ struct LiveComposerSheet: View {
         replyContext: replyTarget?.display,
         publishPhase: phase,
         languages: languages,
+        allowQuotes: allowQuotes,
         onReduce: reduce,
         onLanguagesChange: { languages = $0 },
+        onAllowQuotesChange: updateAllowQuotes,
         onPublish: { Task { await publish() } },
         onCancel: { dismiss() })
         .navigationTitle(replyTarget == nil ? "New post" : "Reply")
@@ -190,6 +193,15 @@ struct LiveComposerSheet: View {
   private var isPosting: Bool {
     if case .posting = phase { return true }
     return false
+  }
+
+  private func updateAllowQuotes(_ allowed: Bool) {
+    allowQuotes = allowed
+    state = ComposerReducer.reduce(
+      state,
+      .updatePostgate(
+        ComposerGates.placeholderPostgateRecord(
+          embeddingRules: allowed ? [] : [ComposerGates.disableRule])))
   }
 
   private func reduce(_ action: ComposerAction) {
@@ -226,6 +238,20 @@ struct LiveComposerSheet: View {
         collection: record.collection,
         record: record.record.typed,
         rkey: record.rkey)
+      if let threadgate = record.threadgate {
+        _ = try await clients.pds.createRecord(
+          repo: clients.did,
+          collection: ComposerGates.threadgateCollection,
+          record: threadgate.typed,
+          rkey: record.rkey)
+      }
+      if let postgate = record.postgate {
+        _ = try await clients.pds.createRecord(
+          repo: clients.did,
+          collection: ComposerGates.postgateCollection,
+          record: postgate.typed,
+          rkey: record.rkey)
+      }
       await onPublished()
       dismiss()
     } catch {
