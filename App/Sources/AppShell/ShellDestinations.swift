@@ -130,14 +130,15 @@ private struct ThreadRouteView: View {
     do {
       if let uri = content.post.viewer?.like?.rawValue, let rkey = recordKey(uri) {
         _ = try await clients.pds.deleteRecord(
-          repo: clients.did, collection: App.Bsky.FeedLike.nsId, rkey: rkey)
+          repo: clients.did, collection: "app.bsky.feed.like", rkey: rkey)
       } else {
         _ = try await clients.pds.createRecord(
           repo: clients.did,
-          collection: App.Bsky.FeedLike.nsId,
-          record: App.Bsky.FeedLike(
-            createdAt: FormatString<Date>(rawValue: ISO8601DateFormatter().string(from: Date())),
-            subject: strongRef(content)))
+          collection: "app.bsky.feed.like",
+          record: ReactionRecord(
+            type: "app.bsky.feed.like",
+            createdAt: ISO8601DateFormatter().string(from: Date()),
+            subject: reactionSubject(content)))
       }
       await load()
     } catch {}
@@ -148,23 +149,39 @@ private struct ThreadRouteView: View {
     do {
       if let uri = content.post.viewer?.repost?.rawValue, let rkey = recordKey(uri) {
         _ = try await clients.pds.deleteRecord(
-          repo: clients.did, collection: App.Bsky.FeedRepost.nsId, rkey: rkey)
+          repo: clients.did, collection: "app.bsky.feed.repost", rkey: rkey)
       } else {
         _ = try await clients.pds.createRecord(
           repo: clients.did,
-          collection: App.Bsky.FeedRepost.nsId,
-          record: App.Bsky.FeedRepost(
-            createdAt: FormatString<Date>(rawValue: ISO8601DateFormatter().string(from: Date())),
-            subject: strongRef(content)))
+          collection: "app.bsky.feed.repost",
+          record: ReactionRecord(
+            type: "app.bsky.feed.repost",
+            createdAt: ISO8601DateFormatter().string(from: Date()),
+            subject: reactionSubject(content)))
       }
       await load()
     } catch {}
   }
 
-  private func strongRef(_ content: ThreadPostContent) -> Com.Atproto.RepoStrongRef {
-    Com.Atproto.RepoStrongRef(
-      cid: FormatString<LexLink>(rawValue: content.post.cid.rawValue),
-      uri: FormatString<ATURI>(rawValue: content.post.uri.rawValue))
+  private struct ReactionRecord: Encodable, Sendable {
+    let type: String
+    let createdAt: String
+    let subject: ReactionSubject
+
+    enum CodingKeys: String, CodingKey {
+      case type = "$type"
+      case createdAt
+      case subject
+    }
+  }
+
+  private struct ReactionSubject: Encodable, Sendable {
+    let uri: String
+    let cid: String
+  }
+
+  private func reactionSubject(_ content: ThreadPostContent) -> ReactionSubject {
+    ReactionSubject(uri: content.post.uri.rawValue, cid: content.post.cid.rawValue)
   }
 
   private func recordKey(_ uri: String) -> String? {
