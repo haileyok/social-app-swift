@@ -278,15 +278,16 @@ public actor SessionStore {
         await self?.handleUpdateFailure(did: did, data: data)
       })
 
-    let session: PasswordSession
-    if SessionAccountMapping.isExpired(stored) {
-      session = try await PasswordSession.resume(
-        sessionData, hooks: hooks, transport: transport)
-    } else {
-      session = PasswordSession(
-        data: sessionData, hooks: hooks, transport: transport)
-    }
+    let session = PasswordSession(
+      data: sessionData, hooks: hooks, transport: transport)
+    // Cache before refreshing. A transient refresh failure must leave a live
+    // session available so the signed-in shell can build production clients
+    // and retry on its next authenticated request. Definitive auth failures
+    // destroy and remove this session through `handleDeleted`.
     sessions[did] = session
+    if SessionAccountMapping.isExpired(stored) {
+      _ = try await session.refresh()
+    }
 
     let data = try? await session.sessionData()
     guard let refreshed = Self.merge(account: stored, session: data) else {

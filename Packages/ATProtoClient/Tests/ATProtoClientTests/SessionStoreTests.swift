@@ -421,6 +421,34 @@ func sampleAccount(did: String, handle: String = "alice.example") -> PersistedAc
     #expect(transport.received[0].url.hasSuffix("/xrpc/com.atproto.server.refreshSession"))
   }
 
+  @Test func transientResumeFailureKeepsALiveSession() async throws {
+    let directory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("session-resume-failure-\(UUID().uuidString)")
+    try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+
+    let transport = ScriptedTransport()
+    transport.networkError = URLError(.notConnectedToInternet)
+    let store = SessionStore(
+      persisted: PersistedStore(directory: directory),
+      tokenStore: FileTokenStore(rootDirectory: directory.appendingPathComponent("tokens")),
+      transport: transport)
+    _ = await store.hydrate()
+
+    let expired = PersistedAccount(
+      service: "https://bsky.social/", did: "did:plc:alice", handle: "alice.example",
+      refreshJwt: "refresh-1",
+      accessJwt: makeJWT(payload: ["exp": 1_000_000_000, "scope": "com.atproto.access"]))
+    try await store.upsertAccount(expired)
+
+    await #expect(throws: URLError.self) {
+      try await store.resume(account: expired)
+    }
+    let session = try #require(await store.currentSession())
+    #expect(!(await session.isDestroyed()))
+    #expect(try await session.sessionData().did == expired.did)
+  }
+
   @Test func shutdownClearsEverything() async throws {
     let harness = await SessionStoreHarness()
     defer { harness.cleanUp() }
