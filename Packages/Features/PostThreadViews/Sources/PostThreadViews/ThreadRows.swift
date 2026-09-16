@@ -17,6 +17,7 @@ struct ThreadRow: View {
   let locale: Locale
   let onShowMoreReplies: (ThreadItem) -> Void
   let onOpen: (RichTextTarget) -> Void
+  let onReply: (ThreadPostContent) -> Void
 
   @Environment(\.alfTheme) private var theme
 
@@ -37,7 +38,8 @@ struct ThreadRow: View {
         now: now,
         locale: locale,
         strings: strings,
-        onOpen: onOpen)
+        onOpen: onOpen,
+        onReply: onReply)
     case .tombstone(let tombstone):
       ThreadTombstoneRow(tombstone: tombstone, strings: strings)
     case .readMore(let readMore):
@@ -57,6 +59,7 @@ struct ThreadPostRow: View {
   let locale: Locale
   let strings: PostThreadStrings
   let onOpen: (RichTextTarget) -> Void
+  let onReply: (ThreadPostContent) -> Void
 
   @Environment(\.alfTheme) private var theme
 
@@ -66,7 +69,8 @@ struct ThreadPostRow: View {
     now: Date,
     locale: Locale,
     strings: PostThreadStrings,
-    onOpen: @escaping (RichTextTarget) -> Void
+    onOpen: @escaping (RichTextTarget) -> Void,
+    onReply: @escaping (ThreadPostContent) -> Void
   ) {
     self.item = item
     self.content = content
@@ -74,6 +78,7 @@ struct ThreadPostRow: View {
     self.locale = locale
     self.strings = strings
     self.onOpen = onOpen
+    self.onReply = onReply
   }
 
   var body: some View {
@@ -83,7 +88,10 @@ struct ThreadPostRow: View {
       locale: locale,
       contextLine: contextLine)
     VStack(alignment: .leading, spacing: 0) {
-      PostFeedItem(data: data, onOpen: onOpen)
+      PostFeedItem(
+        data: data,
+        onOpen: onOpen,
+        onReply: content.replyDisabled ? nil : { onReply(content) })
 
       if item.isAnchor {
         anchorDetails

@@ -23,7 +23,7 @@ public struct PostThreadScreen: View {
   private let now: Date
   private let locale: Locale
   private let onOpen: (RichTextTarget) -> Void
-  private let onReply: () -> Void
+  private let onReply: (ThreadPostContent) -> Void
 
   /// The window the caller handed us, and the one the UI widens. Local state so
   /// a "load more" tap is immediate; the parent's value is the starting point.
@@ -37,7 +37,7 @@ public struct PostThreadScreen: View {
     now: Date = Date(),
     locale: Locale = Locale(identifier: "en_US"),
     onOpen: @escaping (RichTextTarget) -> Void = { _ in },
-    onReply: @escaping () -> Void = {}
+    onReply: @escaping (ThreadPostContent) -> Void = { _ in }
   ) {
     self.window = ThreadWindow(thread: thread, showMore: showMore)
     self.strings = strings
@@ -63,10 +63,11 @@ public struct PostThreadScreen: View {
             now: now,
             locale: locale,
             onShowMoreReplies: handleShowMore,
-            onOpen: onOpen)
+            onOpen: onOpen,
+            onReply: onReply)
 
-          if item.isAnchor, canReply(to: item) {
-            ThreadComposerRow(strings: strings, onTap: onReply)
+          if item.isAnchor, case .post(let content) = item.content, !content.replyDisabled {
+            ThreadComposerRow(strings: strings, onTap: { onReply(content) })
           }
         }
 
@@ -78,12 +79,6 @@ public struct PostThreadScreen: View {
     .background(theme.atomColors.bg)
     .navigationTitle(strings.title)
     .navigationBarTitleDisplayMode(.inline)
-  }
-
-  /// The reply prompt belongs directly below a hydrated, replyable anchor.
-  private func canReply(to item: ThreadItem) -> Bool {
-    guard case .post(let content) = item.content else { return false }
-    return !content.replyDisabled
   }
 
   /// A "load more" tap: widen the window in the direction the row asked for.

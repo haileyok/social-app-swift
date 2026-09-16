@@ -75,7 +75,7 @@ private struct ThreadRouteView: View {
   @Environment(ShellRouter.self) private var router
   @State private var thread: FlattenedThread?
   @State private var failed = false
-  @State private var showsReplyComposer = false
+  @State private var replyTarget: ComposerReplyTarget?
 
   var body: some View {
     Group {
@@ -83,7 +83,7 @@ private struct ThreadRouteView: View {
         PostThreadScreen(
           thread: thread,
           onOpen: { router.open($0) },
-          onReply: { showsReplyComposer = true })
+          onReply: { content in replyTarget = makeReplyTarget(for: content) })
       } else if failed {
         RetryRow(message: "Could not load this post.", retry: { Task { await load() } })
       } else {
@@ -93,22 +93,17 @@ private struct ThreadRouteView: View {
     .navigationTitle("Post")
     .navigationBarTitleDisplayMode(.inline)
     .task { await load() }
-    .sheet(isPresented: $showsReplyComposer) {
-      if let clients = router.clients, let replyTarget {
+    .sheet(item: $replyTarget) { target in
+      if let clients = router.clients {
         LiveComposerSheet(
           clients: clients,
-          replyTarget: replyTarget,
+          replyTarget: target,
           onPublished: { await load() })
       }
     }
   }
 
-  private var replyTarget: ComposerReplyTarget? {
-    guard
-      let item = thread?.items.first(where: \.isAnchor),
-      case .post(let content) = item.content
-    else { return nil }
-
+  private func makeReplyTarget(for content: ThreadPostContent) -> ComposerReplyTarget {
     let parent = RecordReference(
       uri: content.post.uri.rawValue,
       cid: content.post.cid.rawValue)
