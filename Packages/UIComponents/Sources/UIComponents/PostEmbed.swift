@@ -50,13 +50,13 @@ public struct PostEmbed: View {
     case .gallery(let items):
       galleryItemsView(items)
     case .external(let external):
-      ExternalCard(external: external)
+      ExternalCard(external: external, onOpen: onOpen)
     case .record(let record):
-      QuotedPost(record: record)
+      QuotedPost(record: record, onOpen: onOpen)
     case .recordWithMedia(let value):
       VStack(spacing: Spacing.sm) {
         mediaView(value.media)
-        QuotedPost(record: value.record)
+        QuotedPost(record: value.record, onOpen: onOpen)
       }
     case .video(let video):
       VideoEmbed(view: video, onOpen: onOpen)
@@ -73,7 +73,7 @@ public struct PostEmbed: View {
     case .gallery(let items):
       galleryItemsView(items)
     case .external(let external):
-      ExternalCard(external: external)
+      ExternalCard(external: external, onOpen: onOpen)
     case .video(let video):
       VideoEmbed(view: video, onOpen: onOpen)
     case .unknown, .none:
@@ -160,11 +160,16 @@ public struct ImageGallery: View {
 /// The external link card.
 public struct ExternalCard: View {
   private let external: EmbedExternal
+  private let onOpen: (RichTextTarget) -> Void
 
   @Environment(\.alfTheme) private var theme
 
-  public init(external: EmbedExternal) {
+  public init(
+    external: EmbedExternal,
+    onOpen: @escaping (RichTextTarget) -> Void = { _ in }
+  ) {
     self.external = external
+    self.onOpen = onOpen
   }
 
   public var body: some View {
@@ -197,6 +202,11 @@ public struct ExternalCard: View {
       RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
         .stroke(theme.atomColors.borderContrastLow, lineWidth: 1))
     .accessibilityElement(children: .combine)
+    .highPriorityGesture(
+      TapGesture().onEnded {
+        guard let uri = external.uri, let url = URL(string: uri) else { return }
+        onOpen(.external(url))
+      })
   }
 
   /// The display host, without the scheme or a leading `www.`.
@@ -210,11 +220,16 @@ public struct ExternalCard: View {
 /// body when the record could not be hydrated.
 public struct QuotedPost: View {
   private let record: EmbedRecordView?
+  private let onOpen: (RichTextTarget) -> Void
 
   @Environment(\.alfTheme) private var theme
 
-  public init(record: EmbedRecordView?) {
+  public init(
+    record: EmbedRecordView?,
+    onOpen: @escaping (RichTextTarget) -> Void = { _ in }
+  ) {
     self.record = record
+    self.onOpen = onOpen
   }
 
   public var body: some View {
@@ -237,6 +252,13 @@ public struct QuotedPost: View {
     .overlay(
       RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
         .stroke(theme.atomColors.borderContrastLow, lineWidth: 1))
+    .highPriorityGesture(
+      TapGesture().onEnded {
+        guard let union = record?.record, case .viewRecord(let value) = union,
+          let uri = value.uri
+        else { return }
+        onOpen(.post(uri: uri))
+      })
   }
 
   @ViewBuilder

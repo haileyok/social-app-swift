@@ -72,6 +72,8 @@ final class ShellRouter {
       open(.profile(actor: did))
     case .hashtag(let tag):
       open(.search(query: "#\(tag)"))
+    case .post(let uri):
+      open(.thread(uri: uri))
     case .external(let url):
       UIApplication.shared.open(url)
     }

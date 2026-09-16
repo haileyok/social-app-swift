@@ -84,6 +84,7 @@ public enum RichTextTarget: Equatable, Sendable {
   case external(URL)
   case hashtag(String)
   case profile(did: String)
+  case post(uri: String)
 
   /// Parses an internal or external URL.
   public init(url: URL) {
